@@ -1,36 +1,70 @@
 function obj = surface(obj, varargin)
-% Adds surfaces of brain to figure
+% Add one or more brain surfaces to an fmridisplay object (managed display).
+%
+% Each surface is registered as a view on the object, so blobs added with
+% addblobs (and refresh / removeblobs / rethreshold) act on all surfaces and
+% montages together. The actual surface geometry and default camera view come
+% from addbrain, so ANY surface keyword addbrain understands works here.
 %
 % :Usage:
 % ::
 %
-%     obj = surface(obj, varargin)
+%     obj = surface(obj, 'direction', DIR, 'orientation', ORN, 'axes', POS)
+%     obj = surface(obj, DIR)          % bare direction token (e.g. 'thalamus')
 %
 % :Inputs:
 %
 %   **obj:**
-%        fmridisplay
+%        an fmridisplay object (handle). Initialize first, e.g. with montage.
+%
+% :Optional Inputs:
+%
+%   **'direction', DIR:**
+%        Which surface to draw. DIR is passed through to addbrain, so the full
+%        set of addbrain surface/region keywords is available (run `help
+%        addbrain` for the complete, current list). DIR may also be given as a
+%        bare token: surface(obj, 'thalamus') == surface(obj, 'direction',
+%        'thalamus'). Common cortical choices:
+%          'hires left' / 'hires right'              (default: 'hires right')
+%          'inflated left' / 'inflated right'        (freesurfer/fsaverage)
+%          'hcp inflated left' / 'hcp inflated right'
+%          'freesurfer inflated left' / '... right'
+%          'flat left' / 'flat right'
+%        Composite / subcortical examples (all from addbrain):
+%          'brainstem left' / 'brainstem right'      (brainstem + midbrain group)
+%          'caudate left' / 'caudate right'          (basal ganglia group)
+%          'thalamus', 'amygdala', 'cerebellum', 'limbic', 'bg', ...
+%        Multi-surface keywords add a SET of views to this same object:
+%          'foursurfaces', 'foursurfaces_hcp', 'foursurfaces_freesurfer'
+%
+%   **'orientation', ORN:**
+%        'lateral' (default) or 'medial'. For an L/R cortical surface, 'medial'
+%        mirrors the camera azimuth 180 degrees. Ignored for surfaces without a
+%        meaningful medial view.
+%
+%   **'axes', POS:**
+%        An existing axes handle, or a [left bottom width height] position
+%        vector for a new axes. Default: current axes (gca).
+%
+%   Any remaining inputs are passed straight through to addbrain.
 %
 % :Outputs:
 %
 %   **obj:**
-%        an fmridisplay object
-%
-% :Properties:
-%
-%  - overlay: ''
-%  - SPACE: ''
-%  - activation_maps: {}
-%  - montage: {}
-%  - surface: {[1x1 struct]}
-%  - orthviews: {}
-%  - history: {}
-%  - history_descrip: []
-%  - additional_info: ''
+%        the fmridisplay object, with the new surface view(s) registered in
+%        obj.surface and any existing blob layers rendered onto them.
 %
 % :Examples:
+% ::
 %
-%     o2 = surface(o2, axes, [0.15 0.28 .15 1], 'direction', 'hires right', 'orientation', 'lateral');
+%     o2 = fmridisplay; o2 = montage(o2, 'axial');
+%     o2 = surface(o2, 'direction', 'hires right', 'orientation', 'lateral');
+%     o2 = surface(o2, 'thalamus');                 % bare addbrain keyword
+%     o2 = surface(o2, 'foursurfaces_hcp');         % 2x2 set in its own figure
+%
+% :See also:
+%   - addbrain (full surface/region keyword list), addblobs, montage, refresh,
+%     removeblobs, render_on_surface, canlab_results_fmridisplay
 %
 % See help fmridisplay
 
@@ -59,25 +93,38 @@ if ~isempty(multi)
     return
 end
 
+% Parse inputs. Three reserved keyword pairs ('direction', 'orientation',
+% 'axes') are consumed here; the FIRST unrecognized char token is taken as a
+% BARE direction (so surface(han, 'thalamus') works, not just surface(han,
+% 'direction', 'thalamus')), and any remaining args pass straight through to
+% addbrain. This is what lets ANY eligible addbrain surface keyword be used in
+% the managed display (see `help addbrain` for the full surface/region list).
 ax = gca;
-dir = 'hires right';
+dir = '';
 orn = 'lateral';
-
-for i = 1:length(varargin)
-    if ischar(varargin{i})
-        switch varargin{i}
-            % reserved keywords
-            
-            case {'direction'}, dir = varargin{i + 1};
-            
-            case {'orientation'}, orn = varargin{i + 1};
-
-            case {'axes'}, ax = varargin{i + 1};
-
-                %otherwise, warning(['Unknown input string option:' varargin{i}]);
+extra = {};                                            % pass-through to addbrain
+i = 1;
+while i <= numel(varargin)
+    a = varargin{i};
+    if ischar(a)
+        switch a
+            case 'direction',   dir = varargin{i + 1}; i = i + 2; continue
+            case 'orientation', orn = varargin{i + 1}; i = i + 2; continue
+            case 'axes',        ax  = varargin{i + 1}; i = i + 2; continue
+            otherwise
+                if isempty(dir)
+                    dir = a;                           % bare direction token
+                else
+                    extra{end + 1} = a; %#ok<AGROW>    % addbrain pass-through
+                end
+                i = i + 1; continue
         end
+    else
+        extra{end + 1} = a; %#ok<AGROW>                % non-char (e.g. addbrain flag value)
+        i = i + 1;
     end
 end
+if isempty(dir), dir = 'hires right'; end
 
 if isa(ax,'matlab.graphics.axis.Axes')
     axh = ax;
@@ -85,337 +132,29 @@ if isa(ax,'matlab.graphics.axis.Axes')
 else
     axh = axes('Position', ax);
 end
-if strcmp(dir, 'hires left')
-    h = addbrain('hires left');
-    if strcmp(orn, 'medial')
-        view(270, 0);
-    else
-        view(90, 0);
-    end
-elseif strcmp(dir, 'left')
-    h = addbrain('left');
-    if strcmp(orn, 'medial')
-        view(270, 0);
-    else
-        view(90, 0);
-    end
-elseif strcmp(dir, 'hires right')
-    h = addbrain('hires right');
-    if strcmp(orn, 'medial')
-        view(90, 0);
-    else
-        view(270, 0);
-    end
-elseif strcmp(dir, 'right')
-    h = addbrain('right');
-    if strcmp(orn, 'medial')
-        view(90, 0);
-    else
-        view(270, 0);
-    end
-elseif strcmp(dir, 'flat right')
-    h = addbrain('flat right');
-    
-elseif strcmp(dir, 'flat left')
-    h = addbrain('flat left');
-    
-elseif strcmp(dir, 'surface left')
-    h = addbrain('surface left');
-        
-    if strcmp(orn, 'medial')
-        view(270, 0);
-    else
-        view(90, 0);
-    end
-    
-elseif strcmp(dir, 'surface right')
-    h = addbrain('surface right');
-    if strcmp(orn, 'medial')
-        view(90, 0);
-    else
-        view(270, 0);
-    end
 
-    
-elseif strcmp(dir, 'inflated right')
-    h = addbrain('inflated right');
-    if strcmp(orn, 'medial')
-        view(90, 0);
-    else
-        view(270, 0);
-    end
-    
-elseif strcmp(dir, 'inflated left')
-    h = addbrain('inflated left');
-    if strcmp(orn, 'medial')
-        view(90, 0);
-    else
-        view(270, 0);
-    end
-   
-elseif strcmp(dir, 'hcp inflated right')
-    h = addbrain('hcp inflated right',varargin{:});
-    if strcmp(orn, 'medial')
-        view(90, 0);
-    else
-        view(270, 0);
-    end
-    
-elseif strcmp(dir, 'hcp inflated left')
-    h = addbrain('hcp inflated left',varargin{:});
-    if strcmp(orn, 'medial')
-        view(90, 0);
-    else
-        view(270, 0);
-    end
-   
-elseif strcmp(dir, 'hcp sphere right')
-    h = addbrain('hcp sphere right');
-    if strcmp(orn, 'medial')
-        view(90, 0);
-    else
-        view(270, 0);
-    end
-    
-elseif strcmp(dir, 'hcp sphere left')
-    h = addbrain('hcp sphere left');
-    if strcmp(orn, 'medial')
-        view(90, 0);
-    else
-        view(270, 0);
-    end
+% Build the surface(s). addbrain owns the surface geometry AND the default
+% (lateral) camera view + lighting for every keyword, including its many
+% composites (brainstem/caudate groups, limbic, basal ganglia, ...), so this
+% method is essentially a pass-through: ANY eligible addbrain surface works
+% here automatically. We only (1) special-case 'bigbrain left/right', which map
+% to a DIFFERENT addbrain surface than 'bigbrain left' would, and (2) mirror the
+% azimuth 180 degrees for a medial view (medial = lateral azimuth + 180).
+switch dir
+    case 'bigbrain left'
+        h = addbrain('bigbrain', extra{:});
+        view(-137, 18); lightRestoreSingle;
 
-elseif strcmp(dir, 'freesurfer sphere right')
-    h = addbrain('freesurfer sphere right');
-    if strcmp(orn, 'medial')
-        view(90, 0);
-    else
-        view(270, 0);
-    end
-    
-elseif strcmp(dir, 'freesurfer sphere left')
-    h = addbrain('freesurfer sphere left');
-    if strcmp(orn, 'medial')
-        view(90, 0);
-    else
-        view(270, 0);
-    end
+    case 'bigbrain right'
+        h = addbrain('bigbrain', extra{:});
+        view(137, 18); lightRestoreSingle;
 
-elseif strcmp(dir, 'freesurfer white right')
-    h = addbrain('freesurfer white right');
-    if strcmp(orn, 'medial')
-        view(90, 0);
-    else
-        view(270, 0);
-    end
-    
-elseif strcmp(dir, 'freesurfer white left')
-    h = addbrain('freesurfer white left');
-    if strcmp(orn, 'medial')
-        view(90, 0);
-    else
-        view(270, 0);
-    end
-
-elseif strcmp(dir, 'freesurfer inflated right')
-    h = addbrain('freesurfer inflated right');
-    if strcmp(orn, 'medial')
-        view(90, 0);
-    else
-        view(270, 0);
-    end
-    
-elseif strcmp(dir, 'freesurfer inflated left')
-    h = addbrain('freesurfer inflated left');
-    if strcmp(orn, 'medial')
-        view(90, 0);
-    else
-        view(270, 0);
-    end
-
-elseif strcmp(dir, 'MNI152NLin2009cAsym white right')
-    % for internal development use
-    h = addbrain('MNI152NLin2009cAsym white right');
-    if strcmp(orn, 'medial')
-        view(90, 0);
-    else
-        view(270, 0);
-    end
-    
-elseif strcmp(dir, 'MNI152NLin2009cAsym white left')
-    % for internal development use
-    h = addbrain('MNI152NLin2009cAsym white left');
-    if strcmp(orn, 'medial')
-        view(90, 0);
-    else
-        view(270, 0);
-    end
-
-elseif strcmp(dir, 'MNI152NLin2009cAsym midthickness right')
-    % for internal development use
-    h = addbrain('MNI152NLin2009cAsym midthickness right');
-    if strcmp(orn, 'medial')
-        view(90, 0);
-    else
-        view(270, 0);
-    end
-    
-elseif strcmp(dir, 'MNI152NLin2009cAsym midthickness left')
-    % for internal development use
-    h = addbrain('MNI152NLin2009cAsym midthickness left');
-    if strcmp(orn, 'medial')
-        view(90, 0);
-    else
-        view(270, 0);
-    end
-
-elseif strcmp(dir, 'MNI152NLin2009cAsym pial right')
-    % for internal development use
-    h = addbrain('MNI152NLin2009cAsym pial right');
-    if strcmp(orn, 'medial')
-        view(90, 0);
-    else
-        view(270, 0);
-    end
-    
-elseif strcmp(dir, 'MNI152NLin2009cAsym pial left')
-    % for internal development use
-    h = addbrain('MNI152NLin2009cAsym pial left');
-    if strcmp(orn, 'medial')
-        view(90, 0);
-    else
-        view(270, 0);
-    end
-
-elseif strcmp(dir, 'MNI152NLin6Asym white right')
-    % for internal development use
-    h = addbrain('MNI152NLin6Asym white right');
-    if strcmp(orn, 'medial')
-        view(90, 0);
-    else
-        view(270, 0);
-    end
-    
-elseif strcmp(dir, 'MNI152NLin6Asym white left')
-    % for internal development use
-    h = addbrain('MNI152NLin6Asym white left');
-    if strcmp(orn, 'medial')
-        view(90, 0);
-    else
-        view(270, 0);
-    end
-
-elseif strcmp(dir, 'MNI152NLin6Asym midthickness right')
-    % for internal development use
-    h = addbrain('MNI152NLin6Asym midthickness right');
-    if strcmp(orn, 'medial')
-        view(90, 0);
-    else
-        view(270, 0);
-    end
-    
-elseif strcmp(dir, 'MNI152NLin6Asym midthickness left')
-    % for internal development use
-    h = addbrain('MNI152NLin6Asym midthickness left');
-    if strcmp(orn, 'medial')
-        view(90, 0);
-    else
-        view(270, 0);
-    end
-
-elseif strcmp(dir, 'MNI152NLin6Asym pial right')
-    % for internal development use
-    h = addbrain('MNI152NLin6Asym pial right');
-    if strcmp(orn, 'medial')
-        view(90, 0);
-    else
-        view(270, 0);
-    end
-    
-elseif strcmp(dir, 'MNI152NLin6Asym pial left')
-    % for internal development use
-    h = addbrain('MNI152NLin6Asym pial left');
-    if strcmp(orn, 'medial')
-        view(90, 0);
-    else
-        view(270, 0);
-    end
-
-elseif strcmp(dir, 'MNI152NLin6Asym sphere right')
-    % for internal development use
-    h = addbrain('MNI152NLin6Asym sphere right');
-    if strcmp(orn, 'medial')
-        view(90, 0);
-    else
-        view(270, 0);
-    end
-    
-elseif strcmp(dir, 'MNI152NLin6Asym sphere left')
-    % for internal development use
-    h = addbrain('MNI152NLin6Asym sphere left');
-    if strcmp(orn, 'medial')
-        view(90, 0);
-    else
-        view(270, 0);
-    end
-
-elseif strcmp(dir, 'bigbrain left')
-    h = addbrain('bigbrain');
-    view(-137, 18); lightRestoreSingle;
-
-elseif strcmp(dir, 'bigbrain right')
-    h = addbrain('bigbrain');
-    view(137, 18); lightRestoreSingle;
-
-elseif strcmp(dir, 'left_cutaway')
-    h = addbrain('left_cutaway');
-
-elseif strcmp(dir, 'right_cutaway')
-    h = addbrain('right_cutaway');
-
-elseif strcmp(dir, 'brainstem left')
-    h = addbrain('midbrain_group');
-    h = [h addbrain('rvm')];
-    h = [h addbrain('lc')];
-    h = [h addbrain('brainstem')];
-    h = [h addbrain('thalamus_group')];
-    h = [h addbrain('pbn')];
-    h = [h addbrain('rn')];
-    h = [h addbrain('pag')];
-    % h = [surface_handles addbrain('caudate')];
-    view(-137, 18); lightRestoreSingle;
-
-elseif strcmp(dir, 'brainstem right')
-    h = addbrain('midbrain_group');
-    h = [h addbrain('rvm')];
-    h = [h addbrain('lc')];
-    h = [h addbrain('brainstem')];
-    h = [h addbrain('thalamus_group')];
-    h = [h addbrain('pbn')];
-    h = [h addbrain('rn')];
-    h = [h addbrain('pag')];
-    % h = [surface_handles addbrain('caudate')];
-    view(137, 18); lightRestoreSingle;
-
-elseif strcmp(dir, 'caudate left')
-    h = addbrain('caudate');
-    h = [h addbrain('put')];
-    h = [h addbrain('gp')];
-    h = [h addbrain('nacc')];
-    h = [h addbrain('sn')];
-    view(-137, 18); lightRestoreSingle;
-
-elseif strcmp(dir, 'caudate right')
-    h = addbrain('caudate');
-    h = [h addbrain('put')];
-    h = [h addbrain('gp')];
-    h = [h addbrain('nacc')];
-    h = [h addbrain('sn')];
-    view(137, 18); lightRestoreSingle;
-
-else
-    h = addbrain(dir);
-
+    otherwise
+        h = addbrain(dir, extra{:});
+        if strcmp(orn, 'medial')
+            [az, el] = view(axh);
+            view(axh, mod(az + 180, 360), el);
+        end
 end
 
 

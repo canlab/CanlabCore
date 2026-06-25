@@ -190,9 +190,35 @@ defaults.**
   mask → solid colour, positive-only → warm, negative-only → cool, mixed +/- → mango split.
   Propagates to both montage and surface via the central map.
 
-**Next:** addbrain keyword pass-through for `@fmridisplay/surface` (§7.4) so any addbrain surface
-can be used in the managed display, with help/region listing; then route montages and the legend
-through the central map and retire the duplicated colour logic.
+**Step 5 done (2026-06-25): addbrain keyword pass-through for `@fmridisplay/surface` (§7.4) +
+help/region listing.**
+- `@fmridisplay/surface` no longer hard-codes a per-direction `if/elseif` switch. It now parses
+  three reserved keyword pairs (`'direction'`, `'orientation'`, `'axes'`), accepts a **bare
+  direction token** (`surface(o2, 'thalamus')` == `surface(o2, 'direction', 'thalamus')`), and
+  passes any remaining args straight through to `addbrain(dir, extra{:})`. So **any eligible
+  addbrain surface/region keyword works in the managed display automatically** — new addbrain
+  surfaces need no change here.
+- **addbrain owns the view.** addbrain already sets the default (lateral) camera view + lighting
+  per keyword, so surface() no longer duplicates that. It only (1) special-cases `'bigbrain
+  left/right'` (they map to a *different* addbrain surface than `addbrain('bigbrain left')` would)
+  and (2) mirrors the azimuth 180° for `'medial'` (`medial = lateral az + 180`, read back from the
+  axes — works for every surface regardless of its lateral convention). Verified the managed
+  multi-surface layouts (hires/hcp/freesurfer L+R × lateral/medial) keep **identical** view angles;
+  only a couple of standalone lateral azimuths (`inflated right`, `surface right`) move to
+  addbrain's surface-specific convention, which was the more correct one.
+- **Composites centralized into addbrain (T. Wager's suggestion).** The `brainstem left/right` and
+  `caudate left/right` composite handle-sets that surface() used to assemble inline now live in
+  `addbrain` as cases (next to `limbic`/`bg`/`*_group`), with their oblique 3D views. surface()
+  just passes the keyword through. addbrain's help region list documents them.
+- **Help/region listing:** `help fmridisplay/surface` now documents the common directions, the
+  bare-token form, the `'orientation'`/`'axes'` options, and points to `help addbrain` for the
+  full, current keyword list.
+- Tests: added `test_surface_addbrain_passthrough` (bare token + composite multi-patch) and
+  `test_surface_medial_flips_azimuth` to the handle suite (now 37/37). Display 4/4 unchanged.
+
+**Next:** route montages and the legend through the central `canlab_colormap` map and retire the
+duplicated colour logic (`render_blobs` vs `render_on_surface`), which also fixes the single-range
+one-colorbar-spanning-zero legend.
 
 The agreed long-term architecture for the colour pipeline. Today the value→colour logic is
 duplicated and divergent: `render_blobs` (slices) and `render_on_surface` (surfaces) each

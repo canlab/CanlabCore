@@ -201,6 +201,43 @@ tc.verifyEqual(numel(o2.surface), 1, 'surface registered on the object');
 end
 
 
+function test_surface_addbrain_passthrough(tc)
+% surface() is a pass-through to addbrain: a bare direction token works (not
+% just 'direction', X), and ANY addbrain surface/composite keyword is usable,
+% including the brainstem/caudate composites now centralized in addbrain.
+tc.assumeTrue(usejava('jvm'), 'surface rendering requires Java');
+o2 = fmridisplay; o2 = montage(o2);
+
+% (1) bare token == 'direction', token
+try, o2 = surface(o2, 'thalamus'); catch ME, tc.assumeFail(ME.message); end
+tc.verifyEqual(numel(o2.surface), 1, 'bare-token surface registered a view');
+tc.verifyEqual(o2.surface{end}.direction, 'thalamus', 'bare token recorded as direction');
+
+% (2) addbrain composite keyword passes through and yields a multi-patch handle
+try, o2 = surface(o2, 'brainstem left'); catch ME, tc.assumeFail(ME.message); end
+tc.verifyEqual(numel(o2.surface), 2, 'composite surface registered a second view');
+tc.verifyGreaterThan(numel(o2.surface{end}.object_handle), 1, ...
+    'brainstem composite produced multiple surface patches');
+end
+
+
+function test_surface_medial_flips_azimuth(tc)
+% 'medial' mirrors the camera azimuth 180 deg relative to the lateral default
+% that addbrain sets (medial = lateral azimuth + 180).
+tc.assumeTrue(usejava('jvm'), 'surface rendering requires Java');
+oL = fmridisplay; oL = montage(oL);
+try
+    oL = surface(oL, 'direction', 'hires left', 'orientation', 'lateral');
+    [azL, ~] = view(oL.surface{end}.axis_handles);
+    oL = surface(oL, 'direction', 'hires left', 'orientation', 'medial');
+    [azM, ~] = view(oL.surface{end}.axis_handles);
+catch ME
+    tc.assumeFail(ME.message);
+end
+tc.verifyEqual(mod(azM - azL, 360), 180, 'medial azimuth is lateral + 180');
+end
+
+
 function test_surface_pulls_in_existing_blobs(tc)
 % A surface added AFTER blobs should render those existing blobs onto it.
 tc.assumeTrue(usejava('jvm'), 'surface rendering requires Java');

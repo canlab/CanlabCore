@@ -176,8 +176,23 @@ every layer bottom→top) is `composite_surfaces`, used by `refresh` (hence reth
 set_colormap / set_opacity) and `remove_layer`. Verified: a broad green mask under narrower split
 stats shows green where the stats don't cover and split on top; `remove_layer` recomposites the
 remainder; `removeblobs` restores gray.
-**Next:** per-layer surface visibility (skip invisible layers in `composite_surfaces`); then route
-montages and the legend through the same central map and retire the duplicated colour logic.
+**Step 4 done (2026-06-25): per-layer surface visibility + opacity blending + sign-aware
+defaults.**
+- Surfaces now **blend** layers by opacity rather than top-wins: `render_on_surface` takes a
+  `'truecolor_alpha'` and blends a layer's coloured vertices with what's underneath
+  (`a*colour + (1-a)*below`), so a semi-transparent layer lets the layer below show through —
+  matching montages. `render_layer_surfaces` passes the layer's `transvalue` as the alpha
+  (no more whole-patch `FaceAlpha`).
+- **Per-layer visibility:** a layer with `activation_maps{k}.visible == false` is skipped in
+  `render_layer_surfaces`/`composite_surfaces`; the controller's Visible toggle sets the flag,
+  hides the montage blobs, and recomposites the surfaces.
+- **Sign-aware default colormap** (`addblobs`, only when no explicit colour is given): a binary
+  mask → solid colour, positive-only → warm, negative-only → cool, mixed +/- → mango split.
+  Propagates to both montage and surface via the central map.
+
+**Next:** addbrain keyword pass-through for `@fmridisplay/surface` (§7.4) so any addbrain surface
+can be used in the managed display, with help/region listing; then route montages and the legend
+through the central map and retire the duplicated colour logic.
 
 The agreed long-term architecture for the colour pipeline. Today the value→colour logic is
 duplicated and divergent: `render_blobs` (slices) and `render_on_surface` (surfaces) each

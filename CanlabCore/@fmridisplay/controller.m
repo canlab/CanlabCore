@@ -409,11 +409,17 @@ end
 end
 
 function set_layer_visible(obj, k, tf)
-% Toggle a layer's montage blob graphics. (Surface visibility is deferred —
-% see VISUALIZATION_OVERHAUL_NOTES.md.)
+% Toggle a layer's visibility on montages AND surfaces. Montage blobs hide via
+% their graphics Visible; surfaces recomposite, skipping the hidden layer so
+% lower layers show through.
 if k < 1 || k > numel(obj.activation_maps), return, end
+obj.activation_maps{k}.visible = logical(tf);
 bh = obj.activation_maps{k}.blobhandles;
-if isempty(bh), return, end
-bh = bh(ishandle(bh));
-set(bh, 'Visible', matlab.lang.OnOffSwitchState(tf));
+if ~isempty(bh)
+    bh = bh(ishandle(bh));
+    set(bh, 'Visible', matlab.lang.OnOffSwitchState(tf));
+end
+if ~isempty(obj.surface)
+    composite_surfaces(obj);
+end
 end

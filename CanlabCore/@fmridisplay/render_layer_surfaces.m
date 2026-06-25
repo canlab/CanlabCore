@@ -46,6 +46,11 @@ if ~isfield(layer, 'source_region') || isempty(layer.source_region)
     return   % legacy layer with no retained source; nothing to render from
 end
 
+% A layer toggled invisible is skipped on surfaces (lower layers show through).
+if isfield(layer, 'visible') && ~isempty(layer.visible) && ~layer.visible
+    return
+end
+
 if nargin < 3 || isempty(wh_surface)
     wh_surface = 1:numel(obj.surface);
 end
@@ -77,12 +82,14 @@ if ~isempty(surf_neg_cm), color_args = [color_args, {'neg_colormap', surf_neg_cm
 % passed so render_on_surface can build the colorbar legend. See canlab_colormap.
 tc_map = canlab_colormap.from_render_args(args, cmaprange);
 
-% Constant opacity for the surface patch (set_opacity / controller slider).
-% render_on_surface drives blob ALPHA via 'transvalue' on montages, but on a
-% surface the overlay IS the vertex coloring, so we dim the patch via FaceAlpha.
+% Layer opacity (set_opacity / controller slider). On surfaces the overlay IS the
+% vertex colouring, so opacity BLENDS this layer's colours with what's underneath
+% (lower layers / gray) rather than making the whole patch translucent — matching
+% the per-layer blending montages already do. Passed to render_on_surface as
+% 'truecolor_alpha'.
 wh_tv = find(strcmp(args, 'transvalue'), 1);
-surf_alpha = [];
-if ~isempty(wh_tv), surf_alpha = args{wh_tv + 1}; end
+layer_alpha = 1;
+if ~isempty(wh_tv) && isnumeric(args{wh_tv + 1}), layer_alpha = args{wh_tv + 1}; end
 
 for i = wh_surface
 
@@ -106,16 +113,9 @@ for i = wh_surface
         idxmap = args{wh_index + 1};
         [~, bar1axis, bar2axis] = render_on_surface(img, surfh, args{:}, 'colormap', idxmap, 'indexmap');
     else
-        call_args = [clean_args, color_args, {'truecolor', tc_map}];
+        call_args = [clean_args, color_args, {'truecolor', tc_map, 'truecolor_alpha', layer_alpha}];
         if ~isempty(cmaprange), call_args = [call_args, {'cmaprange', cmaprange}]; end
         [~, bar1axis, bar2axis] = render_on_surface(img, surfh, call_args{:});
-    end
-
-    % Constant-opacity overlay: dim the whole surface patch to the requested
-    % value so the controller's opacity slider has an effect on surfaces.
-    if ~isempty(surf_alpha)
-        valid = surfh(ishandle(surfh));
-        if ~isempty(valid), set(valid, 'FaceAlpha', surf_alpha); end
     end
 
     % Track the colorbar axes as the layer's legend; drop a prior one so

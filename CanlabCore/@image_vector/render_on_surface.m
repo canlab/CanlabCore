@@ -216,6 +216,7 @@ targetsurface = [];
 interp = 'linear';
 gray_buffer = true;
 truecolor_cmap = [];   % optional canlab_colormap -> true-colour (N x 3 RGB) vertices
+truecolor_alpha = 1;   % opacity for the true-colour layer (blend with what's underneath)
 
 allowable_sourcespace = {'colin27','MNI152NLin6Asym','MNI152NLin2009cAsym'};
 allowable_targetsurface = {'fsaverage_164k','fsLR_32k'};
@@ -281,6 +282,11 @@ for i = 1:length(varargin)
                 % Followed by a canlab_colormap; colours vertices via map() as
                 % true-colour RGB instead of the indexed colormap path.
                 truecolor_cmap = varargin{i + 1};
+
+            case 'truecolor_alpha'
+                % Opacity (0..1) for the true-colour layer: its coloured vertices
+                % are blended with what is underneath (lower layers / gray).
+                truecolor_alpha = varargin{i + 1};
 
             case 'scaledtransparency'
                 doscaledtrans = 1;
@@ -689,6 +695,14 @@ for i = 1:length(surface_handles)
         end
         rgb      = truecolor_cmap.map(double(c(:)));        % N x 3, NaN = uncoloured
         unc      = wh(:) | any(isnan(rgb), 2);
+        col      = ~unc;
+        % Blend this layer's coloured vertices with what is underneath by its
+        % opacity, so a semi-transparent layer lets the layer below show through
+        % (alpha 0 = fully transparent / hidden, alpha 1 = opaque).
+        a = max(0, min(1, truecolor_alpha));
+        if a < 1
+            rgb(col, :) = a .* rgb(col, :) + (1 - a) .* base(col, :);
+        end
         rgb(unc, :) = base(unc, :);
         set(sh_obj, 'FaceVertexCData', rgb, 'FaceColor', 'interp', ...
             'CDataMapping', 'direct', 'EdgeColor', 'none');

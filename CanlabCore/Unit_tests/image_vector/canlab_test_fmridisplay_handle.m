@@ -273,6 +273,34 @@ tc.verifyGreaterThan(sum(g2), 100, 'the remaining layer is still composited');
 end
 
 
+function test_surface_layer_visibility(tc)
+% Hiding a layer recomposites the surface, skipping it so the lower layer shows
+% through; re-showing brings it back.
+tc.assumeTrue(usejava('jvm'), 'surface rendering requires Java');
+t1 = canlab_get_sample_thresholded_t(0.05);
+t2 = canlab_get_sample_thresholded_t(0.001);
+o2 = fmridisplay; o2 = montage(o2);
+try, o2 = surface(o2); catch ME, tc.assumeFail(ME.message); end
+o2 = addblobs(o2, t1, 'color', [0 1 0], 'noverbose');   % layer 1 green
+o2 = addblobs(o2, t2, 'noverbose');                     % layer 2 split, on top
+isgreen = @(f) f(:, 2) > .6 & f(:, 1) < .4 & f(:, 3) < .4;
+issplit = @(f) (max(f, [], 2) - min(f, [], 2)) > .2 & ~isgreen(f);
+
+fvc = o2.surface{1}.object_handle(1).FaceVertexCData;
+tc.verifyGreaterThan(sum(issplit(fvc)), 100, 'layer 2 visible initially');
+
+o2.activation_maps{2}.visible = false;
+o2 = composite_surfaces(o2);
+fvc2 = o2.surface{1}.object_handle(1).FaceVertexCData;
+tc.verifyEqual(sum(issplit(fvc2)), 0, 'hidden layer 2 is not shown on the surface');
+tc.verifyGreaterThan(sum(isgreen(fvc2)), 100, 'layer 1 shows through where layer 2 was');
+
+o2.activation_maps{2}.visible = true;
+o2 = composite_surfaces(o2);
+tc.verifyGreaterThan(sum(issplit(o2.surface{1}.object_handle(1).FaceVertexCData)), 100, 'layer 2 returns when re-shown');
+end
+
+
 function test_surface_first_render_uncolored_is_gray(tc)
 % Regression: on the FIRST true-colour render onto a fresh (solid-FaceColor)
 % surface, uncoloured areas must be proper gray, not near-black (the fresh
@@ -379,13 +407,20 @@ tc.verifyLessThanOrEqual(n_after, 3, 'surface is essentially uniform gray after 
 end
 
 
-function test_set_opacity_dims_surface(tc)
-% set_opacity must reach surfaces (controller opacity slider): the surface
-% patch FaceAlpha follows the requested value.
+function test_set_opacity_blends_surface(tc)
+% set_opacity blends a layer's surface colours toward what's underneath (gray
+% for a single layer), so the colours desaturate rather than the whole patch
+% going translucent.
 o2 = build_montage_surface_blobs(tc);
-o2 = set_opacity(o2, 0.4);
-tc.verifyEqual(o2.surface{1}.object_handle(1).FaceAlpha, 0.4, 'AbsTol', 1e-9, ...
-    'set_opacity dims the surface patch');
+s  = o2.surface{1}.object_handle(1);
+fvc0    = s.FaceVertexCData;
+sat0    = max(fvc0, [], 2) - min(fvc0, [], 2);
+colored = sat0 > 0.2;
+tc.assumeGreaterThan(sum(colored), 100, 'layer has coloured surface vertices');
+o2  = set_opacity(o2, 0.3);                            % 30% opaque -> blend toward gray
+fvc1 = o2.surface{1}.object_handle(1).FaceVertexCData;
+sat1 = max(fvc1(colored, :), [], 2) - min(fvc1(colored, :), [], 2);
+tc.verifyLessThan(mean(sat1), mean(sat0(colored)), 'opacity blended the surface colours toward gray');
 end
 
 
@@ -443,6 +478,29 @@ o2 = set_colormap(o2, 'color', [1 0 0], 'layers', 1);
 controller(o2);                              % update in place
 dd = findobj(o2.controller_handle, 'Type', 'uidropdown');
 tc.verifyTrue(any(strcmp({dd.Value}, 'solid colour…')), 'a dropdown reflects the solid-color layer');
+end
+
+
+function test_default_colormap_by_sign(tc)
+% Default colormap depends on the data's sign: mixed +/- -> mango split;
+% positive-only -> warm; negative-only -> cool; binary mask -> solid colour.
+t = canlab_get_sample_thresholded_t(0.01);                      % mixed
+o = montage(t);
+tc.verifyTrue(any(strcmp(o.activation_maps{end}.render_args, 'splitcolor')), 'mixed -> mango split');
+
+tpos = t; tpos.dat(tpos.dat < 0) = 0;
+try, tpos.sig = tpos.sig & tpos.dat > 0; catch, end
+a = montage(tpos); a = a.activation_maps{end}.render_args;
+tc.verifyEqual(a{find(strcmp(a, 'maxcolor'), 1) + 1}, [1 1 0], 'positive-only -> warm');
+
+tneg = t; tneg.dat(tneg.dat > 0) = 0;
+try, tneg.sig = tneg.sig & tneg.dat < 0; catch, end
+a = montage(tneg); a = a.activation_maps{end}.render_args;
+tc.verifyEqual(a{find(strcmp(a, 'maxcolor'), 1) + 1}, [0 1 1], 'negative-only -> cool');
+
+tbin = t; tbin.dat = single(tbin.dat ~= 0);
+o = montage(tbin);
+tc.verifyTrue(any(strcmp(o.activation_maps{end}.render_args, 'color')), 'binary mask -> solid colour');
 end
 
 

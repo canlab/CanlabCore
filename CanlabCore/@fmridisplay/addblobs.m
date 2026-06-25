@@ -370,12 +370,35 @@ for j = wh_cmap
 end
 varargin(to_strip) = [];
 
+% Sign-aware default colormap: when the caller gave NO explicit colour spec
+% (still the default split), pick the default by the data's sign — a binary mask
+% gets a solid colour, a positive-only (or zero) map gets "warm" (red->yellow), a
+% negative-only map gets "cool" (blue->cyan), and a mixed +/- map keeps the
+% "mango" split default. Explicit 'splitcolor'/'color'/'maxcolor'/etc. are untouched.
+if dosplitcolor && ~any(strcmp(varargin, 'splitcolor'))
+    dvals = mask(mask ~= 0 & ~isnan(mask));
+    if ~isempty(dvals)
+        if numel(unique(dvals)) == 1
+            dosplitcolor = 0; doonecolor = 1;                 % binary mask -> solid
+            varargin{end + 1} = 'color';
+            varargin{end + 1} = [1 .5 0];
+        elseif all(dvals >= 0)
+            dosplitcolor = 0; domaxcolor = 1; domincolor = 1; % positive-only -> warm
+            maxcolor = [1 1 0]; mincolor = [1 0 0];
+        elseif all(dvals <= 0)
+            dosplitcolor = 0; domaxcolor = 1; domincolor = 1; % negative-only -> cool
+            maxcolor = [0 1 1]; mincolor = [0 0 1];
+        end
+        % else: mixed +/- -> keep the mango split default
+    end
+end
+
 % Add relevant colors and args to varargin, because we may have passed in
 % keywords without following args, intending to use defaults specified above
 % These are passed to render_blobs and also used to update legend registry
 % in fmridisplay obj
 
-if dosplitcolor  
+if dosplitcolor
     
     mysplitcolors = {minnegcolor maxnegcolor minposcolor maxposcolor};
     

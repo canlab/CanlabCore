@@ -86,7 +86,9 @@ function icadat = ica(fmridat_obj, varargin)
 %   - mahal
 %   - orthviews
 
-figure; plot(B(:), W(:), 'k.')
+% (Removed a stray, non-functional debug line here that referenced undefined
+%  variables B and W before they were computed, which made ica() error on every
+%  call for all image_vector subclasses. -- 2026-06-26)
 
 nic = 30;
 if length(varargin) > 0, nic = varargin{1}; end

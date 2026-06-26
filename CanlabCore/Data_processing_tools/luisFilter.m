@@ -86,7 +86,7 @@ if (nargin==4)
     
     freq_gain = scalefactor/2 + 20*log10( abs(freq_response).^2 ./ abs(freq_impulse) ) ;
     
-    %Plotting the reponse of the filter
+    %Plotting the response of the filter
     subplot(2,1,1) , hold on,plot(time, abs(outdata), 'r'), title ('Time Domain'), legend('Before', 'After')
     subplot(2,1,2), hold on, plot(f, abs(outfdata), 'r'), title ('Frequency Domain');
     

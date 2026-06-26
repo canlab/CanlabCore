@@ -306,7 +306,7 @@ function [underlineFlag,boldFlag,style,debugFlag] = processStyleInfo(style)
           style = style(~debugIdx);
       end
 
-      % Check if the remaining style sting is a numeric vector
+      % Check if the remaining style string is a numeric vector
       %styleNum = str2num(style); %#ok<ST2NM>  % not good because style='text' is evaled!
       %if ~isempty(styleNum)
       if any(style==' ' | style==',' | style==';')
@@ -571,7 +571,7 @@ function showDemo(majorVersion,minorVersion)
        'cprintf([1,0.5,0], ''and multi-\nline orange\n'');' 10];
    if boldFlag
        % In R2011b+ the internal bug that causes the need for an extra space
-       % is apparently fixed, so we must insert the sparator spaces manually...
+       % is apparently fixed, so we must insert the separator spaces manually...
        % On the other hand, 2011b enables *bold* format
        s = [s 'cprintf(''*blue'',   ''and *bold* (R2011b+ only)\n'');' 10];
        s = strrep(s, ''')',' '')');

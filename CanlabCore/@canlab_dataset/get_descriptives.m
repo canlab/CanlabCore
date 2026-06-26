@@ -118,7 +118,7 @@ end % main function
 
 function [Min_value, Max_value, Mean_value, St_Dev, myIQR, NaN_count, text_vals] = get_descriptives_var(D, vname)
 
-% intialize
+% initialize
 [Min_value, Max_value, Mean_value, St_Dev, myIQR, NaN_count] = deal(NaN);
 text_vals = [];
 

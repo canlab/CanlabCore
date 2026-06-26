@@ -2,7 +2,7 @@ function mni_coords = CBIG_RF_fsaverageVertex2MNICoord(hemi, vertices)
 % mni_coords = CBIG_RF_fsaverageVertex2MNICoord(hemi, vertices)
 %
 % This function takes in a vertex number or a list of vertex numbers, to convert to the 
-% corresponding RAS coordiantes in MNI152 space.
+% corresponding RAS coordinates in MNI152 space.
 %
 % Note that this conversion uses the MNI152-to-fsaverage mapping. Therefore the results 
 % may not be consistent with using the final projection scripts to project fsaverage 

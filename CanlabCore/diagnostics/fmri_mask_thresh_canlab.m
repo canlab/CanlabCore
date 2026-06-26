@@ -127,7 +127,7 @@ end
 % get threshold
 
 % this could be done using a mixture model, but the mixture models i tried
-% did not coverge well on actual data. this seems more robust.
+% did not converge well on actual data. this seems more robust.
 %
 % This will likely work well SPECIFICALLY for images with a very
 % low-intensity, homogeneous background and then some signal at much higher

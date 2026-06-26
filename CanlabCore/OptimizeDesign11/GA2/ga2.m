@@ -391,7 +391,7 @@ w = find(eff > median(eff));
 
 % we can only do crossover if not all the designs are the same
 if isempty(w)
-    warning('Extremely homogenous sample!')
+    warning('Extremely homogeneous sample!')
     % add a little random noise to efficiency - 1% of var of efficiency
     eff = eff + randn(1,length(eff)) .* .01 * mean(eff);
     w = find(eff > median(eff));

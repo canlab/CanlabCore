@@ -44,7 +44,7 @@ function [projected, projected_seg] = CBIG_RF_projectfsaverage2Vol_single(lh_inp
 %                      projected results with left and right hemisphere combined 
 %                      (same dimension as mask_input.vol)
 %     - projected_seg:
-%                      projected results in segmentation form, where right hemishpere values 
+%                      projected results in segmentation form, where right hemisphere values 
 %                        start from 1000
 %                      (same dimension as mask_input.vol)
 %

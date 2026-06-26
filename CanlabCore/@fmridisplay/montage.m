@@ -3,7 +3,7 @@ function [obj, dat] = montage(obj, varargin)
 %  - Solid brain slices or contour outlines
 %  - Points or text labels or both
 %  - Flexible slice spacing, colors, marker sizes/styles, axis layout (one row/standard square)
-%  - axial or saggital orientation
+%  - axial or sagittal orientation
 %
 % :Usage:
 % ::

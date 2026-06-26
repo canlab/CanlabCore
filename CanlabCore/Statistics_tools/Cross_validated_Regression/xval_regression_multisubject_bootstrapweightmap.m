@@ -18,7 +18,7 @@ function pmodel_obj = xval_regression_multisubject_bootstrapweightmap(fit_method
     % CROSS-VALIDATED (JACKKNIFE) REGRESSION
     % Leave-one observation out, predict outcomes for each missing holdout_set.
     % THIS IS LIKE XVAL_REGRESSION_MULTISUBJECT, but IS SPECIFIC FOR
-    % CREATING P-VALUES FOR BOOSTRAPPED VOXEL WEIGHTS. So it requires an
+    % CREATING P-VALUES FOR BOOTSTRAPPED VOXEL WEIGHTS. So it requires an
     % additional input, volInfo (see below).
     %
     % Y = outcome, holdout_set x 1

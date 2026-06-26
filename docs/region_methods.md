@@ -54,7 +54,7 @@ MATLAB for the live list on any instance.
 | `posneg_separate` | `@region` | Split regions into positive- and negative-valued sub-regions |
 | `subdivide_by_atlas` | `@region` | Subdivide each blob by anatomical atlas parcels |
 | `subdivide_by_local_max` | `@region` | Subdivide regions by local peak Z-score / maxima |
-| `reparse_continguous` | `@region` | Re-define regions based on contiguous blobs (note: spelling is `continguous` in source) |
+| `reparse_continguous` | `@region` | Re-define regions based on contiguous blobs (note: spelling is `continguous` in source) | <!-- codespell:ignore continguous -->
 | `select_coordinates_near_regions` | `@region` | Filter MNI mm coordinates by minimum distance to the region object |
 
 ## Display and visualization

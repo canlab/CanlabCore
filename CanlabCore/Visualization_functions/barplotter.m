@@ -13,7 +13,7 @@ function h = barplotter(data, varargin)
 % grouping must have the same number of columns or elements (if data is a
 % cell array) as data, and must consist of integers beginning with 1 and
 % ending with the total number of groups. Data belonging to the same group
-% will be 'clustered' together in the plot. Ommitting groups (eg, [1 1 3 3])
+% will be 'clustered' together in the plot. Omitting groups (eg, [1 1 3 3])
 % will create extra spacing between groups.
 % ::
 %

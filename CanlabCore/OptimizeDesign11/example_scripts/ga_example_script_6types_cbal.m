@@ -137,7 +137,7 @@ GA.contrastweights = [1];
 AutocorrelationFileName = 'myscannerxc';
     % This is the name of a mat file without the .mat extension
     % In the mat file, there should be a variable called myscannerxc
-    % which is a row vector containing the autocorrelation fucntion you wish to use.
+    % which is a row vector containing the autocorrelation function you wish to use.
     % This function is used as the intrinsic noise autocorrelation estimate.
     % Included with the GA scripts are these functions:
     % myscannerxc   (U of M 3T, 7 subjects)

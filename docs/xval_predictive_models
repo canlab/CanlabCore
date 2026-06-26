@@ -31,7 +31,7 @@ TABLE
 | xval_SVR.m                                            | A   | S                       | SVR via fitrsvm; subject-grouped CV; optional bayesopt + bootstrap |
 | xval_classify.m                                       | A   | S                       | LDA via fitcdiscr |
 | xval_discriminant_classifier.m                        | A   | S                       | LDA via fitcdiscr — NEARLY DUPLICATE of xval_classify.m (flag) |
-| xval_cross_classfy.m                                  | A   | test_results, stats1, stats2 | SVM or LASSOPCR cross-classification; FILENAME TYPO: classfy -> classify |
+| xval_cross_classfy.m                                  | A   | test_results, stats1, stats2 | SVM or LASSOPCR cross-classification; FILENAME TYPO: classfy -> classify | <!-- codespell:ignore classfy -->
 | xval_regression_multisubject.m                        | A   | STATS                   | Core engine: 'lasso' / 'ols' / 'ridge' / 'robust' regression |
 | xval_regression_multisubject_featureselect.m          | A   | STATS                   | Same engine with per-fold feature selection |
 | xval_regression_multisubject_bootstrapweightmap.m     | A   | STATS                   | Regression + voxel-level bootstrap weight maps |

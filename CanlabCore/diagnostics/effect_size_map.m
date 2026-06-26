@@ -49,7 +49,7 @@
 % % This is the [3-back - 2-back] contrast
 % %cd ../robust0002
 % groupcon = which('rob_beta_0001.img');
-% groupt = which('rob_tmap_0001.img');
+% groupt = which('rob_tmap_0001.img');  % codespell:ignore groupt
 % 
 % % Now we need individual-subject MSE images (residual variance images) for
 % % the test contrast
@@ -82,7 +82,7 @@ fprintf('Mask area: %3.0f voxels\n', volInfo.n_inmask);
 
 
 con = iimg_get_data(mask, groupcon);
-t = iimg_get_data(mask, groupt);
+t = iimg_get_data(mask, groupt);  % codespell:ignore groupt
 
 N = size(resms_images, 1);
 
@@ -242,7 +242,7 @@ end
 % This is an effect size measure, really a t-score, averaged across voxels
 Zmean = mean(Zi);
 
-% covert to power estimate, given multiple comparisons
+% convert to power estimate, given multiple comparisons
 % ---------------------------------------------------------------
 % first, estimate smoothness
 [fwhm,VRpv] = spm_est_smoothness(spm_vol(resms_images), spm_vol(mask));

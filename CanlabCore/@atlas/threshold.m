@@ -241,7 +241,7 @@ end
 
 % Identifies any fragmented parcels, splits them in two and postfixes
 % _fragN to the label name, retaining corresponding probabilities for
-% each regoin. N is the fragment index, frag1 is the largest and subsequent
+% each region. N is the fragment index, frag1 is the largest and subsequent
 % parcels are in order of size.
 function obj = spin_off_frag(obj)
     obj = obj.replace_empty();

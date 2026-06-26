@@ -14,7 +14,7 @@ function cl = multi_threshold(P,type,df,varargin)
 
 % ..
 %    defaults
-%       Colors:     postive - Red Yellow Orange
+%       Colors:     positive - Red Yellow Orange
 %                   negative -  Blue, Light Blue, Aqua
 %       Threshold:  [.001 .005 .05] uncorrected
 %       K Sizes:    [5 5 10]

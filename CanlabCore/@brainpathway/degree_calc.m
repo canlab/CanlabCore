@@ -3,7 +3,7 @@ function b2 = degree_calc(b2)
 % b2 = degree_calc(b2)
 %
 % Method for brainpathway
-% uses node_clusters to caculate overall, within-cluster(network), and
+% uses node_clusters to calculate overall, within-cluster(network), and
 % between-cluster degree
 %
 % NOTE: Currently uses region averages (.region), update to use nodes!

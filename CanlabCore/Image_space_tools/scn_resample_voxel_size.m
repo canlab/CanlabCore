@@ -128,7 +128,7 @@ function [img, Vto] = scn_resample_voxel_size(loadImg, voxsize, varargin)
 
         Mslice  = spm_matrix([0 0 j]);      % Matrix specifying this slice
 
-        Mtrans  = Mto \ Mmap \ Mslice;          % Affine mappping mtx: Mask -> TOvol
+        Mtrans  = Mto \ Mmap \ Mslice;          % Affine mapping mtx: Mask -> TOvol
 
         img(:, :, j) = spm_slice_vol(Vmap(1), Mtrans, dim(1:2), [0 NaN]);
 

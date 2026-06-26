@@ -296,7 +296,7 @@ end
 
 
 SETUP.algorithm.max_dev = max_dev;
-SETUP.algorithm.max_dev_descrip = 'Max deviation from old to new betas in interation; check convergence.';
+SETUP.algorithm.max_dev_descrip = 'Max deviation from old to new betas in iteration; check convergence.';
 
 % Write mask, betas, residuals, weights
 % ---------------------------------------------------------------------
@@ -439,7 +439,7 @@ end
 %
 % Wi{i} = diag(W(:, i));              %
 %
-%             invxvx{i} = inv(X' * Wi{i} * X);       % Save these for later, for speed; don't need to re-use
+%             invxvx{i} = inv(X' * Wi{i} * X);       % Save these for later, for speed; don't need to reuse
 %             bforming{i} = invxvx{i} * X' * Wi{i};
 %  % R = Wi.^.5 * (eye(n) - X * invxvx * X' * Wi{i});          % Residual inducing matrix
 %             R = Wi{i} .^ .5 * (eye(n) - X * bforming{i});               % Residual inducing matrix

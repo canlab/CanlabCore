@@ -65,7 +65,7 @@ function out = regress(obj, varargin)
 %        Do not add intercept to model
 %
 %  **display, display_results:**
-%        Show thresholded results usin orthviews (if < 10 regressors)
+%        Show thresholded results using orthviews (if < 10 regressors)
 %
 %  **nodisplay:**
 %        Do not plot thresholded results using orthviews

@@ -4,7 +4,7 @@ function noise = make1overf(length, sampling_rate)
 
 %
 
-% returns a noise vector of 'length' smaples 
+% returns a noise vector of 'length' samples 
 
 % with 1/f characteristics, sampled at 'sampling_rate' (in Hz)
 

@@ -34,7 +34,7 @@ function ribbons = riverplot_ribbon_matrix(layer1, layer2, sim_matrix, varargin)
 % :Inputs:
 %
 %   **layer1:**
-%        Cell array of structures with handles and decription of imrect class objects,
+%        Cell array of structures with handles and description of imrect class objects,
 %        created with riverplot_draw_layer.m.  Each object is a rectangular
 %        graphic that denotes a spatial brain pattern or mask created with riverplot_rect.m.  
 %        layer1 is the LEFTMOST layer in the plot.
@@ -75,7 +75,7 @@ function ribbons = riverplot_ribbon_matrix(layer1, layer2, sim_matrix, varargin)
 %        ribbons. Colors are specified for each element of layer1.
 %
 %   **steepness**
-%        followed by value for sigmoid steepness, on [0 1] inteval
+%        followed by value for sigmoid steepness, on [0 1] interval
 %
 %   **ax:**
 %        followed by axis handle to plot

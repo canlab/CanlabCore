@@ -8,7 +8,7 @@ function M = optimize_rand_search(GA)
 %   power lower limit cutoff pushes power higher
 %
 % Why using avg power is better than efficiency
-%   efficiency doesn't account for 1/f model (altho here we just use a cutoff, the same thing)
+%   efficiency doesn't account for 1/f model (although here we just use a cutoff, the same thing)
 %   avoid transformation errors in using high pass filter
 %   efficiency is based on the sample size, determined by TR, of the model - but so is fft power...
 %

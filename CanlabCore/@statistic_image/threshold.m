@@ -174,7 +174,7 @@ for i = 1:length(varargin)
                     end
                 else
                     if sum(sum(maskobj.volInfo.mat ~= stats_image_obj.volInfo.mat))
-                        error('VolInfo of mask and data are diffferent, but data lengths are same.');
+                        error('VolInfo of mask and data are different, but data lengths are same.');
                     else
                         maskdat = logical(maskobj.dat);
                     end

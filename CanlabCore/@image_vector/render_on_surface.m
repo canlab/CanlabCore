@@ -518,7 +518,7 @@ end
 [~, ~, mesh_struct] = reconstruct_image(obj);                % get volume data for slices
 
 % fixes colormap out of range bug
-% BP: sure, but it also asigns colors to empty parts of the cortex. It's
+% BP: sure, but it also assigns colors to empty parts of the cortex. It's
 % better to address the colormap out of range bug directly, which is due to
 % c_gray being initialized to a 3-vector rather than a 2D matrix. We can
 % fix that below instead of using this hacky solution here.
@@ -603,7 +603,7 @@ for i = 1:length(surface_handles)
             % this condition will occur with user error but also 
             % when you have multiple surfaces, e.g. a freesurfer 
             % surface + subcortical structures, and then this code 
-            % handles the auxillary surfaces.
+            % handles the auxiliary surfaces.
             warning('Size of surface %d does not match size of target surface. Falling back to naive mesh interpolation.',i);
             c = interp3(mesh_struct.X, mesh_struct.Y, mesh_struct.Z, mesh_struct.voldata, ...
                 surface_handles(i).Vertices(:,1), surface_handles(i).Vertices(:,2), surface_handles(i).Vertices(:,3), interp);

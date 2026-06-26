@@ -425,7 +425,7 @@ wh = strcmp(varargin, 'subcortex slices');
 if any(wh), montagetype = varargin{find(wh)}; varargin(wh) = []; end
 
 
-% if these are run before coronal/saggital arguments are parsed they will
+% if these are run before coronal/sagittal arguments are parsed they will
 % overwrite the blob/regioncenters argument, so run these last.
 wh = strcmp(varargin, 'blobcenters');
 if any(wh)
@@ -558,7 +558,7 @@ if ~exist('o2', 'var')
         case 'compact'
             % The default
             
-            % saggital
+            % sagittal
             axh1 = axes('Position', [-0.02 0.4 .17 .17]);
             [o2, dat] = montage(o2, 'saggital', 'wh_slice', [-4 0 0], 'onerow', 'noverbose', 'existing_axes', axh1);
             text(50, -50, 'left');
@@ -668,7 +668,7 @@ if ~exist('o2', 'var')
                     
                 end
                     
-                % saggital
+                % sagittal
                 axh = axes('Position', [-0.02 .75-shiftvals(i) .17 .17]);  % [-0.02 0.15+shiftvals(i) .17 .17]);
                 axh(2) = axes('Position', [.022 .854-shiftvals(i) .17 .17]);
                 
@@ -733,10 +733,10 @@ if ~exist('o2', 'var')
             end
 
         case 'full'
-            % --- Saggital ---
+            % --- Sagittal ---
             [o2, dat] = montage(o2, 'saggital', 'wh_slice', xyz, 'onerow', 'noverbose');
             shift_axes(-0.02, -0.04);
-            sag_coords = xyz(:, 1);  % x-coordinates for saggital
+            sag_coords = xyz(:, 1);  % x-coordinates for sagittal
 
             % --- Coronal ---
             sr_cor = [-40 50];
@@ -821,7 +821,7 @@ if ~exist('o2', 'var')
 
         case 'full2'
 
-            % saggital
+            % sagittal
             [o2, dat] = montage(o2, 'saggital', 'wh_slice', xyz, 'onerow', 'noverbose');
             shift_axes(-0.02, -0.04);
 
@@ -1172,7 +1172,7 @@ if ~exist('o2', 'var')
             wh_montages = [1 2 3];
             
         case 'full hcp'
-            % saggital
+            % sagittal
             [o2, dat] = montage(o2, 'saggital', 'wh_slice', xyz, 'onerow', 'noverbose');
             shift_axes(-0.02, -0.04);surface right
             
@@ -1253,7 +1253,7 @@ if ~exist('o2', 'var')
 
 
         case 'full hcp inflated'
-            % saggital
+            % sagittal
             [o2, dat] = montage(o2, 'saggital', 'wh_slice', xyz, 'onerow', 'noverbose');
             shift_axes(-0.02, -0.04);
             
@@ -1333,7 +1333,7 @@ if ~exist('o2', 'var')
 
 
         case 'full no surfaces'
-            % saggital
+            % sagittal
             [o2, dat] = montage(o2, 'saggital', 'wh_slice', xyz, 'onerow', 'noverbose');
             % shift_axes(-0.02, -0.04);
             
@@ -1405,7 +1405,7 @@ if ~exist('o2', 'var')
             wh_montages = [1 2 3 4];
 
         case 'hcp grayordinates'
-            % saggital
+            % sagittal
             f1 = gcf;
             mainLayout = tiledlayout(f1,1,5);
             surfLayout = tiledlayout(mainLayout, 2, 2, 'Parent', mainLayout, 'TileSpacing', 'compact', 'Padding', 'none');
@@ -1451,7 +1451,7 @@ if ~exist('o2', 'var')
             wh_surfaces = [1:4];
 
         case 'hcp grayordinates subcortex'
-            % saggital
+            % sagittal
             f1 = gcf;
             n_col = size(grayord_xyz,1);
             n_row = size(grayord_xyz,2);
@@ -1629,7 +1629,7 @@ if ~exist('o2', 'var')
             wh_surfaces = [1:4];
 
         case 'leftright inout subcortex'
-            % saggital
+            % sagittal
             f1 = gcf;
             mainLayout = tiledlayout(f1,1,5);
             surfLayout = tiledlayout(mainLayout, 2, 2, 'Parent', mainLayout, 'TileSpacing', 'compact', 'Padding', 'none');
@@ -1673,7 +1673,7 @@ if ~exist('o2', 'var')
 
 
         case 'subcortex full'
-            % saggital
+            % sagittal
             f1 = gcf;
             mainLayout = tiledlayout(f1,1,5);
             surfLayout = tiledlayout(mainLayout, 2, 2, 'Parent', mainLayout, 'TileSpacing', 'compact', 'Padding', 'none');
@@ -1885,7 +1885,7 @@ if ~exist('o2', 'var')
             wh_surfaces = [1:4];
 
         otherwise 
-            error('illegal montage type. choose one of the following: blobcenters, regioncenters, compact, multirow, full, full2, compact2, compact3, coronal, saggital, allslices, full hcp, full hcp inflated, full no surfaces, hcp grayordinates, hcp grayordinates subcortex, hcp inflated, hcp sphere, freesurfer inflated, freesurfer white, freesurfer sphere, MNI152NLin2009cAsym white, MNI152NLin2009cAsym midthickness, MNI152NLin2009cAsym pial, MNI152NLin6Asym white, MNI152NLin6Asym midthickness, MNI152NLin6Asym pial, MNI152NLin6Asym sphere, inout leftright, inout leftright subcortex.');
+            error('illegal montage type. choose one of the following: blobcenters, regioncenters, compact, multirow, full, full2, compact2, compact3, coronal, sagittal, allslices, full hcp, full hcp inflated, full no surfaces, hcp grayordinates, hcp grayordinates subcortex, hcp inflated, hcp sphere, freesurfer inflated, freesurfer white, freesurfer sphere, MNI152NLin2009cAsym white, MNI152NLin2009cAsym midthickness, MNI152NLin2009cAsym pial, MNI152NLin6Asym white, MNI152NLin6Asym midthickness, MNI152NLin6Asym pial, MNI152NLin6Asym sphere, inout leftright, inout leftright subcortex.');
     end
     
     % wh_montages = [1 2];
@@ -1902,7 +1902,7 @@ else % use existing o2 object to add montages
         % use same o2, but add montages
         switch montagetype
             case 'full'
-            % saggital
+            % sagittal
             [o2, dat] = montage(o2, 'saggital', 'wh_slice', xyz, 'onerow', 'noverbose');
             shift_axes(-0.02, -0.04);        
 

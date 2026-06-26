@@ -30,7 +30,7 @@ function [ind]=adjacent_test(XYZ,varargin)
 %
 % min_adj (must be scalar) is the minimum number of voxels that a voxel
 % must be adjacent to for it to be included in a cluster. Voxels adjacent
-% to less voxels than min_adj will recieve a value of 0 in ind. Setting
+% to less voxels than min_adj will receive a value of 0 in ind. Setting
 % criteria above the connectivity value associated with a given adjacency
 % criteria will result in no clusters. Default is 0.
 %
@@ -271,10 +271,10 @@ else
         l(m)=sum(ind==cls(a(m)));
     end
     if sum(l==max(l))==1
-%         warning(['Voxel at ' num2str(XYZ(1,lost(i))) ',' num2str(XYZ(2,lost(i))) ',' num2str(XYZ(3,lost(i))) ' shares an equal number of adjacent voxels with more than one seperate cluster. It is being associated with the largest of them.']);
+%         warning(['Voxel at ' num2str(XYZ(1,lost(i))) ',' num2str(XYZ(2,lost(i))) ',' num2str(XYZ(3,lost(i))) ' shares an equal number of adjacent voxels with more than one separate cluster. It is being associated with the largest of them.']);
         lind=cls(a(l==max(l)));
     else
-        warning(['Voxel shares an equal number of adjacent voxels with more than one seperate cluster of identical size. It is being randomly associated with one of them.']);
+        warning(['Voxel shares an equal number of adjacent voxels with more than one separate cluster of identical size. It is being randomly associated with one of them.']);
         r=randperm(length(a));
         lind=cls(a(r(1)));
     end

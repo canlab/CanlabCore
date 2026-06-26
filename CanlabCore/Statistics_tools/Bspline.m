@@ -5,7 +5,7 @@ function B = Bspline(t,k,u,v,ForceSup)
 %     Bspline(t,k,u[,v])
 %
 % Create B-Spline basis of order k, with knots u, evaluated at t.
-% If control verticies v are specified then then B is the spline
+% If control vertices v are specified then then B is the spline
 % function instead of the basis.
 %
 % u must be at least length(k)+1 

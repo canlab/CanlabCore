@@ -16,7 +16,7 @@ function varargout = scn_stats_helper_functions(meth, varargin)
 %           unweighted; with AR model if specified as last input
 %
 %       **'boot':**
-%           Boostrapping of GLS
+%           Bootstrapping of GLS
 %
 %       **'signperm':**
 %           Sign permutation test for intercept of GLS
@@ -369,7 +369,7 @@ else
     % get matrices for outcome vars in OLS case
     if any(equal_weights)
         
-        tmp = inv(X' * X);       % Save these for later, for speed; don't need to re-use
+        tmp = inv(X' * X);       % Save these for later, for speed; don't need to reuse
         invxvx(equal_weights) = {tmp};
         bforming(equal_weights) = {tmp * X'};
     end
@@ -382,7 +382,7 @@ else
             
             Wi{i} = diag(W(:, i));              % Wi = V^-1, inverse of cov.matrix
             
-            invxvx{i} = inv(X' * Wi{i} * X);       % Save these for later, for speed; don't need to re-use
+            invxvx{i} = inv(X' * Wi{i} * X);       % Save these for later, for speed; don't need to reuse
             bforming{i} = invxvx{i} * X' * Wi{i};
             
         end
@@ -1263,7 +1263,7 @@ stats.gls_p = stats.p;
 [final_boot_samples, alphaaccept] = get_boot_samples_needed(stats.p, whpvals_for_boot, targetu, bootsamples, verbose); % uses whpvals_for_boot, returns Be
 
 
-% set up boostrap beta-generating function
+% set up bootstrap beta-generating function
 % generic for multiple cols of Y (outcomes), multiple cols. of X
 % (predictors), weights equal or not (W)
 % much faster if X is intercept only!
@@ -1274,7 +1274,7 @@ wmean = @(Y, W, X) gls_wrapper(Y, W, X);
 
 if verbose, fprintf('Bootstrapping %3.0f samples...', final_boot_samples); end
 
-% initalize random number generator to new values; bootstrp uses this
+% initialize random number generator to new values; bootstrp uses this
 % old syntax replaced in 2020 by Tor Wager, per Matlab's recs.
 % see "Replace Discouraged Syntaxes of rand and randn" in Matlab docs
 rng('default')

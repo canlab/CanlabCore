@@ -138,7 +138,7 @@ end
 
 % Choose mode (deterministic/stochastic)
 
-mode = 0;   % 0 - deterministic aproach 
+mode = 0;   % 0 - deterministic approach 
             % 1 - simulated annealing approach
             % Please note that when using simulated annealing approach you
             % may need to perform some tuning before use.

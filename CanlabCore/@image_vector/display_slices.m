@@ -17,7 +17,7 @@ function [whsl, plate] = display_slices(dat, varargin)
 %   single-volume montage.
 % - Also easy to select slices: Enter 'startslice' and 'endslice', each followed by values, to display
 %   a range of slices. Default is entry in mm coordinate, but 'voxelspace' allows you to specify them in
-%   voxel coodinates, i.e., in slices in the actual data image.
+%   voxel coordinates, i.e., in slices in the actual data image.
 %
 % - This function is good for getting a quick view of the contents of an
 %   image, e.g., for structural images.

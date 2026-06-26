@@ -52,7 +52,7 @@ function [K, stats] = cluster_confusion_matrix(pred_label,true_label,varargin)
 %	Fields that contain performance metrics for different clustering solutions:
 %       multi_way_accuracy - overall accuracy for N-way classification
 %       accuracy_mean - vector of average accuracy for each clustering
-%       ste_mean - vectore of average standard error for each clustering
+%       ste_mean - vector of average standard error for each clustering
 %        p_vals -  cell array of p-values for all clusters for each clustering solution
 %       clustered_multi_way_accuracy - overall accuracy for each clustering solution
 %       sig - cell array indicating rejection of null hypothesis at alpha = .05 for each clustering solution
@@ -229,7 +229,7 @@ ind=max(find(stats.num_sig==stats.num_clusters )); %#ok<MXFND>
 % store optimal K in output
 stats.optimalK = 1+ind;
 end
-% create variable foor bootstrapping calls (first output of this function)
+% create variable for bootstrapping calls (first output of this function)
 K=stats.optimalK;
 
 % store multi-way accuracy for optimal clustering

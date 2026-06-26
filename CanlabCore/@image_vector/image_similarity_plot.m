@@ -186,7 +186,7 @@ function [stats, hh, hhfill, table_group, multcomp_group] = image_similarity_plo
 %             'average' and 'compareGroups' to be specified)
 %
 %   **multcomp_group**
-%             mutiple comparisons of means across groups, one output
+%             multiple comparisons of means across groups, one output
 %             cell for each spatial basis, critical value determined
 %             by Tukey-Kramer method (see multcompare)
 %
@@ -292,7 +292,7 @@ n_obs = size(obj.dat, 2); % number of images to test + plot
 % ------------------------------------------------------------------------
 
 [hh, hhfill] = deal(' ');
-doaverage = false;       % initalize optional variables to default values here.
+doaverage = false;       % initialize optional variables to default values here.
 force_noaverage = false; % averaging mode determined by plot style below, which is problematic for some
                          % functions, e.g., riverplot
 
@@ -519,7 +519,7 @@ switch sim_metric
 
         for im = 1:n_obs2
             %         a = nansum(obj.dat .^ 2) .^ .5; %PK KEEP out of mask for norm
-            %         b = nansum(mask.dat(nonemptydat,im ) .^ 2) .^ .5; %PK exlude empty data for norm
+            %         b = nansum(mask.dat(nonemptydat,im ) .^ 2) .^ .5; %PK exclude empty data for norm
             %
             %         r(im, :) = (nansum(bsxfun(@times, obj.dat, mask.dat(:,im))) ./ (a .* b))';
             %

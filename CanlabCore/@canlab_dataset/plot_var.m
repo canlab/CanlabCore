@@ -45,7 +45,7 @@ function [meandat, stedat] = plot_var(D, varname, varargin)
 %             plots across events with standard error shading
 %           - the grouping variable's description, if it exists, will
 %             be split along commas, and those values will be used as
-%             column lables
+%             column labels
 %
 %   **eventmeans:**
 %        calculate and plot subject means across event-level variables
@@ -64,7 +64,7 @@ function [meandat, stedat] = plot_var(D, varname, varargin)
 %
 %   **other:**
 %        other varargin are passed directly to barplot_columns.  So
-%        for example, '95CI' will make 95% confidence interals, instead
+%        for example, '95CI' will make 95% confidence intervals, instead
 %        of SE bars.
 %
 %

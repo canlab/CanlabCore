@@ -1,5 +1,5 @@
-function varargout = efficency(X,P)
-% function [con_eff,hrf_eff,X,hrfX,P] = efficency(X,PARAMS)
+function varargout = efficiency(X,P)
+% function [con_eff,hrf_eff,X,hrfX,P] = efficiency(X,PARAMS)
 % a useful summary function for a design, incorporating tests of contrasts and of HRF shape estimation
 %
 % X

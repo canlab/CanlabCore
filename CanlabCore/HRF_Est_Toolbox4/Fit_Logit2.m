@@ -7,11 +7,11 @@ function [hrf, fit, e, param] = Fit_Logit2(tc, TR, Run, T, mode)
 % 
 % tc    - time course
 % TR    - time resolution
-% Runs  - expermental design
+% Runs  - experimental design
 % T     - length of estimated HRF
 % mode  - deterministic or stochastic
 %   options:
-%       0 - deterministic aproach 
+%       0 - deterministic approach 
 %       1 - simulated annealing approach
 %       Please note that when using simulated annealing approach you
 %       may need to perform some tuning before use.

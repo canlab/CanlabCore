@@ -48,7 +48,7 @@ For multiple sets of coordinates, the input should be a matrix of size 3 x N, wh
 
 ---
 
-## fsaverage vertices to MNI152 coordiantes
+## fsaverage vertices to MNI152 coordinates
 
 To convert fsaverage vertex numbers (e.g. vertex number x in left hemisphere) to RAS coordinates in MNI152 space, use the Matlab script with the command:
 
@@ -62,7 +62,7 @@ For vertices in the right hemisphere, change the first argument to `'rh'`.
 
 ---
 
-Note that the conversion of MNI152 coordiantes to fsaverage vertices uses fsaverage-to-MNI152 mapping, while the reverse conversion uses MNI152-to-fsaverage mapping. Therefore the results obtained may not be consistent with those from the final projection scripts (or the standalone scripts) to project data between MNI152 space and fsaverage surface.
+Note that the conversion of MNI152 coordinates to fsaverage vertices uses fsaverage-to-MNI152 mapping, while the reverse conversion uses MNI152-to-fsaverage mapping. Therefore the results obtained may not be consistent with those from the final projection scripts (or the standalone scripts) to project data between MNI152 space and fsaverage surface.
 
   
 

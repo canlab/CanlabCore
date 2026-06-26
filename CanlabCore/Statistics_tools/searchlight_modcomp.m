@@ -98,7 +98,7 @@ r_corr = NaN(n,1);
 p_corr = NaN(n,1);
 sl_size = zeros(n,1);
 
-fprintf('\n Calculating corrleation for voxel                 ');
+fprintf('\n Calculating correlation for voxel                 ');
 xyzlist=dat1.volInfo.xyzlist(~dat1.removed_voxels,:);
 dat=dat1.dat;
 for i = 1:n %(1):vox_to_run(10)

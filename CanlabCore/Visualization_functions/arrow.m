@@ -84,7 +84,7 @@ function [h,yy,zz] = arrow(varargin)
 %    6/26/08  EAJ  Replace eval('trycmd','catchcmd') with try, trycmd; catch,
 %                    catchcmd; end; -- break's MATLAB 5 compatibility.
 %    8/26/03  EAJ  Eliminate OpenGL attempted fix since it didn't fix anyway.
-%   11/15/02  EAJ  Accomodate how MATLAB 6.5 handles NaN and logicals
+%   11/15/02  EAJ  Accommodate how MATLAB 6.5 handles NaN and logicals
 %    7/28/02  EAJ  Tried (but failed) work-around for MATLAB 6.x / OpenGL bug
 %                    if zero 'Width' or not double-ended
 %   11/10/99  EAJ  Add logical() to eliminate zero index problem in MATLAB 5.3.
@@ -116,7 +116,7 @@ function [h,yy,zz] = arrow(varargin)
 %  - change computing from Xform to Camera paradigms
 %     + this will help especially with 3-D perspective plots
 %     + if the WarpToFill section works right, remove warning code
-%     + when perpsective works properly, remove perspective warning code
+%     + when perspective works properly, remove perspective warning code
 %  - add cell property values and struct property name/values (like get/set)
 %  - get rid of NaN as the "default" data label
 %     + perhaps change userdata to a struct and don't include (or leave

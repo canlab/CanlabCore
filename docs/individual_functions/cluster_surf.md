@@ -65,7 +65,7 @@ multi-set overlap.
    A cell array is interpreted as colors. A numeric scalar is `mmdeep`.
    A string is either a surface keyword, a `*.mat` filename, or a flag
    (`'colorscale'`, `'heatmap'`, `'normalize'`, `'colormaps'`,
-   `'noverbose'`). A patch handle re-uses an existing surface (typically
+   `'noverbose'`). A patch handle reuses an existing surface (typically
    from [`addbrain`](addbrain.md)).
 
 2. **Surface load.** If a keyword is given, `cluster_surf` calls

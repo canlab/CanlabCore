@@ -304,7 +304,7 @@ function [sim_values, d, low_agreement, Nvox] = jackknife_similarity(obj, vararg
 % drawbacks. Dot product and normalized absolute agreement
 % (Bray-Curtis) are sensitive to global whole-dataset location
 % shifts and have no superior properties to other metrics. Lin's
-% Concordance Correlation performs most similiarly to cosine
+% Concordance Correlation performs most similarly to cosine
 % similarity, sensitive to random image-level location shifts and
 % pattern noise, but like correlation has the drawback of
 % insensitivity to pattern noise at the whole-dataset effect size

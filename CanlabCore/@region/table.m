@@ -46,7 +46,7 @@ function [poscl, negcl, results_table] = table(cl, varargin)
 %        max Z). Minimum will be useful for, e.g., when data is p values.
 %
 %   **noverbose**:
-%        don't diplay results
+%        don't display results
 %
 % :Outputs:
 %

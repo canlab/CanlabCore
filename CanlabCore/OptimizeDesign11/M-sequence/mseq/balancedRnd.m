@@ -32,7 +32,7 @@ if ~overlapYes,
       end;
    end;
    
-else % if overlaps are alowed
+else % if overlaps are allowed
 	nOnes=round(n*nOnes);
    for i=1:nVals, 
       ind=randSequence(n,nOnes);

@@ -3,7 +3,7 @@ function [maxFreqDev,omega,freqs] = calcFreqDev(stimList,conditions,freqConditio
 %
 %
 % conditions is integer vector of conditions of interest
-% freqConditions is vector of propotions of all conditions
+% freqConditions is vector of proportions of all conditions
 
 			nc = size(conditions,2);
 

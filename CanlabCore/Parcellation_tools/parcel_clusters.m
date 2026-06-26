@@ -16,7 +16,7 @@ function parcel_clusters(clpos_data, clneg_data)
 %
 % Because we have a many voxel x many voxel covariance matrix for each
 % subject (lots of data!), it's important to reduce the dimensionality of
-% the problem and peform clustering on a REDUCED_DIMENSIONAL space. 
+% the problem and perform clustering on a REDUCED_DIMENSIONAL space. 
 %
 % We use PCA to do this.  Instead of clustering activation profiles (e.g.,
 % time-courses) directly, we cluster eigenvector loadings for each voxel on

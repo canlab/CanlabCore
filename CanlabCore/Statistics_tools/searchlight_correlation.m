@@ -117,7 +117,7 @@ r_corr = NaN(n,1);
 p_corr = NaN(n,1);
 sl_size = zeros(n,1);
 
-fprintf('\n Calculating corrleation for voxel                 ');
+fprintf('\n Calculating correlation for voxel                 ');
 for i = 1:n %(1):vox_to_run(10)
     fprintf('\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b%07d/%07d', i, n);
     eval(['searchlight_indx = searchlight_sphere_prep(dat' num2str(idx) ...

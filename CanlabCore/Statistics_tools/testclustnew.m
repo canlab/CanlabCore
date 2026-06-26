@@ -41,7 +41,7 @@ function [bestpval,bestmyclass,bestnames,bestX,where,clustnames,stats]=testclust
 %        without these elements. This iterative recomputation means that
 %        you are pruning your solution *until* you get a good one.  The
 %        p-values which accompany each solution are thus difficult to
-%        intepret if you use this option
+%        interpret if you use this option
 %
 %   **linkagetype:**
 %        is the input to linkage ('single','average',etc) 
@@ -62,7 +62,7 @@ function [bestpval,bestmyclass,bestnames,bestX,where,clustnames,stats]=testclust
 %
 %   **bestmyclass:**
 %        is the assignment of REGIONS to CLUSTERS for the best
-%        soluton
+%        solution
 %
 %   **bestnames:**
 %        contains the names of the REGIONS included in the
@@ -111,7 +111,7 @@ num=size(X,1);  %thus is the number of elements at the start
 bestpval = 1; beststdval = -Inf;
 bestc = 0;
 
-% initalize
+% initialize
 bestnames = [];
 bestmyclass = ones(num, 1);
 
@@ -127,7 +127,7 @@ for c=clust  %loop through clusters
     [cq mcq myclass] = getmeanquality(X,c,linkagetype);   %point estimate values
     % cq: quality for each REGION
     % mcq: mean of cq
-    % myclass: cluster assigments 
+    % myclass: cluster assignments 
     % disp(['mean quality for cluster  ',num2str(c),' ......',num2str(mcq)]);    
     
     for p=1:nperm

@@ -127,7 +127,7 @@ mask = [];
 by_tissue_type = 0;
 singleaxis = false;
 
-% initalize optional variables to default values here.
+% initialize optional variables to default values here.
 
 
 % optional inputs with default values

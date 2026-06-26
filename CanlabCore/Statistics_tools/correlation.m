@@ -40,7 +40,7 @@ function [corr,t,p, fdrsig, fdrthresh] = correlation(meth,x,varargin)
 % :Examples:
 % ::
 %
-%    % Corelation between two variables, Pearson's
+%    % Correlation between two variables, Pearson's
 %    x = rand(10,1); y = rand(10,1);
 %    [corr,t,p] = correlation('r',x,y);
 %

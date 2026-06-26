@@ -7,7 +7,7 @@ function [hrf, fit, e, param, info] = Fit_Canonical_HRF(tc,TR,Run,T,p)
 % 
 % tc    - time course
 % TR    - time resolution
-% Runs  - expermental design
+% Runs  - experimental design
 % T     - length of estimated HRF
 % p     - Model type
 %

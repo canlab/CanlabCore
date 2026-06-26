@@ -91,7 +91,7 @@ figure(Finter);cla; set(gcf,'Color','w')
 
 [x,a] = dohist(v,[]);
 
-%x(a < length(v(:))/18000) = [];     % eliminate relatively empty bins for indiviudal plots
+%x(a < length(v(:))/18000) = [];     % eliminate relatively empty bins for individual plots
 %x(a < sum(a) ./ 1000) = [];
 
 title('All image data input into RFX analysis.')

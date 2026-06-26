@@ -33,7 +33,7 @@ function myribbon = riverplot_draw_ribbon(topleft, topright, bottomleft, bottomr
 % :Inputs:
 %
 %   **rect1:**
-%        Structure with handles and decription of imrect class object,
+%        Structure with handles and description of imrect class object,
 %        created with riverplot_rect.m.  This is always the LEFTMOST
 %        rect of the pair.
 %
@@ -56,7 +56,7 @@ function myribbon = riverplot_draw_ribbon(topleft, topright, bottomleft, bottomr
 %        align ribbon with bottom edges of rects 
 %
 %   **steepness**
-%        followed by value for sigmoid steepness, on [0 1] inteval
+%        followed by value for sigmoid steepness, on [0 1] interval
 %
 % :Outputs:
 %

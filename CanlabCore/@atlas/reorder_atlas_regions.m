@@ -52,7 +52,7 @@ function [obj, wh_order] = reorder_atlas_regions(obj, wh_order, varargin)
 % Programmers' notes:
 % Created by Tor Wager
 % 12/2019: Tor fixed bug in reordering; probability_maps field was not
-% preivously being considered, which resulted in wrong ordering when
+% previously being considered, which resulted in wrong ordering when
 % present. .dat is rebuilt from probability_maps if available.
 % 3/2025 Updated help and added labelgroups option
 

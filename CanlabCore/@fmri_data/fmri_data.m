@@ -60,7 +60,7 @@
 %   new_obj.volInfo = MC_Setup.volInfo;
 %   new_obj.dat = MC_Setup.unweighted_study_data(:, sym_cons);
 %
-% You can create an fmri_data object with extacted image data.
+% You can create an fmri_data object with extracted image data.
 % - Let "imgs" be a string array or cell array of image names
 % - This command creates an object with your (4-D) image data:
 % - fmri_dat = fmri_data(imgs);
@@ -453,7 +453,7 @@ classdef fmri_data < image_vector
                 end
 
                 % convert dat to single if needed
-                % this is esp relevant for converstion of atlas to fmri_data
+                % this is esp relevant for conversion of atlas to fmri_data
                 % because atlas has integer data type by default. this is
                 % to prevent a range of issues that can occur when using
                 % the fmri_data object later on and dat field is an

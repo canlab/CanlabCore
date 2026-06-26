@@ -584,7 +584,7 @@ classdef brainpathway < handle
          function [obj_subset, region_objects, region_indices] = cluster_region_subset_by_connectivity(obj, varargin)
             % [obj_subset, region_objects, region_indices] = cluster_region_subset_by_connectivity(obj, Group#, [# clusters])
             %
-            % Takes a subset of parcels idenfied based on obj.node_clusters 
+            % Takes a subset of parcels identified based on obj.node_clusters 
             % and clusters them based on profiles
             % of pairwise connectivity with other regions. Returns a new
             % object based on the target subset.

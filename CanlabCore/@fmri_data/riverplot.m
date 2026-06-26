@@ -54,7 +54,7 @@ function [layer1, layer2, ribbons, sim_matrix] = riverplot(layer1fmri_obj, varar
 % :Optional Inputs:
 %   **layer2:**
 %        A second fmri_data object.  This is layer 2 of the plot.  Plots
-%        assocations between images in layer1 object and layer2 object
+%        associations between images in layer1 object and layer2 object
 %
 %   **r:**
 %        Change similarity metric to correlation.  Default is cosine

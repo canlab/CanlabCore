@@ -208,7 +208,7 @@ else
         end
         
 %         modeljobcmd = ['matlabbatch = canlab_spm_fmri_model_job(submodeldir, DSGN.tr, DSGN.hpf, runs3d, conditions_by_run, onsets, durations, names, multipleregressors, ''pmod'', pmods ' OPTS.modeljob ', ''vol_cnts'', vol_cnts);'];
-        % Fixed a bug here that will pass in a nonexistant vol_cnts
+        % Fixed a bug here that will pass in a nonexistent vol_cnts
         % variable if DSGN.concatenation is not set: MS 12/10/2022
         if ~isempty(DSGN.concatenation)
             modeljobcmd = ['matlabbatch = canlab_spm_fmri_model_job(submodeldir, DSGN.tr, DSGN.hpf, runs3d, conditions_by_run, onsets, durations, names, multipleregressors, ''pmod'', pmods ' OPTS.modeljob ', ''vol_cnts'', vol_cnts);'];

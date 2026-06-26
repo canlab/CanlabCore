@@ -35,9 +35,9 @@ function fig_handle = montage(image_obj, varargin)
 %   Options for canlab_results_fmridisplay are passed forward, so different
 %   named montage types can be used. E.g.:
 %
-%        'full'            Axial, coronal, and saggital slices, 4 cortical surfaces
-%        'compact'         Midline saggital and two rows of axial slices [the default]
-%        'compact2'        A single row showing midline saggital and axial slices
+%        'full'            Axial, coronal, and sagittal slices, 4 cortical surfaces
+%        'compact'         Midline sagittal and two rows of axial slices [the default]
+%        'compact2'        A single row showing midline sagittal and axial slices
 %        'compact3'        One row of axial slices, midline sagg, and 4 HCP surfaces
 %        'multirow'        A series of 'compact2' displays in one figure for comparing different images/maps side by side
 %        'regioncenters'   A series of separate axes, each focused on one region

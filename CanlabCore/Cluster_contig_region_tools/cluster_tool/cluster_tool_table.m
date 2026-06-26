@@ -125,7 +125,7 @@ end
 s='cluster_table(handles.cl,get(handles.do_subcl,''Value''),any([get(handles.do_labels,''Value'') get(handles.tal_labels,''Value'')])';
 if get(handles.write,'Value')
     handles.pwd=pwd;cd(handles.fdir);
-    [FileName,PathName]=uiputfile('*.tsv','Save as tab seperated values...');
+    [FileName,PathName]=uiputfile('*.tsv','Save as tab separated values...');
     cd(handles.pwd);
     if isempty(FileName)||~ischar(FileName),beep,disp('No file found'),return,end
     handles.fdir=PathName;

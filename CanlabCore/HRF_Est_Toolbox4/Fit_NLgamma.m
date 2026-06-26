@@ -6,7 +6,7 @@ function [hrf, fit, e, param] =  Fit_NLgamma(tc, TR, Run, T )
 % 
 % tc    - time course
 % TR    - time resolution
-% Runs  - expermental design
+% Runs  - experimental design
 % T     - length of estimated HRF
 % 
 % OUTPUTS:

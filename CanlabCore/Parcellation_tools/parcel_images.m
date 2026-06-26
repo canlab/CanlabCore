@@ -215,7 +215,7 @@ parcel_labels = zeros(maskInfo.n_inmask, 1);
 % ============================================================
 % Loop through anatomical labels, and cluster data based on similarity
 % within each region.  'region' refers to an anatomical region specified a
-% priori, and 'parcel' refers to a functionally homogenous subset of voxels
+% priori, and 'parcel' refers to a functionally homogeneous subset of voxels
 % in that region.
 
 fprintf('Parcellating %3.0f anatomical regions. 000', length(all_labels));

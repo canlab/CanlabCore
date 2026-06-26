@@ -28,7 +28,7 @@ clnew = iimg_indx2clusters(newlabels, volInfo);
 cluster_orthviews(clnew, {[1 0 0]}, 'add', 'solid');
 
 %% do the replacement
-% add an offset in integer numbers so that we don't have mutliple regions
+% add an offset in integer numbers so that we don't have multiple regions
 % with the same labels
 
 offset_num = max(max(u) + 1, 200);  

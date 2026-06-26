@@ -8,7 +8,7 @@ function [taskclass,maxlike,likeratio, taskprob] = classify_choose_most_likely(p
 %
 %   **ptask:**
 %        likelihood of each task given activation, p(task | activation)
-%        classses x variables (features, brain voxels)
+%        classes x variables (features, brain voxels)
 %
 %   **testvec:**
 %        activation values across features variables x 1

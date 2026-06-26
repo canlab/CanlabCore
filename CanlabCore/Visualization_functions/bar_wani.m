@@ -355,7 +355,7 @@ function handles = barweb(barvalues, errors, width, groupnames, bw_title, bw_xla
 % groupnames is an m-length cellstr vector of groupnames (i.e. groupnames = {'group 1'; 'group 2'}).  For no groupnames, enter [] or {}
 % The errors matrix is of the same form of the barvalues matrix, namely m group of n errors.
 % Gridstatus is either 'x','xy', 'y', or 'none' for no grid.
-% No legend will be shown if the legend paramter is not provided
+% No legend will be shown if the legend parameter is not provided
 % 'error_sides = 2' plots +/- std while 'error_sides = 1' plots just + std
 % legend_type = 'axis' produces the legend along the x-axis while legend_type = 'plot' produces the standard legend.  See figure for more details
 %
@@ -491,7 +491,7 @@ else
 		handles.legend = [];
 	end
 	
-	% Plot erros
+	% Plot errors
     % 	for i = 1:numbars
     % 		x =get(get(handles.bars(i),'children'), 'xdata');
     % 		x = mean(x([1 3],:));

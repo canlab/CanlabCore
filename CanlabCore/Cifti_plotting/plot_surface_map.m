@@ -1,6 +1,13 @@
 function h = plot_surface_map(dat,varargin)
 
 % This is a method to plot cifti (grayordinate) data on cortical surfaces
+%
+% NOTE (2026): This function depends on external tools (ft_read_cifti from
+% FieldTrip, and the gifti toolbox). For new code, prefer the self-contained
+% fmri_surface_data object, which reads CIFTI/GIFTI natively and renders with
+% surface(): s = fmri_surface_data('data.dscalar.nii'); surface(s);
+% See docs/fmri_surface_data_methods.md.
+%
 % (e.g., from the HCP project). Read data with fieldtrip into matlab and
 % call this function. Right now, only dense scalar files (*.dscalar.nii)
 % with one map per file are supported.

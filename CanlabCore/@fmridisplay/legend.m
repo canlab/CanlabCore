@@ -181,7 +181,15 @@ for c = 1:length(obj.activation_maps)
     
     % separate plot for split colormap
     issplitmap = size(currentmap.mincolor, 1) - 1; % zero for one row, 1 for 2+
-    
+
+    % Guard against inconsistent colour fields (e.g. a stale 2-row split mincolor
+    % left after switching to a single colormap): a split legend needs 4 colormap
+    % anchors (cmaprange). If they aren't present, treat it as a single map rather
+    % than indexing past the end of scaleanchors.
+    if issplitmap && numel(scaleanchors) < 4
+        issplitmap = 0;
+    end
+
     if issplitmap
         
 %         legvals = linspace(scaleanchors(1), scaleanchors(4), nsteps);

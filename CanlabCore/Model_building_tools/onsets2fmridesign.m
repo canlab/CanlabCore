@@ -533,12 +533,14 @@ delta = cf2;
 if ~isempty(varargin)
     for i = 1:length(ons)
         
-        try
-            % 2019 internal matlab function
-            delta{i} = padarray(delta{i}, ceil(len./res./TR - length(delta{i})));
-        catch
-            % This is in CanlabCore/Misc_utilities
-            delta{i} = pad(delta{i}, ceil(len./res./TR - length(delta{i})));
+        % Zero-pad the TR-resolution onset indicator to the run length.
+        % (Was: padarray, falling back to CanlabCore's pad.m. pad.m was
+        % renamed to canlab_pad.m and 'pad' now resolves to MATLAB's builtin
+        % string pad -- which errors on numeric input in R2024b+ -- so append
+        % zeros explicitly, matching canlab_pad's one-sided behavior.)
+        npad = ceil(len ./ res ./ TR - length(delta{i}));
+        if npad > 0
+            delta{i} = [delta{i}; zeros(npad, 1)];
         end
         
     end

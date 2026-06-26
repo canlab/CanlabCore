@@ -35,6 +35,24 @@ const OPACITY_ID = "canlab-niivue-opacity";
  */
 const COLORMAP_TYPE_TRANSPARENT_BELOW_MIN = 1;
 
+/**
+ * Fixed high-contrast color for the highlighted atlas region (RGB, 0-255).
+ * Because only ONE region is ever shown at a time, the whole label LUT is
+ * painted this single color rather than a per-region hue, so the highlight
+ * reads consistently against grayscale anatomy and hot/cool stat overlays.
+ * Bright magenta sits outside both the inferno (warm) and winter (cool) ramps.
+ */
+const ATLAS_HIGHLIGHT_RGB = [255, 0, 230];
+
+/**
+ * Atlas outline thickness, in voxels. NiiVue's label shader marks a voxel as a
+ * boundary if a neighbor at +/- this many voxels has a different label, so a
+ * larger value yields a thicker outline band. Driven into nv.opts.atlasOutlineWidth
+ * (a small CANlab patch in the vendored niivue.js reads it; if that patch is ever
+ * lost on a niivue re-download, the outline simply falls back to ~1 voxel).
+ */
+const ATLAS_OUTLINE_WIDTH = 3;
+
 /** Curated overlay colormaps offered in the dropdown (all exist in NiiVue 0.57). */
 const OVERLAY_COLORMAPS = [
     "warm", "hot", "redyellow", "inferno", "plasma", "viridis",
@@ -229,6 +247,112 @@ function buildOpacityPanel(nv, info) {
 }
 
 /**
+ * Build the "Atlas region" control: a dropdown (Outline / Shaded / Off) plus a
+ * controller that highlights ONLY the region under the crosshair. The atlas
+ * label volume stays loaded; we show a single region at a time by zeroing every
+ * label's alpha in the colormapLabel LUT except the current code, then
+ * re-uploading via updateGLVolume(). The LUT mutation is O(nLabels) and the GPU
+ * refresh runs only when the crosshair crosses into a different region.
+ *
+ * @param {Niivue} nv - the NiiVue instance
+ * @param {number} atlasIndex - volume index of the atlas label layer
+ * @returns {{onCode:(code:number)=>void}|null} controller, or null if unavailable
+ */
+function buildAtlasControls(nv, atlasIndex) {
+    const bar = document.getElementById(CONTROLS_ID);
+    const av = nv.volumes && nv.volumes[atlasIndex];
+    if (!bar || !av || !av.colormapLabel) return null;
+
+    const lut = av.colormapLabel.lut;            // Uint8ClampedArray, RGBA per dense label
+    const lmin = av.colormapLabel.min;
+    const lmax = av.colormapLabel.max;
+    const nLabel = lmax - lmin + 1;
+
+    // Per-mode look. In NiiVue's label shader the region FILL is drawn at
+    // (labelAlpha * opacity), while boundary voxels are drawn at
+    // (labelAlpha * atlasOutline), overriding opacity. So an outline-only look
+    // needs opacity 0 (no fill) + a high atlasOutline (bright border); a shaded
+    // look needs a translucent opacity + atlasOutline 0 (no border emphasis).
+    const MODES = {
+        outline: { outline: 1.0, opacity: 0.0 },
+        shaded:  { outline: 0.0, opacity: 0.5 },
+        off:     { outline: 0.0, opacity: 0.0 }
+    };
+    let mode = "outline";   // default: ON, show the current region's outline
+    let curCode = -1;
+
+    // Set LUT alpha so only the current region (curCode) is visible.
+    const maskLutToCurrent = () => {
+        for (let i = 0; i < nLabel; i++) lut[i * 4 + 3] = 0;
+        if (curCode >= 1 && curCode >= lmin && curCode <= lmax) {
+            lut[(curCode - lmin) * 4 + 3] = 255;
+        }
+    };
+
+    const apply = () => {
+        const m = MODES[mode] || MODES.off;
+        maskLutToCurrent();
+        nv.setAtlasOutline(m.outline);          // global, but only the label volume responds
+        nv.setOpacity(atlasIndex, mode === "off" ? 0 : m.opacity);
+        nv.updateGLVolume();
+    };
+
+    // --- Dropdown in the controls bar, right of the "Load overlay" button --
+    const wrap = document.createElement("label");
+    wrap.className = "canlab-niivue-select";
+    wrap.textContent = "Atlas region";
+
+    const sel = document.createElement("select");
+    for (const [value, text] of [["outline", "Outline"], ["shaded", "Shaded"], ["off", "Off"]]) {
+        const o = document.createElement("option");
+        o.value = value;
+        o.textContent = text;
+        if (value === mode) o.selected = true;
+        sel.appendChild(o);
+    }
+    sel.addEventListener("change", () => {
+        mode = sel.value;
+        apply();
+    });
+    wrap.appendChild(sel);
+    bar.appendChild(wrap);
+
+    apply();   // establish initial mode (nothing highlighted until a code arrives)
+
+    return {
+        onCode(code) {
+            if (code === curCode || mode === "off") {
+                curCode = code;
+                return;
+            }
+            curCode = code;
+            apply();
+        }
+    };
+}
+
+/**
+ * Build a NiiVue label colormap (for setColormapLabel) from a region-name list.
+ * labels[k] is the name for integer code k+1 (atlas codes are 1..N; code 0 is
+ * background, rendered transparent). Every region is painted the single fixed
+ * high-contrast highlight color (ATLAS_HIGHLIGHT_RGB) — only one region is shown
+ * at a time, so a per-region hue would add no information and reads less clearly.
+ *
+ * @param {string[]} labels - region names, index = (code - 1)
+ * @returns {{R:number[],G:number[],B:number[],A:number[],I:number[],labels:string[]}}
+ */
+function buildAtlasLabelColormap(labels) {
+    const n = Array.isArray(labels) ? labels.length : 0;
+    const [hr, hg, hb] = ATLAS_HIGHLIGHT_RGB;
+    const R = [0], G = [0], B = [0], A = [0], I = [0], L = [""];
+    for (let c = 1; c <= n; c++) {
+        R.push(hr); G.push(hg); B.push(hb); A.push(255); I.push(c);
+        L.push(String(labels[c - 1] || ""));
+    }
+    return { R, G, B, A, I, labels: L };
+}
+
+/**
  * The current overlay volume is always the last-loaded volume (underlay is index 0).
  * Resolving it dynamically keeps the colormap dropdown correct after a file swap.
  * @param {Niivue} nv
@@ -342,9 +466,16 @@ function fmtValue(v) {
  *
  * @param {Niivue} nv - the NiiVue instance
  * @param {boolean} hasOverlay - whether an overlay volume was loaded
+ * @param {{index:number,labels:string[]}} [atlasInfo]
+ *        Atlas layer index and label key (labels[k] names integer code k+1).
+ *        When present and the crosshair sits on a labeled voxel, the region
+ *        name is appended to the readout.
+ * @param {{onCode:(code:number)=>void}} [atlasCtl]
+ *        Optional atlas-region controller; notified of the integer code under
+ *        the crosshair so it can highlight that single region.
  * @returns {void}
  */
-function wireReadout(nv, hasOverlay) {
+function wireReadout(nv, hasOverlay, atlasInfo, atlasCtl) {
     const out = document.getElementById(READOUT_ID);
     if (!out) return;
 
@@ -369,7 +500,24 @@ function wireReadout(nv, hasOverlay) {
             if (pick && typeof pick.value === "number") value = pick.value;
         }
 
-        out.textContent = `MNI [${x} ${y} ${z}] mm   value: ${fmtValue(value)}`;
+        let text = `MNI [${x} ${y} ${z}] mm   value: ${fmtValue(value)}`;
+
+        // Region name from the atlas layer (its raw value is the integer code;
+        // .value stays numeric even though the layer carries a label colormap).
+        if (atlasInfo && atlasInfo.index >= 0 && vals.length > atlasInfo.index) {
+            const av = vals[atlasInfo.index];
+            const labels = atlasInfo.labels || [];
+            if (av && typeof av.value === "number") {
+                const code = Math.round(av.value);
+                if (code >= 1 && code <= labels.length && labels[code - 1]) {
+                    text += `   region: ${labels[code - 1]}`;
+                }
+                // Highlight only this region (no-op if the code is unchanged).
+                if (atlasCtl) atlasCtl.onCode(code);
+            }
+        }
+
+        out.textContent = text;
     };
 }
 
@@ -385,6 +533,13 @@ function wireReadout(nv, hasOverlay) {
  *        the overlay (if any) is shown alone.
  * @param {(string|{base64:string,name?:string})} [config.overlay]
  *        Statistical/mask overlay: URL string or {base64,name} payload.
+ * @param {(string|{base64:string,name?:string})} [config.atlas]
+ *        Integer label (atlas) volume: URL string or {base64,name} payload.
+ *        Loaded as a hidden NIFTI_INTENT_LABEL layer that drives the crosshair
+ *        region-name readout and the "Atlas regions" Off/Filled/Outline toggle.
+ * @param {string[]} [config.atlasLabels]
+ *        Region names for the atlas; atlasLabels[k] names integer code k+1.
+ * @param {string} [config.atlasName]            Atlas name (informational).
  * @param {string} [config.colormap="inferno"]   Overlay positive colormap.
  * @param {string} [config.colormapNegative="winter"] Overlay negative colormap.
  * @param {number} [config.cal_min]              Overlay lower threshold.
@@ -454,6 +609,40 @@ export async function canlabNiivue(target, config) {
         await loadImage(nv, cfg.underlay, { colormap: "gray" }, "underlay.nii.gz");
     }
 
+    // --- Atlas label volume (hidden; drives the region readout + show toggle) ---
+    // Loaded BEFORE the overlay so the overlay stays the LAST volume — every
+    // "last == overlay" assumption below (colormap dropdown, threshold slider,
+    // load-overlay swap) keeps holding. The atlas starts hidden (opacity 0) but
+    // NiiVue still samples its integer label value at the crosshair.
+    const hasAtlas = !!cfg.atlas;
+    let atlasIndex = -1;
+    if (hasAtlas) {
+        try {
+            await loadImage(nv, cfg.atlas, { opacity: 0, colorbarVisible: false }, "atlas.nii.gz");
+            atlasIndex = nv.volumes.length - 1;
+            const av = nv.volumes[atlasIndex];
+            if (av) {
+                // Mark as a label map: NiiVue's integer-label shader, per-region
+                // colormapLabel coloring, and the atlasOutline toggle all key off
+                // NIFTI_INTENT_LABEL (intent_code 1002).
+                if (av.hdr) av.hdr.intent_code = 1002;
+                av.colorbarVisible = false;
+                av.setColormapLabel(buildAtlasLabelColormap(cfg.atlasLabels || []));
+                // Thicker outline band (read by the CANlab patch in niivue.js;
+                // ignored -> ~1-voxel outline if that patch is ever lost).
+                nv.opts.atlasOutlineWidth = ATLAS_OUTLINE_WIDTH;
+                nv.setOpacity(atlasIndex, 0);
+                nv.updateGLVolume();
+            }
+        } catch (e) {
+            // A failed atlas layer must not break the viewer; the readout simply
+            // omits the region name and the toggle button is not built.
+            // eslint-disable-next-line no-console
+            console.error("canlab_niivue: failed to set up atlas layer", e);
+            atlasIndex = -1;
+        }
+    }
+
     let overlayIndex = -1;
     let overlayCalMin = NaN;
     let overlayCalMax = NaN;
@@ -498,7 +687,31 @@ export async function canlabNiivue(target, config) {
             calMin: overlayCalMin, calMax: overlayCalMax
         });
     }
-    if (showReadout) wireReadout(nv, hasOverlay);
+
+    // Atlas-region control (dropdown + single-region highlighter), built after
+    // the slider panel so it appears alongside the sliders.
+    let atlasCtl = null;
+    if (atlasIndex >= 0) {
+        atlasCtl = buildAtlasControls(nv, atlasIndex);
+    }
+
+    if (showReadout) {
+        wireReadout(nv, hasOverlay, { index: atlasIndex, labels: cfg.atlasLabels || [] }, atlasCtl);
+    }
+
+    // Seed the highlight from the initial crosshair position (NiiVue may not
+    // fire onLocationChange until the first interaction).
+    if (atlasCtl && atlasIndex >= 0) {
+        try {
+            const av = nv.volumes[atlasIndex];
+            const mm = nv.frac2mm(nv.scene.crosshairPos);
+            const vox = av.mm2vox(mm);
+            const code = Math.round(av.getValue(vox[0], vox[1], vox[2]));
+            atlasCtl.onCode(code);
+        } catch (e) {
+            // Non-fatal: the first crosshair move will highlight the region.
+        }
+    }
 
     return nv;
 }

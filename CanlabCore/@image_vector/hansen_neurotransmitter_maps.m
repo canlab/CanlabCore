@@ -41,6 +41,10 @@ function [stats, ntmaps, hh, hhfill, table_group, multcomp_group] = hansen_neuro
 %        Indicates group membership for each image as vector, categorical,
 %        or string array
 %
+%    **mask**
+%       Followed by mask on path, default canlab gray matter mask
+%       Mask will be applied to both fmri_data_obj and hansen maps
+%
 % :Outputs:
 %
 %   **stats:**
@@ -128,6 +132,8 @@ function [stats, ntmaps, hh, hhfill, table_group, multcomp_group] = hansen_neuro
 %    this function, and debugged plotting for multiple groups in
 %    image_similarity_plot
 %
+%    Lukas: Added mask option
+%
 % ..
 
 % -------------------------------------------------------------------------
@@ -137,8 +143,9 @@ function [stats, ntmaps, hh, hhfill, table_group, multcomp_group] = hansen_neuro
 colors = [1 0 0];
 dofigure = true;
 doplot = true;
-similarity_metric = 'corr';
+similarity_metric = 'correlation';
 dofixrange = [];
+mask = which('gray_matter_mask.nii');
 
 doAverage=0;
 % -------------------------------------------------------------------------
@@ -150,7 +157,7 @@ doAverage=0;
 
 allowable_inputs = {'colors' 'doplot' 'similarity_metric' 'dofixrange'};
 
-keyword_inputs = {'noplot' 'nofigure' 'cosine_similarity' 'doAverage' 'compareGroups'};
+keyword_inputs = {'noplot' 'nofigure' 'cosine_similarity' 'doAverage' 'compareGroups', 'mask'};
 
 % optional inputs with default values - each keyword entered will create a variable of the same name
 
@@ -190,10 +197,21 @@ for i = 1:length(varargin)
             case 'compareGroups'
                 compareGroups = true;
                 group = varargin{i+1};
+                
+            case 'mask'
+                mask = varargin{i+1};
 
         end
     end
 end
+
+% -------------------------------------------------------------------------
+% INTIALIZE OUTPUT
+% -------------------------------------------------------------------------
+stats = struct();
+[hh, hhfill] = deal(' ');
+table_group = {};
+multcomp_group = {}; 
 
 % -------------------------------------------------------------------------
 % MAIN FUNCTION
@@ -204,69 +222,144 @@ ntmaps = load_image_set('hansen22');
 ntmaps = reorder_and_add_metadata(ntmaps);
 
 % These are already gray-matter masked in repo, but make sure:
-ntmaps = apply_mask(ntmaps, which('gray_matter_mask.nii'));
+ntmaps = apply_mask(ntmaps, mask);
 
 % This may not be masked...so mask with gray matter:
-fmri_data_obj = apply_mask(fmri_data_obj, which('gray_matter_mask.nii'));
+fmri_data_obj = apply_mask(fmri_data_obj, mask);
 
-if dofigure
-    create_figure('Neurotransmitter polar plot')
+% handle tags for figure(s)
+if dofigure   
+    tagname = ['Neurotransmitter polar plot ' similarity_metric];
+    old = findobj('Tag', tagname);
+    old = old( strcmp( get(old, 'Type'), 'figure' ) );
+
+    if ~isempty(old) % Found existing figure window with this tag
+        create_figure([tagname ' ' num2str(length(old)+1)])
+    else
+        create_figure(tagname)
+    end
 end
 
 if doplot
     if ~iscell(colors), colors = {colors}; end
-
-    if doAverage==1
-        if isempty(dofixrange)
-            
-            if exist('compareGroups','var') % added by Lukas: if we want to analyze & plot multiple groups 
-                
-                groupValues = unique(group, 'stable');
-                if size(colors,1) ~= size(groupValues,1)
-                    colors = scn_standard_colors(length(groupValues))';
-                end
-                
-                [stats, hh, hhfill, table_group, multcomp_group] = image_similarity_plot(fmri_data_obj, 'mapset', ntmaps, similarity_metric, 'plotstyle', 'polar', 'networknames', ntmaps.metadata_table.target, 'colors', colors, 'nofigure', 'average','compareGroups', group);
-           
-            else
-                
-                [stats, hh, hhfill, table_group, multcomp_group] = image_similarity_plot(fmri_data_obj, 'mapset', ntmaps, similarity_metric, 'plotstyle', 'polar', 'networknames', ntmaps.metadata_table.target, 'colors', colors, 'nofigure', 'average','Error_STD');
-            end
-            
-        else
-            
-            if exist('compareGroups','var') % % added by Lukas: if we want to analyze & plot multiple groups 
-                
-                groupValues = unique(group, 'stable');
-                if size(colors,1) ~= size(groupValues,1)
-                    colors = scn_standard_colors(length(groupValues))';
-                end
-                
-                [stats, hh, hhfill, table_group, multcomp_group] = image_similarity_plot(fmri_data_obj, 'mapset', ntmaps, similarity_metric, 'plotstyle', 'polar', 'networknames', ntmaps.metadata_table.target, 'colors', colors, 'nofigure', 'dofixrange', dofixrange, 'average', 'compareGroups', group);
-
-            else
-                
-                [stats, hh, hhfill, table_group, multcomp_group] = image_similarity_plot(fmri_data_obj, 'mapset', ntmaps, similarity_metric, 'plotstyle', 'polar', 'networknames', ntmaps.metadata_table.target, 'colors', colors, 'nofigure', 'dofixrange', dofixrange,'average','Error_STD');
-            end
-            
-        end
+    
+    switch similarity_metric
         
-    else
-        if isempty(dofixrange)
+        case 'cosine_similarity'
+
+            if doAverage==1
+                if isempty(dofixrange)
+
+                    if exist('compareGroups','var') % added by Lukas: if we want to analyze & plot multiple groups 
+
+                        groupValues = unique(group, 'stable');
+                        if size(colors,1) ~= size(groupValues,1)
+                            colors = scn_standard_colors(length(groupValues))';
+                        end
+
+                        [stats, hh, hhfill, table_group, multcomp_group] = image_similarity_plot(fmri_data_obj, 'mapset', ntmaps, similarity_metric, 'plotstyle', 'polar', 'networknames', ntmaps.metadata_table.target, 'colors', colors, 'nofigure', 'average','compareGroups', group);
+
+                    else
+
+                        [stats, hh, hhfill] = image_similarity_plot(fmri_data_obj, 'mapset', ntmaps, similarity_metric, 'plotstyle', 'polar', 'networknames', ntmaps.metadata_table.target, 'colors', colors, 'nofigure', 'average','Error_STD');
+                    end
+
+                else
+
+                    if exist('compareGroups','var') % % added by Lukas: if we want to analyze & plot multiple groups 
+
+                        groupValues = unique(group, 'stable');
+                        if size(colors,1) ~= size(groupValues,1)
+                            colors = scn_standard_colors(length(groupValues))';
+                        end
+
+                        [stats, hh, hhfill, table_group, multcomp_group] = image_similarity_plot(fmri_data_obj, 'mapset', ntmaps, similarity_metric, 'plotstyle', 'polar', 'networknames', ntmaps.metadata_table.target, 'colors', colors, 'nofigure', 'dofixrange', dofixrange, 'average', 'compareGroups', group);
+
+                    else
+
+                        [stats, hh, hhfill] = image_similarity_plot(fmri_data_obj, 'mapset', ntmaps, similarity_metric, 'plotstyle', 'polar', 'networknames', ntmaps.metadata_table.target, 'colors', colors, 'nofigure', 'dofixrange', dofixrange,'average','Error_STD');
+                    end
+
+                end
+
+            else
+                if isempty(dofixrange)
+
+                    [stats, hh, hhfill] = image_similarity_plot(fmri_data_obj, 'mapset', ntmaps, similarity_metric, 'plotstyle', 'polar', 'networknames', ntmaps.metadata_table.target, 'colors', colors, 'nofigure');
+
+                else % we have fixed range
+
+                    [stats, hh, hhfill] = image_similarity_plot(fmri_data_obj, 'mapset', ntmaps, similarity_metric, 'plotstyle', 'polar', 'networknames', ntmaps.metadata_table.target, 'colors', colors, 'nofigure', 'dofixrange', dofixrange);
+
+                end
+            end
     
-            [stats, hh, hhfill, table_group, multcomp_group] = image_similarity_plot(fmri_data_obj, 'mapset', ntmaps, similarity_metric, 'plotstyle', 'polar', 'networknames', ntmaps.metadata_table.target, 'colors', colors, 'nofigure');
-    
-        else % we have fixed range
-    
-            [stats, hh, hhfill, table_group, multcomp_group] = image_similarity_plot(fmri_data_obj, 'mapset', ntmaps, similarity_metric, 'plotstyle', 'polar', 'networknames', ntmaps.metadata_table.target, 'colors', colors, 'nofigure', 'dofixrange', dofixrange);
-    
-        end
-    end
+        case 'correlation'
+            
+            if doAverage==1
+                if isempty(dofixrange)
+
+                    if exist('compareGroups','var') % added by Lukas: if we want to analyze & plot multiple groups 
+
+                        groupValues = unique(group, 'stable');
+                        if size(colors,1) ~= size(groupValues,1)
+                            colors = scn_standard_colors(length(groupValues))';
+                        end
+
+                        [stats, hh, hhfill, table_group, multcomp_group] = image_similarity_plot(fmri_data_obj, 'mapset', ntmaps, 'plotstyle', 'polar', 'networknames', ntmaps.metadata_table.target, 'colors', colors, 'nofigure', 'average','compareGroups', group);
+
+                    else
+
+                        [stats, hh, hhfill] = image_similarity_plot(fmri_data_obj, 'mapset', ntmaps, 'plotstyle', 'polar', 'networknames', ntmaps.metadata_table.target, 'colors', colors, 'nofigure', 'average','Error_STD');
+                    end
+
+                else
+
+                    if exist('compareGroups','var') % % added by Lukas: if we want to analyze & plot multiple groups 
+
+                        groupValues = unique(group, 'stable');
+                        if size(colors,1) ~= size(groupValues,1)
+                            colors = scn_standard_colors(length(groupValues))';
+                        end
+
+                        [stats, hh, hhfill, table_group, multcomp_group] = image_similarity_plot(fmri_data_obj, 'mapset', ntmaps, 'plotstyle', 'polar', 'networknames', ntmaps.metadata_table.target, 'colors', colors, 'nofigure', 'dofixrange', dofixrange, 'average', 'compareGroups', group);
+
+                    else
+
+                        [stats, hh, hhfill] = image_similarity_plot(fmri_data_obj, 'mapset', ntmaps, 'plotstyle', 'polar', 'networknames', ntmaps.metadata_table.target, 'colors', colors, 'nofigure', 'dofixrange', dofixrange,'average','Error_STD');
+                    end
+
+                end
+
+            else
+                if isempty(dofixrange)
+
+                    [stats, hh, hhfill] = image_similarity_plot(fmri_data_obj, 'mapset', ntmaps, 'plotstyle', 'polar', 'networknames', ntmaps.metadata_table.target, 'colors', colors, 'nofigure');
+
+                else % we have fixed range
+
+                    [stats, hh, hhfill] = image_similarity_plot(fmri_data_obj, 'mapset', ntmaps, 'plotstyle', 'polar', 'networknames', ntmaps.metadata_table.target, 'colors', colors, 'nofigure', 'dofixrange', dofixrange);
+
+                end
+            end
+            
+    end % switch similarity metric
 
 else
-    [stats, hh, hhfill, table_group, multcomp_group] = image_similarity_plot(fmri_data_obj, 'mapset', ntmaps, similarity_metric, 'noplot');
+    
+    switch similarity_metric
+        
+        case 'cosine_similarity'
+   
+            [stats, hh, hhfill] = image_similarity_plot(fmri_data_obj, 'mapset', ntmaps, similarity_metric, 'noplot');
+            
+        case 'correlation'
+    
+            [stats, hh, hhfill] = image_similarity_plot(fmri_data_obj, 'mapset', ntmaps, 'noplot');
+            
+    end % switch similarity metric     
 
-end
+end % if doplot
 
 end % main function
 

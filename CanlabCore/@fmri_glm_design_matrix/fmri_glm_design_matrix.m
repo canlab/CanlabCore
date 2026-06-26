@@ -24,7 +24,9 @@
 %
 % my_model = fmri_glm_design_matrix(2);
 % creates an empty fmri_glm_design_matrix object with a TR of 2 (which is used to
-% create a default b-spline basis set for the HRF.
+% create a default basis set: the canonical SPM HRF, one basis function per
+% condition). To use a multi-basis set (b-splines, HRF + derivatives, ...),
+% pass a custom xBF or call replace_basis_set after construction.
 %
 % my_model = fmri_glm_design_matrix(2, 'nscan', [198 198 198]);
 % creates an empty structure but assigns data to the field nscans, number
@@ -167,11 +169,22 @@ classdef fmri_glm_design_matrix
             obj.Sess = [];  % : [1xs struct] - Session structure array
             obj.xX = [];
             
-            % Default basis set
+            % Default basis set: the canonical SPM HRF (a single basis
+            % function per condition), so each condition becomes one
+            % HRF-convolved regressor. This matches SPM's default and is the
+            % most common choice. To use a multi-basis set (e.g. b-splines or
+            % HRF + derivatives) instead, pass a custom xBF (e.g. from
+            % fmri_spline_basis or spm_get_bf) or call replace_basis_set after
+            % construction.
             %    ----------------------------------------------------------------------
             obj.xY.RT = obj.TR; % : - repetition time {seconds)
-            
-            obj.xBF = fmri_spline_basis(obj.TR, 0);
+
+            % Sample the basis set at high resolution (16 samples/second,
+            % TR-independent). get_session_X builds a 16 Hz onset/epoch delta,
+            % convolves with this basis, and downsamples to TR -- the standard
+            % microtime pipeline, robust to fractional TRs.
+            obj.xBF = struct('dt', 1/16, 'name', 'hrf', 'length', 32, 'order', 1);
+            obj.xBF = spm_get_bf(obj.xBF);   % adds obj.xBF.bf (canonical HRF, single column)
             % obj.xBF.name: - name of basis set
             % obj.xBF.length: - support of basis set {seconds}
             % obj.xBF.order: - order of basis set

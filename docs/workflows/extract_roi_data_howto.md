@@ -80,6 +80,10 @@ Convert it to a `region` and montage it:
 
 ```matlab
 montage(atlas2region(roi), 'regioncenters', 'colormap');   % the bilateral amygdala
+
+% Or inspect it interactively:
+canlab_orthviews(roi);   % MATLAB 3-plane viewer; names the atlas region at the crosshair
+canlab_niivue(roi);      % portable web viewer (NiiVue)
 ```
 
 ![Bilateral amygdala ROI on the brain](extract_roi_howto_A_roi_montage.png)

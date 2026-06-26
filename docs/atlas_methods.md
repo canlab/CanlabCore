@@ -85,6 +85,8 @@ parcellation.
 | [`montage`](individual_functions/fmri_data_montage.md) | `@atlas` | Display atlas regions on a standard slice montage (forwards to `region/montage`) |
 | `isosurface` | `@atlas` | Render each atlas region as a colored 3-D isosurface |
 
+**Interactive viewers (stand-alone functions, not class methods):** an `atlas` object can be displayed in — and serves as the region-label source for — both interactive viewers. `canlab_orthviews(atl)` opens an enhanced SPM-style three-plane viewer in MATLAB that names the region under the crosshair (attach to any display with `canlab_orthviews('AddAtlasLabel', atl)`); [`canlab_niivue(atl)`](canlab_niivue_guide.md) writes a portable **web** viewer (NiiVue) with the same crosshair region readout and a single-region outline/shade highlight.
+
 ## Statistics
 
 | Method | From | One-liner |

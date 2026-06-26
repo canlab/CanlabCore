@@ -26,4 +26,6 @@ ignore-regex = https?://\S+|^%   data: \{"dataType":"image".*
 #   atleast, whch, whn, includ -- variable names (renaming would break code; "atleast" -> "at least" would be a syntax error)
 #   efficency -- legacy function file name OptimizeDesign11/core_functions/efficency.m (sibling efficiency.m is the newer version; both retained)
 #   ony, nam, tha, thre, firt, jus -- ambiguous variable/string fragments in context
-ignore-words-list = ons,ans,fpr,ttests,myu,whos,ser,htmp,fwe,dout,ttest,indx,alph,te,ist,selt,multy,shft,delt,dum,datin,fixin,runn,nneeded,figurestyle,cxan,losin,commun,pres,ues,assignin,evalin,inout,ment,sepulcre,shepard,shure,claus,lew,nd,ore,fo,atmost,sessons,lightening,prctiles,atleast,whch,whn,includ,efficency,ony,nam,tha,thre,firt,jus
+#   hask -- local "has key" anonymous-function helper (`hask = @(k) any(strcmp(args,k))`)
+#           in canlab_colormap.m and @fmridisplay/render_layer_surfaces.m
+ignore-words-list = ons,ans,fpr,ttests,myu,whos,ser,htmp,fwe,dout,ttest,indx,alph,te,ist,selt,multy,shft,delt,dum,datin,fixin,runn,nneeded,figurestyle,cxan,losin,commun,pres,ues,assignin,evalin,inout,ment,sepulcre,shepard,shure,claus,lew,nd,ore,fo,atmost,sessons,lightening,prctiles,atleast,whch,whn,includ,efficency,ony,nam,tha,thre,firt,jus,hask

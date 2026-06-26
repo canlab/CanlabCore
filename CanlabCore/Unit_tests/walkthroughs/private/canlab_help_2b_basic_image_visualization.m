@@ -92,7 +92,7 @@ drawnow, snapnow
 % slices, so as to show the "whole picture" and not omit any results.
 %
 % You can customize this a lot, as it uses the fmridisplay() object class,
-% which allows you to add custom montages (in axial, saggital, and coronal 
+% which allows you to add custom montages (in axial, sagittal, and coronal 
 % orientations, add blobs of various types, and remove them and re-plot.
 % See |help fmridisplay| and |help fmridisplay.addblobs| for more details.
 %

@@ -17,7 +17,7 @@
 % (4-8) trials of heat delivered at a single stimulus intensity, ranging
 % from 44.3 - 49.3 degrees C in one-degree increments. Each image is also
 % paired with an average reported pain value for that set of trials, rated
-% immmediately after heat experience. 
+% immediately after heat experience. 
 %
 % This dataset is interesting for mixed-effects and predictive analyses, as
 % it has both within-person and between-person sources of variance.  

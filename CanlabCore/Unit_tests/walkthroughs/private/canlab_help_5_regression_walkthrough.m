@@ -367,7 +367,7 @@ image_obj_untouched.X = scale(success, 1);
 % Do a standard OLS regression and view the results:
 out = regress(image_obj_untouched, 'nodisplay');        
 
-% Treshold at q < .05 FDR and display
+% Threshold at q < .05 FDR and display
 t_untouched = threshold(out.t, .05, 'fdr');
 
 o2 = montage(t_untouched);

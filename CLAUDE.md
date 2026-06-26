@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-CanlabCore is a MATLAB toolbox for MRI/fMRI/PET analysis from the Cognitive and Affective Neuroscience Lab (PI: Tor Wager). The core abstraction is a small set of object types that wrap neuroimaging data and provide a consistent, high-level method surface (`plot`, `predict`, `ica`, `threshold`, `apply_atlas`, `montage`, `surface`, ...). There is **no build system, no test runner, and no linter** — code is loaded onto the MATLAB path and exercised interactively or via user scripts.
+CanlabCore is a MATLAB toolbox for MRI/fMRI/PET analysis from the Cognitive and Affective Neuroscience Lab (PI: Tor Wager). The core abstraction is a small set of object types that wrap neuroimaging data and provide a consistent, high-level method surface (`plot`, `predict`, `ica`, `threshold`, `apply_atlas`, `montage`, `surface`, ...). There is no build system and no linter; code is loaded onto the MATLAB path and exercised interactively or via user scripts. There **is** now a `matlab.unittest` test runner and GitHub Actions CI (see Tests).
 
 ## Setup and "running" the toolbox
 
@@ -14,10 +14,30 @@ CanlabCore is a MATLAB toolbox for MRI/fMRI/PET analysis from the Cognitive and 
 
 ## Tests
 
-There is no test harness. What exists:
-- `CanlabCore/Unit_tests/` — three standalone scripts (`check_roi_extraction.m`, `jackknife_similarity_unit_test.m`, `resampling_pattern_expression_unit_test1.m`). Run by `cd`'ing in MATLAB and calling the function name.
-- `@fmri_data/predict_test_suite.m` and `@fmri_data/validate_object.m` — broader sanity checks invoked on a constructed object (e.g. `validate_object(my_fmri_data)`).
-- For ad-hoc verification, the canonical pattern is to load a sample dataset (`load_image_set('emotionreg')` or files under `CanlabCore/Sample_datasets/`) and run the method end-to-end.
+There is a real `matlab.unittest` harness under `CanlabCore/Unit_tests/`. Prerequisite: CanlabCore **and** `Neuroimaging_Pattern_Masks` **and** SPM (SPM12 or SPM25) must be on the path — most tests load atlases/sample images and will error otherwise.
+
+**Runner.** `canlab_run_all_tests.m` is the entry point (returns a `matlab.unittest.TestResult` array):
+```matlab
+cd CanlabCore/Unit_tests
+results = canlab_run_all_tests;                         % unit tier; walkthroughs SKIPPED by default
+results = canlab_run_all_tests('Walkthroughs','only');  % only the slow walkthrough integration tests
+results = canlab_run_all_tests('Walkthroughs','include');% both tiers
+results = canlab_run_all_tests('Tag','Core');           % select/deselect by tag ('~RequiresMasks' to skip)
+results = canlab_run_all_tests('JUnit','test-results.xml'); % write JUnit XML (CI)
+```
+It globs `canlab_test_*.m` recursively (excluding `old_to_integrate/`) and runs each via `TestSuite.fromFile`. To run/debug one file directly, use `runtests('canlab_test_xxx.m')`.
+
+**Naming convention matters.** Test files are namespaced `canlab_test_*.m` to avoid path collisions. `matlab.unittest`'s `TestSuite.fromFolder` only auto-discovers files whose names *start or end* with "test", so the prefix-`canlab_` form is invisible to it — that's why the runner does its own glob. Name any new test `canlab_test_<thing>.m` and it is picked up automatically.
+
+**Layout.** `Unit_tests/<class-or-area>/canlab_test_*.m` (e.g. `fmri_data/`, `image_vector/`, `statistic_image/`, `atlas/`, `predictive_model/`, `region/`, `workflows/`); `Unit_tests/helpers/` (shared fixtures like `canlab_get_sample_thresholded_t`); `Unit_tests/walkthroughs/` (slow end-to-end integration tier). Legacy still present: the old standalone scripts, `@fmri_data/predict_test_suite.m`, `@fmri_data/validate_object.m`.
+
+**Result semantics.** CI gates on **Failed only** (`if any([results.Failed]); error(...); end`). **Incomplete** = "Filtered by assumption": the test called `assumeFail`/`assumeTrue` and was skipped because an environment precondition (a data file, a toolbox, a display) was missing — not a failure. A couple of Incomplete results is normal and environment-dependent. Verified locally (R2026a + SPM25): unit tier **261 passed / 0 failed / 2 incomplete** (~9 min); walkthrough tier **10/10 passed**.
+
+**Walkthrough tier is fault-tolerant by design.** `canlab_run_walkthrough_snapshot` runs *vendored snapshot copies* of the CANlab_help_examples scripts (`walkthroughs/private/canlab_help_*.m`) section by section, so the tier does not depend on the external help repo. `canlab_classify_environment_error` downgrades environment-limited sections (missing toolbox, no graphics/display, invalid surface handles) to logged **skips** rather than failures — so a headless or partially-provisioned machine still passes. Don't "fix" a skipped graphics section by forcing it to run.
+
+**CI.** `.github/workflows/test.yml` runs the unit tier (R2024b + Statistics + Signal Processing, clones SPM25, checks out `Neuroimaging_Pattern_Masks`, uploads JUnit XML). `tests-walkthroughs.yml` runs the walkthrough tier. `codespell.yml` is a spell-check action over comments/docs.
+
+For quick ad-hoc verification (not a formal test), the canonical pattern is still to load a sample dataset (`load_image_set('emotionreg')` or files under `CanlabCore/Sample_datasets/`) and run the method end-to-end.
 
 ## Object architecture (the part you must understand to be productive)
 

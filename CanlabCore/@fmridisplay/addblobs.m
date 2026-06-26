@@ -157,6 +157,42 @@ function obj = addblobs(obj, cl, varargin)
 %    Add the volume to activation maps in fmridisplay object
 % ..
 
+% Argument checks: fail with a clear, actionable message instead of MATLAB's
+% cryptic "Not enough input arguments" when the blobs/region argument is left out
+% (e.g. addblobs(o2) instead of addblobs(o2, region(t))).
+% -------------------------------------------------------------------
+% Drop any views whose figures were closed, so we never draw onto deleted
+% graphics handles.
+obj = prune_dead_views(obj);
+
+if nargin < 2
+    error('fmridisplay:addblobs:missingRegion', ...
+        ['addblobs needs something to add as its second argument; you passed only ' ...
+         'the fmridisplay object.\n\n' ...
+         'Usage:   obj = addblobs(obj, cl)\n' ...
+         '   where cl is a region object (or a clusters struct / atlas / fmri_data / statistic_image).\n\n' ...
+         'Example:\n' ...
+         '   o2 = montage(t);              %% t is a thresholded statistic_image; o2 is an fmridisplay\n' ...
+         '   o2 = addblobs(o2, region(t)); %% add the blobs from t']);
+end
+
+% Retain the ORIGINAL input as the layer source, before any conversion.
+% A statistic_image/fmri_data source enables re-thresholding downward
+% (rethreshold); a region source supports re-render at the same or higher
+% stringency. See VISUALIZATION_OVERHAUL_NOTES.md.
+% -------------------------------------------------------------------
+source_object = cl;
+
+% Allow a caller (e.g. image_vector.montage, which passes region(obj) as the
+% blobs but knows the original statistic_image/fmri_data) to override the
+% retained source, so rethreshold has the real object with p-values / raw data
+% to work from. Stripped here so it is not forwarded to render_blobs.
+wh_so = find(strcmp(varargin, 'source_object'));
+if ~isempty(wh_so)
+    source_object = varargin{wh_so(1) + 1};
+    varargin(wh_so(1):wh_so(1) + 1) = [];
+end
+
 % Check and convert to region
 % -------------------------------------------------------------------
 if isstruct(cl) && ~isa(cl, 'region'), cl = cluster2region(cl); end
@@ -164,7 +200,12 @@ if isstruct(cl) && ~isa(cl, 'region'), cl = cluster2region(cl); end
 if isa(cl, 'atlas'), cl = atlas2region(cl); elseif isa(cl, 'image_vector'), cl = region(cl); end
 
 if ~isa(cl, 'region')
-    error('cl input must be a region object. Try region() constructor method.');
+    error('fmridisplay:addblobs:badRegion', ...
+        ['The second argument to addblobs must be a region (got a %s).\n' ...
+         'Convert your image to a region first, e.g.\n' ...
+         '   o2 = addblobs(o2, region(img));\n' ...
+         'addblobs also accepts a clusters struct, an atlas, an fmri_data, or a statistic_image.'], ...
+        class(cl));
 end
 
 if isempty(cl), return, end
@@ -185,7 +226,16 @@ V = struct('mat', cl(1).M, 'dim', dim');
 SPACE = map_to_world_space(V);
 
 obj.activation_maps{end + 1} = struct('mapdata', mask, 'V', V, 'SPACE', SPACE, 'blobhandles', [], 'cmaprange', [], ...
-    'mincolor', [0 0 1], 'maxcolor', [1 0 0], 'color', []);
+    'mincolor', [0 0 1], 'maxcolor', [1 0 0], 'color', [], ...
+    'source_region', [], 'source_object', [], 'render_args', [], ...
+    'wh_montage', [], 'wh_surface', [], 'applied_threshold', []);
+
+% Retain the source region + original source object on the layer so the
+% layer can be re-rendered in place (refresh / rethreshold / set_colormap /
+% set_opacity). render_args (the final option set actually passed to
+% render_blobs) is stored further below, once augmented with defaults.
+obj.activation_maps{end}.source_region = cl;
+obj.activation_maps{end}.source_object = source_object;
 
 % Montage selection and options
 % -------------------------------------------------------------------
@@ -218,10 +268,12 @@ doonecolor = 0;
 domaxcolor = 0;
 domincolor = 0;
 
-maxposcolor = [1 1 0]; % max pos, most extreme values
-minposcolor = [1 .4 .5]; % [.8 .3 0]; % min pos
-maxnegcolor = [0 .8 .8]; % [.3 .6 .9]; % max neg
-minnegcolor = [0 0 1]; % min neg, most extreme values
+% Default split colormap = "mango" {minneg maxneg minpos maxpos}
+% = {[.5 0 1] [0 .8 .3] [1 .2 1] [1 1 .3]}. (Was hot/cool; mango is now the default.)
+maxposcolor = [1 1 .3]; % max pos, most extreme values
+minposcolor = [1 .2 1]; % min pos
+maxnegcolor = [0 .8 .3]; % max neg
+minnegcolor = [.5 0 1]; % min neg, most extreme values
 indexmap = [];
 
 % More purply orange and deeper blue:  {[0 0 1] [.3 0 .8] [.8 .3 0] [1 1 0]}
@@ -300,12 +352,53 @@ for i = 1:length(varargin)
     end
 end
 
+% Drop a BARE 'colormap' flag before forwarding to render_blobs.
+% addblobs accepts 'colormap' as a flag meaning "value-mapped (not split)
+% colors" (handled above by setting dosplitcolor = 0). render_blobs, however,
+% treats 'colormap' as requiring a following n x 3 matrix and errors otherwise.
+% A bare flag (no matrix value, e.g. montage(r, o2, 'colormap')) must not be
+% passed on, or render_blobs raises "'colormap' argument must be followed by
+% an n x 3 matrix". Keep 'colormap' only when it is genuinely followed by an
+% n x 3 numeric matrix.
+wh_cmap = find(strcmp(varargin, 'colormap'));
+to_strip = false(size(varargin));
+for j = wh_cmap
+    has_matrix = j < numel(varargin) && isnumeric(varargin{j + 1}) && size(varargin{j + 1}, 2) == 3;
+    if ~has_matrix
+        to_strip(j) = true;
+    end
+end
+varargin(to_strip) = [];
+
+% Sign-aware default colormap: when the caller gave NO explicit colour spec
+% (still the default split), pick the default by the data's sign — a binary mask
+% gets a solid colour, a positive-only (or zero) map gets "warm" (red->yellow), a
+% negative-only map gets "cool" (blue->cyan), and a mixed +/- map keeps the
+% "mango" split default. Explicit 'splitcolor'/'color'/'maxcolor'/etc. are untouched.
+if dosplitcolor && ~any(strcmp(varargin, 'splitcolor'))
+    dvals = mask(mask ~= 0 & ~isnan(mask));
+    if ~isempty(dvals)
+        if numel(unique(dvals)) == 1
+            dosplitcolor = 0; doonecolor = 1;                 % binary mask -> solid
+            varargin{end + 1} = 'color';
+            varargin{end + 1} = [1 .5 0];
+        elseif all(dvals >= 0)
+            dosplitcolor = 0; domaxcolor = 1; domincolor = 1; % positive-only -> warm
+            maxcolor = [1 1 0]; mincolor = [1 0 0];
+        elseif all(dvals <= 0)
+            dosplitcolor = 0; domaxcolor = 1; domincolor = 1; % negative-only -> cool
+            maxcolor = [0 1 1]; mincolor = [0 0 1];
+        end
+        % else: mixed +/- -> keep the mango split default
+    end
+end
+
 % Add relevant colors and args to varargin, because we may have passed in
 % keywords without following args, intending to use defaults specified above
 % These are passed to render_blobs and also used to update legend registry
 % in fmridisplay obj
 
-if dosplitcolor  
+if dosplitcolor
     
     mysplitcolors = {minnegcolor maxnegcolor minposcolor maxposcolor};
     
@@ -350,6 +443,14 @@ end
 % obj.activation_maps{end + 1} = struct('mapdata', resampled_dat, 'V_original', V, 'blobhandles', []);
 
 wh_to_display = length(obj.activation_maps);
+
+% Retain the final render option set + targeting on the layer, so refresh /
+% set_colormap / set_opacity can replay the exact look. varargin has, by this
+% point, been augmented with the resolved splitcolor / maxcolor / mincolor
+% defaults that are passed on to render_blobs.
+obj.activation_maps{wh_to_display}.render_args = varargin;
+obj.activation_maps{wh_to_display}.wh_montage = wh_montage;
+obj.activation_maps{wh_to_display}.wh_surface = wh_surface;
 
 
 % Find valid handles and render blobs on them
@@ -407,60 +508,17 @@ end
 
 % Surfaces
 % -------------------------------------------------------------------------
+% Render this layer onto every (targeted) registered surface view. The actual
+% drawing is shared with surface() pull-in and refresh() via the
+% render_layer_surfaces method, which derives colors from the layer's stored
+% render_args so all views stay in sync. See VISUALIZATION_OVERHAUL_NOTES.md.
 
-if addsurfaceblobs
-    for i = wh_surface
-        
-        if length(obj.surface) < i
-            warning('Requested surface does not exist! Check input surface indices.');
-            continue
-        end
-        
-        % Set color maps for + / - values
-        if dosplitcolor || doonecolor || domaxcolor || domincolor
-            pos_colormap = colormap_tor(minposcolor, maxposcolor);
-            neg_colormap = colormap_tor(minnegcolor, maxnegcolor);
-        end
-        
-        % OLD method: cluster_surf
-        % cluster_surf(cl, depth, 'heatmap', 'colormaps', pos_colormap, neg_colormap, obj.surface{i}.object_handle);
-        
-        img = region2imagevec(cl);
-        if dosplitcolor
-
-            if exist('cmaprange', 'var')
-                % Keep the same color mapping as before
-                [~,bar1axis,bar2axis] = render_on_surface(img, obj.surface{i}.object_handle, 'pos_colormap', pos_colormap, 'neg_colormap', neg_colormap, 'cmaprange', cmaprange, varargin{:});
-            else
-                [~,bar1axis,bar2axis] = render_on_surface(img, obj.surface{i}.object_handle, 'pos_colormap', pos_colormap, 'neg_colormap', neg_colormap, varargin{:});
-            end
-
-%             o2.activation_maps{1}.cmaprange
-        else
-            if isempty(indexmap)
-                if exist('cmaprange', 'var')
-                    [~, bar1axis, bar2axis] = render_on_surface(img, obj.surface{i}.object_handle, 'cmaprange', cmaprange, varargin{:});
-                else
-                    [~, bar1axis, bar2axis] = render_on_surface(img, obj.surface{i}.object_handle, varargin{:});
-                end
-
-            else
-                try
-                [~, bar1axis, bar2axis] = render_on_surface(img, obj.surface{i}.object_handle, varargin{:},'colormap', indexmap, 'indexmap');
-                catch
-                    keyboard
-                end
-            end
-        end
-        if ismember('legendhandle',fieldnames(obj.activation_maps{wh_to_display}))
-            % if we plot multiple surfaces then their legends will overlap.
-            % We only need to keep the exteriormost one
-            delete(obj.activation_maps{wh_to_display}.legendhandle);    
-        end
-        obj.activation_maps{wh_to_display}.legendhandle = [bar1axis, bar2axis];
-
-    end
+if addsurfaceblobs && ~isempty(obj.surface)
+    obj = render_layer_surfaces(obj, wh_to_display, wh_surface);
 end
+
+% Keep an open controller panel in sync with the new layer.
+obj = update_controller(obj);
 
 end  % main function
 

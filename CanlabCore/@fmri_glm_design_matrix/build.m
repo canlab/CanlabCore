@@ -54,6 +54,45 @@ iC = blkdiag(C{:});
 iG = [];
 iB = blkdiag(B{:});
 
+% -------------------------------------------------------------------------
+% Complete, unique column names for the full design [iH iC iG iB].
+% get_session_X names only the of-interest columns, and condition names repeat
+% across runs, so prefix names with the run (when there is more than one run)
+% and append names for the user covariates and the per-run baselines.
+% -------------------------------------------------------------------------
+if strcmp(obj.build_method, 'Separate sessions')
+    fullnames = {};
+
+    % interest (and parametric-modulator) regressors, per run
+    for s = 1:nsess
+        pre = ''; if nsess > 1, pre = sprintf('Sn%d ', s); end
+        for j = 1:numel(names{s})
+            fullnames{end + 1} = [pre names{s}{j}]; %#ok<AGROW>
+        end
+    end
+
+    % user covariates (iC), per run
+    for s = 1:nsess
+        pre = ''; if nsess > 1, pre = sprintf('Sn%d ', s); end
+        ncov = size(C{s}, 2);
+        cn = {};
+        if ~isempty(obj.Sess(s).C) && isfield(obj.Sess(s).C, 'name'), cn = obj.Sess(s).C.name; end
+        for j = 1:ncov
+            if j <= numel(cn) && ~isempty(cn{j}), nm = cn{j}; else, nm = sprintf('Cov%d', j); end
+            fullnames{end + 1} = [pre nm]; %#ok<AGROW>
+        end
+    end
+
+    % per-run baselines (iB)
+    for s = 1:nsess
+        if nsess > 1, fullnames{end + 1} = sprintf('Sn%d constant', s); %#ok<AGROW>
+        else,         fullnames{end + 1} = 'constant'; %#ok<AGROW>
+        end
+    end
+
+    obj.xX(1).name = matlab.lang.makeUniqueStrings(fullnames);
+end
+
 obj.xX(1).X = [iH iC iG iB];
 
 % indices for each partition
@@ -128,7 +167,10 @@ elseif length(obj.xBF) < nconds
 end
 
 for i = 1:nconds
-    obj.xBF(i).name = sprintf('%s for Condition %3.0f', obj.xBF(i).name, i);
+    % Idempotent: strip any prior " for Condition N" suffix so repeated
+    % build() calls do not keep appending to the basis-set name.
+    basename = regexprep(obj.xBF(i).name, '\s*for Condition\s+\d+\s*$', '');
+    obj.xBF(i).name = sprintf('%s for Condition %3.0f', basename, i);
 end
 
 end

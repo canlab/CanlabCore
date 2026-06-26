@@ -1,10 +1,59 @@
 function [modelstatus constatus linkstatus] = canlab_glm_subject_levels_run1subject(wd, s)
-% child process of canlab_glm_subject_levels
-% (see canlab_glm_README.txt for an overview)
+% canlab_glm_subject_levels_run1subject Worker process that runs subject-level GLM for one subject.
+%
+% :Usage:
+% ::
+%
+%     [modelstatus, constatus, linkstatus] = canlab_glm_subject_levels_run1subject(wd, s)
+%
+% Child process of canlab_glm_subject_levels. Loads the saved
+% environment file env_<NNNN>.mat for subject s from the
+% working directory wd and runs the model specification / estimation
+% job, the contrast job, and the named-link directory creation for that
+% single subject. Writes a per-subject diary log
+% (diary_<NNNN>.log) into wd. See canlab_glm_README.txt for an
+% overview of the canlab_glm_* batch tools.
+%
+% This function is normally called automatically by
+% canlab_glm_subject_levels (including in parallel/cluster modes); it
+% is rarely invoked directly by users.
 %
 % ..
 %    Copyright (C) 2013  Luka Ruzic
 % ..
+%
+% :Inputs:
+%
+%   **wd:**
+%        Working directory containing the per-subject environment
+%        file env_<NNNN>.mat saved by canlab_glm_subject_levels.
+%        Diary logs and status files are also written here.
+%
+%   **s:**
+%        Integer subject index (1-based). Used to locate
+%        env_<NNNN>.mat and diary_<NNNN>.log and to index
+%        DSGN.subjects.
+%
+% :Outputs:
+%
+%   **modelstatus:**
+%        Status code for the model specification/estimation step.
+%        0 indicates skipped/success; -1 indicates error; positive
+%        values indicate the step completed.
+%
+%   **constatus:**
+%        Status code for the contrast generation step (same convention
+%        as modelstatus).
+%
+%   **linkstatus:**
+%        Status code for the named-links directory creation step (same
+%        convention as modelstatus).
+%
+% :See also:
+%   - canlab_glm_subject_levels
+%   - canlab_glm_group_levels
+%   - canlab_spm_fmri_model_job
+%   - canlab_spm_contrast_job_luka
 
 load(fullfile(wd,sprintf('env_%04d',s)));
 %% PREP

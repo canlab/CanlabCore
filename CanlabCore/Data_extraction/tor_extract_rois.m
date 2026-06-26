@@ -61,6 +61,18 @@ function [clusters,SPM,xX,xCon] = tor_extract_rois(imnames,varargin)
     xCon = [];
     clustersin = [];
 
+    % Transparently handle gzipped (.gz) image names. spm_vol cannot read
+    % compressed NIfTI, so gunzip any .gz inputs to .nii and remove the
+    % temporary .nii on exit (onCleanup fires on normal return and on error).
+    % The original .gz files are left untouched.
+    if ~isempty(imnames) && (ischar(imnames) || iscell(imnames))
+        [imnames, was_gz_extract] = gunzip_image_names_if_gz(imnames, 'verbose', false);
+        if any(was_gz_extract)
+            if iscell(imnames), names_list = imnames(:); else, names_list = cellstr(imnames); end
+            cleanup_temp_nii_extract = onCleanup(@() delete_temp_niftis_extract(names_list(logical(was_gz_extract)))); %#ok<NASGU>
+        end
+    end
+
     if nargin == 1
         % ----------------------------------------------------------------------------------
         % get SPM info from SPM.mat
@@ -284,6 +296,23 @@ function [clusters,SPM,xX,xCon] = tor_extract_rois(imnames,varargin)
             clusters = analyze_cluster_rois(clusters,xX);
         catch
             disp('Error analyzing timeseries clusters - skipping analysis.')
+        end
+    end
+end
+
+
+% -------------------------------------------------------------------
+% Remove temporary .nii files created by gunzipping .gz inputs
+% -------------------------------------------------------------------
+function delete_temp_niftis_extract(files)
+
+    for i = 1:numel(files)
+        if exist(files{i}, 'file')
+            try
+                delete(files{i});
+            catch
+                % leave the file in place if it cannot be deleted
+            end
         end
     end
 end

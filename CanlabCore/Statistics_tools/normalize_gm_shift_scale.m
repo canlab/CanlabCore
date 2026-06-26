@@ -8,6 +8,7 @@ function [Z, stats] = normalize_gm_shift_scale(Y, gm_mask, wm_mask, csf_mask, va
 %
 % USAGE
 %   [Z, stats] = normalize_gm_shift_scale(Y, gm_mask, wm_mask, csf_mask, ...
+%                                         'do_scale', true, ...
 %                                         'log_scale', false, 'trim_pct', 5);
 %
 % INPUTS
@@ -20,6 +21,12 @@ function [Z, stats] = normalize_gm_shift_scale(Y, gm_mask, wm_mask, csf_mask, va
 %   csf_mask : V x 1 logical vector; true for CSF voxels
 %
 % OPTIONAL INPUTS (name/value pairs)
+%   'do_scale'  : logical (default = true)
+%                 - If true, estimate and apply multiplicative scale
+%                   normalization.
+%                 - If false, skip scale estimation and apply only the
+%                   additive shift normalization.
+%
 %   'log_scale' : logical (default = false)
 %                 - If true, fit scale model on log(MAD) values:
 %                   log(r_GM) ~ log(r_CSF) + log(r_WM)
@@ -41,10 +48,14 @@ function [Z, stats] = normalize_gm_shift_scale(Y, gm_mask, wm_mask, csf_mask, va
 %       .beta_mean             : 3 x 1 coefficients for:
 %                                m_GM ~ [1, m_CSF, m_WM]
 %       .mu_nuis               : S x 1 estimated nuisance shift for each subject
+%       .do_scale              : logical flag indicating whether scale
+%                                normalization was enabled
 %       .beta_scale or .lambda : 3 x 1 coefficients for scale model
+%                                (present only when do_scale is true)
 %       .sigma_hat             : S x 1 fitted GM scale per subject
 %       .sigma_ref             : scalar reference GM scale
-%       .scale_factor          : S x 1 scaling factor (sigma_ref ./ sigma_hat)
+%       .scale_factor          : S x 1 scaling factor (sigma_ref ./ sigma_hat),
+%                                or ones(S,1) when do_scale is false
 %       .log_scale             : logical flag indicating model type
 %       .trim_pct              : trimming percentage used
 %
@@ -77,11 +88,13 @@ p.addRequired('Y', @(x) isnumeric(x) && ismatrix(x));
 p.addRequired('gm_mask', @(x) islogical(x) && isvector(x));
 p.addRequired('wm_mask', @(x) islogical(x) && isvector(x));
 p.addRequired('csf_mask', @(x) islogical(x) && isvector(x));
+p.addParameter('do_scale', true, @(x) islogical(x) && isscalar(x));
 p.addParameter('log_scale', false, @(x) islogical(x) && isscalar(x));
 p.addParameter('trim_pct', 5, @(x) isnumeric(x) && isscalar(x) && x >= 0 && x < 50);
 
 p.parse(Y, gm_mask, wm_mask, csf_mask, varargin{:});
 
+do_scale  = p.Results.do_scale;
 log_scale = p.Results.log_scale;
 trim_pct  = p.Results.trim_pct;
 
@@ -138,42 +151,48 @@ mu_nuis = beta_mean(2) * m_csf + beta_mean(3) * m_wm;   % S x 1, fitted mean gra
 % Scale model: r_GM ~ r_CSF + r_WM  or  log(r_GM) ~ log(r_CSF) + log(r_WM)
 % -------------------------------------------------------------------------
 
-eps_val = 1e-12;  % For log scale, avoid log(0)
+if do_scale
+    eps_val = 1e-12;  % For log scale, avoid log(0)
 
-if ~log_scale
+    if ~log_scale
 
-    % Linear scale model
-    X_scale = [ones(S, 1), r_csf, r_wm];
-    y_scale = r_gm;
+        % Linear scale model
+        X_scale = [ones(S, 1), r_csf, r_wm];
+        y_scale = r_gm;
 
-    beta_scale = X_scale \ y_scale;          % 3 x 1
-    sigma_hat  = X_scale * beta_scale;       % fitted r_GM, S x 1
+        beta_scale = X_scale \ y_scale;          % 3 x 1
+        sigma_hat  = X_scale * beta_scale;       % fitted r_GM, S x 1
 
-    scale_param = beta_scale;                % store under stats
+        scale_param = beta_scale;                % store under stats
 
+    else
+
+        % Log-scale model
+        rc = max(r_csf, eps_val);
+        rw = max(r_wm,  eps_val);
+        rg = max(r_gm,  eps_val);
+
+        X_log = [ones(S, 1), log(rc), log(rw)];
+        y_log = log(rg);
+
+        lambda = X_log \ y_log;                  % 3 x 1
+        log_sigma_hat = X_log * lambda;
+        sigma_hat     = exp(log_sigma_hat);      % S x 1, positive by construction
+
+        scale_param = lambda;                    % store under stats
+
+    end
+
+    % Reference scale: median fitted GM scale
+    % Group median will be normalized to this value
+    sigma_ref = median(sigma_hat(~isnan(sigma_hat) & isfinite(sigma_hat)));
+
+    scale_factor = sigma_ref ./ sigma_hat;       % S x 1
 else
-
-    % Log-scale model
-    rc = max(r_csf, eps_val);
-    rw = max(r_wm,  eps_val);
-    rg = max(r_gm,  eps_val);
-
-    X_log = [ones(S, 1), log(rc), log(rw)];
-    y_log = log(rg);
-
-    lambda = X_log \ y_log;                  % 3 x 1
-    log_sigma_hat = X_log * lambda;
-    sigma_hat     = exp(log_sigma_hat);      % S x 1, positive by construction
-
-    scale_param = lambda;                    % store under stats
-
+    sigma_hat    = nan(S, 1);
+    sigma_ref    = NaN;
+    scale_factor = ones(S, 1);
 end
-
-% Reference scale: median fitted GM scale
-% Group median will be normalized to this value
-sigma_ref = median(sigma_hat(~isnan(sigma_hat) & isfinite(sigma_hat)));
-
-scale_factor = sigma_ref ./ sigma_hat;       % S x 1
 
 % -------------------------------------------------------------------------
 % Apply shift and scale normalization to GM voxels
@@ -217,10 +236,11 @@ stats.r_csf   = r_csf;
 
 stats.beta_mean   = beta_mean;
 stats.mu_nuis     = mu_nuis;
+stats.do_scale    = do_scale;
 
-if ~log_scale
+if do_scale && ~log_scale
     stats.beta_scale = scale_param;
-else
+elseif do_scale
     stats.lambda = scale_param;
 end
 

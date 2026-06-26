@@ -253,7 +253,7 @@ ustr = '_____________________________________________________________________';
 
 if display_output
     
-    if isempty(test_dat.fullpath), test_dat.fullpath = 'fullpath_was_empty'; end
+    if isempty(test_dat.fullpath), test_dat.fullpath = repmat('fullpath_was_empty', size(test_dat.dat, 2), 1); end
     
     for i = 1:ntest
         

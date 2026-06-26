@@ -115,8 +115,61 @@ printhdr = @(str) fprintf('%s\n%s\n%s\n', dashes, str, dashes);
 % Enforce valid variable names in a cell array of strings: Eliminate special characters and leading numbers
 [variable_names, namewarnings] = format_text_letters_only(variable_names, 'numbers', 'cleanup', 'squeeze', 'underscore_ok');
 
-% ----------------------------------------------------------------------
+% BELOW IS THE INPUT PARSER TEMPLATE
+
+% -------------------------------------------------------------------------
 % Parse inputs
+% -------------------------------------------------------------------------
+
+% Parse special command keywords and remove them before inputParser
+
+doplot = false;  
+plot_idx = strcmpi(varargin, 'plot');
+if any(plot_idx)               % Override: omit 'doplot' key/value pair 
+    doplot = true;
+    varargin(plot_idx) = [];   % remove so inputParser doesn't see it
+end
+
+verbose = true;  
+verbose_idx = strcmpi(varargin, 'noverbose');
+if any(verbose_idx)
+    verbose = false;
+    varargin(verbose_idx) = [];   % remove so inputParser doesn't see it
+end
+
+% Use inputParser to parse key/value pairs
+% First add obligatory/non-conditional keywords
+
+p = inputParser;
+p.addRequired('obj');
+p.addParameter('similarity_metric','correlation',...
+    @(x) ismember(x, {'correlation','cosine_similarity','dot_product', ...
+    'dice','normalized_absolute_agreement','concordance_correlation', ...
+    'standardized_abs_deviation','mean_shift_z','scale_shift_z'}));
+p.addParameter('treat_zero_as_data', false, @(x) islogical(x) || isnumeric(x));
+p.addParameter('complete_cases', false, @(x) islogical(x) || isnumeric(x));
+
+% Special key/value pairs that we have potentially set with optional keywords
+p.addParameter('doplot', doplot, @(x) islogical(x) || isnumeric(x));
+p.addParameter('verbose', verbose, @(x) islogical(x) || isnumeric(x));
+
+% process inputs and deal out to variables in workspace
+p.parse(obj,varargin{:});
+
+ARGS = p.Results;
+
+% Get all field names in ARGS
+fn = fieldnames(ARGS);
+
+% Loop over fields and assign variables in caller workspace
+for i = 1:numel(fn)
+    assignin('caller', fn{i}, ARGS.(fn{i}));
+end
+
+% END INPUT PARSER TEMPLATE
+
+% ----------------------------------------------------------------------
+% Parse inputs - older
 % ----------------------------------------------------------------------
 % This 2019 version uses the inputParser object. Older schemes are below.
 % Note: With this, you can pass in EITHER keyword, value pairs OR a

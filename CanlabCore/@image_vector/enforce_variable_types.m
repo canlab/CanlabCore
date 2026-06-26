@@ -1,11 +1,55 @@
 function obj = enforce_variable_types(obj)
-% Re-casts variables in objects into standard data types, which can save space
-% in memory.  Also removes empty voxels as a space-saving device.
+% enforce_variable_types Re-cast image_vector fields into standard data types to save space.
 %
-% obj = enforce_variable_types(obj)
+% Re-casts variables in objects into standard data types, which can save
+% space in memory. Also removes empty voxels as a space-saving device.
 %
 % Needs testing to ensure that doing this does not break any other
 % display/computation functions.
+%
+% :Usage:
+% ::
+%
+%     obj = enforce_variable_types(obj)
+%
+% :Inputs:
+%
+%   **obj:**
+%        An image_vector or subclass (fmri_data, statistic_image, atlas)
+%        object.
+%
+% :Outputs:
+%
+%   **obj:**
+%        The input object with empty voxels removed and the following
+%        type conversions applied:
+%
+%        - .dat -> single (or double for statistic_image with type 'T')
+%        - .volInfo.wh_inmask -> uint32
+%        - .volInfo.xyzlist -> uint16
+%        - .volInfo.cluster -> uint32
+%        - For fmri_data, .mask is similarly down-cast.
+%        - For statistic_image, .sig -> logical and .p -> single
+%          (except for 'T' type, which retains higher precision .p).
+%
+%        If the object lacks an 'image_metadata' property, a default
+%        image_metadata struct is initialized.
+%
+% :Examples:
+% ::
+%
+%     dat = enforce_variable_types(dat);
+%
+% :See also:
+%   - remove_empty
+%   - replace_empty
+%
+% ..
+%    Programmers' notes:
+%    Edited 02/26/2026 (Zizhuang Miao): force the .dat field of a
+%    statistic_image of type 'T' to be double, to enable more accurate
+%    estimates of p values.
+% ..
 
 obj = remove_empty(obj);
 % EDITED: force the .dat field of a statistic_image to be double

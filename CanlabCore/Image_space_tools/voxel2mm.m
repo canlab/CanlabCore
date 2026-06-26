@@ -18,6 +18,16 @@ function XYZmm = voxel2mm(XYZ,m)
 %
 %    XYZmm = voxel2mm([x y z]',V.mat);
 %
+% Note: 
+% % Create grid in mm coordinates (world) for surface mapping
+% % -------------------------------------------------------------------------
+% [Xt, Yt, Zt] = ndgrid(1:dim_to(1), 1:dim_to(2), 1:dim_to(3));
+% ijk_target = [Xt(:)'; Yt(:)'; Zt(:)'; ones(1,numel(Xt))];
+% XYZmm_grid = M * ijk_target;  % where M is affine matrix
+%
+% :See also:
+% mm2voxel, define_space_mapping, reconstruct_image
+
 % ..
 %    Verified that this works 10/27/01.
 %    Tor Wager, 10/27/01
@@ -26,7 +36,7 @@ function XYZmm = voxel2mm(XYZ,m)
 
 if isempty(XYZ), XYZmm = []; return, end
 
-% add one for the origin -- constant shift (offset from edge) in mat
+% final 1 is to add the origin
 % x_world = M * [x_i y_i z_i 1]';  
 % -------------------------------------------------------------------
 XYZ(4, :) = 1;	
@@ -35,4 +45,6 @@ XYZmm = m * XYZ;
 
 XYZmm = XYZmm(1:3, :);
 
-return
+
+end
+

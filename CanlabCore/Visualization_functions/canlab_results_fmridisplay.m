@@ -1,187 +1,223 @@
 function o2 = canlab_results_fmridisplay(input_activation, varargin)
+% canlab_results_fmridisplay Display fMRI results blobs on canonical anatomical slices and surfaces.
+%
 % :Usage:
 % ::
 %
-%    canlab_results_fmridisplay(input_activation, [optional inputs])
+%     o2 = canlab_results_fmridisplay(input_activation, [optional inputs])
 %
-% purpose:  This function display fmri results.
+% Sets up anatomical underlays (axial / coronal / sagittal slices and/or
+% cortical surfaces) and overlays activation blobs from an image file,
+% region object, or fmri_data / statistic_image object. Returns an
+% fmridisplay object that can be reused with addblobs, removeblobs, and
+% render_on_surface methods. You can also pass an existing fmridisplay
+% object as one of the inputs and it will be used instead of setting up
+% canonical slices.
 %
-% :Input:
+% Tip: Try brighten(.4) to make the images brighter.
 %
-%   **input_activation:**
-%        nii, img,
-%
-%        This image has the blobs you want to
-%        display. You can also enter a cl "clusters" structure or
-%        "region" object.
-%
-%        you can also get a thresholded image like the examples used here
-%        from a number of places - by thresholding your results in SPM
-%        and using "write filtered" to save the image, by creating masks
-%        from meta-analysis or anatomical atlases, or by using
-%        mediation_brain_results, robust_results_threshold,
-%        robust_results_batch_script, threshold_imgs, or object
-%        oriented tools including fmri_data and statistic_image objects.
-%
-% :Optional Inputs:
-%
-%   **'noblobs':**
-%        do not display blobs
-%
-%   **'outline':**
-%        display blob outlines
-%
-%   **'nooutline':**
-%        do not display blob outlines (default)
-%
-%   **'addmontages':**
-%        when entering existing fmridisplay obj, add new montages
-%
-%   **'noremove':**
-%        do not remove current blobs when adding new ones
-%
-%   **'nofigure':**
-%        do not create a new figure (for selected montage sets only)
-%
-%   **'outlinecolor:**
-%        followed by new outline color
-%
-%   **'splitcolor':**
-%        followed by 4-cell new split colormap colors (help fmridisplay or edit code for defaults as example)
-%
-%   **'montagetype':**
-%        Note: for surface plotting MNI surface projection is available. See help render_on_surface for additional 
-%        options to specify to enable the necessary transformations. Otherwise naive sampling based on naive surface 
-%        vertex coordinates will be used, which in most cases will not correctly map to your data volume.
-% 
-%        'full'            Axial, coronal, and saggital slices, 4 cortical surfaces
-%        'compact'         Midline saggital and two rows of axial slices [the default] 
-%        'compact2'        A single row showing midline saggital and axial slices
-%        'compact3'        One row of axial slices, midline sagg, and 4 HCP surfaces
-%        'multirow'        A series of 'compact2' displays in one figure for comparing different images/maps side by side
-%        'regioncenters'   A series of separate axes, each focused on one region
-%        'full2'           for a slightly less full montage that avoids colorbar overlap issues
-%        'full hcp'        for full montage, but with surfaces and volumes from HCP data
-%        'full hcp inflated' for full montage using hcp inflated surfaces
-%        'hcp grayordinates' for 4 surfaces and 18 zoomed in subcortical slices
-%        'hcp grayordinates compact' for 4 surfaces and 4 zoomed in subcortical slices
-%        'hcp grayordinates subcortex'
-%                          for zoomed in subcortical slices
-%        'hcp inflated'    for a connectome workbench style layout without
-%                          volumetric slices
-%        'freesurfer inflated' connectome workbench style layout (no volumetric slices) with fsaverage 164k surfaces.
-%        'MNI152NLin[2009c|6]Asym [pial|midthickness|white]
-%                          Connectome workbench style layout (no volumetric slices) using MNI152NLin2009cAsym or MNI152NLin6Asym 
-%                          surfaces sampled at one of three depths. This will work with data that's already in the corresponding 
-%                          MNI template space with naive mesh interpolation (no need for special surface projection 
-%                          transformations), unlike all other surfaces (see help render_on_surface for details on projection 
-%                          options otherwise). When projecting data to other surfaces you need a sampling depth though and these 
-%                          MNI space surfaces can be helpful for deciding on a sampling depth to use in your projections (see 
-%                          srcdepth argument to render_on_surface). Simply render on the surface corresponding to your data's 
-%                          template space and the desired depth to see what data would be extracted from your volumes with that 
-%                          srcdepth argument (pial, midthickness, white), and then include that with your srcdepth argument when 
-%                          plotting your surface data.
-%
-%        'compact' [default] for single-figure parasagittal and axials slices.
-%
-%        'compact2': like 'compact', but fewer axial slices.
-%
-%        'multirow': followed by number of rows
-%           e.g., o2 = canlab_results_fmridisplay([], 'multirow', 2);
-%
-%        {'blobcenters', 'regioncenters'}: Slices for the center of each blob/region
-%        Note: this creates a new figure, tagged
-%        'fmridisplay_regioncenters', and is not compatible with 'nofigure'
-%        
-%   **'noverbose':**
-%        suppress verbose output, good for scripts/publish to html, etc.
-%
-%   **'overlay':**
-%        specify anatomical image for montage (not surfaces), followed by
-%        image name
-%        e.g., o2 = canlab_results_fmridisplay([], 'overlay', 'icbm152_2009_symmetric_for_underlay.img')';
-%
-%         The default brain for overlays is the brain extracted MNI152NLin2009cAsym 
-%         T1 1mm template from templatFlow.
-%         For legacy brains based on Keuken et al. 2014 enter as arguments:
-%         'overlay', which('keuken_2014_enhanced_for_underlay.img')
-%         For legacy SPM8 single subject, enter as arguments:
-%         'overlay', which('SPM8_colin27T1_seg.img')
-% 
-% Other inputs to addblobs and render_on_surface (fmridisplay methods) are allowed, e.g., 'cmaprange', [-2 2], 'trans'
-%
-% See help fmridisplay
-% e.g., 'color', [1 0 0]
-%
-% You can also input an existing fmridisplay object, and it will use the
-% one you have created rather than setting up the canonical slices.
-%
-% Try "brighten(.4) to make the images brighter.
-%
-% :Example Script:
-% ::
-%
-%    input_activation = 'Pick_Atlas_PAL_large.nii';
-%
-%    % set up the anatomical overlay and display blobs
-%    % (see the code of this function and help fmridisplay for more examples)
-%
-%    o2 = canlab_results_fmridisplay(input_activation);
-%
-%    %% ========== remove those blobs and change the color ==========
-%
-%    cl = mask2clusters(input_activation);
-%    removeblobs(o2);
-%    o2 = addblobs(o2, cl, 'color', [0 0 1]);
-%
-%    %% ========== OR
-%
-%    r = region(input_activation);
-%    o2 = removeblobs(o2);
-%    o2 = addblobs(o2, r, 'color', [1 0 0]);
-%
-%    %% ========== Create empty fmridisplay object on which to add blobs:
-%    o2 = canlab_results_fmridisplay
-%    o2 = canlab_results_fmridisplay([], 'compact2', 'noverbose');
-%
-%    %% ========== If you want to start over with a new fmridisplay object,
-%    % make sure to clear o2, because it uses lots of memory
-%
-%    % This image should be on your path in the "canlab_canonical_brains" subfolder:
-%
-%    input_activation = 'pain-emotion_2s_z_val_FDR_05.img';
-%    clear o2
-%    close all
-%    o2 = canlab_results_fmridisplay(input_activation);
-%
-%    %% ========== save PNGs of your images to insert into powerpoint, etc.
-%    % for your paper/presentation
-%
-%    scn_export_papersetup(400);
-%    saveas(gcf, 'results_images/pain_meta_fmridisplay_example_sagittal.png');
-%
-%    scn_export_papersetup(350);
-%    saveas(gcf, 'results_images/pain_meta_fmridisplay_example_sagittal.png');
-%
-%    Change colors, removing old blobs and replacing with new ones:
-%    o2 = canlab_results_fmridisplay(d, o2, 'cmaprange', [.3 .45], 'splitcolor', {[0 0 1] [.3 0 .8] [.9 0 .5] [1 1 0]}, 'outlinecolor', [.5 0 .5]);
-%
-%   %% ========== Legend control
-%   There is a 'nolegend' option.
-%   Colorbar legends are created in render_on_surface
-%   You can access and control the handles like this:
-%   set(obj.activation_maps{1}.legendhandle, 'Position', [[0.965 0.0994 0.01 0.4037]]);
-%
-%   %% ========== Colormap range control
-%   Range is set automatically by default, and stored in
-%   obj.activation_maps{wh_to_display}.cmaprange 
-%   You can enter 'cmaprange', followed by inputs in the correct format, to
-%   manually control this.
-%   
 % ..
 %    Tor Wager
 %    1/27/2012
 % ..
+%
+% :Inputs:
+%
+%   **input_activation:**
+%        Image (nii, img) to display, a cl 'clusters' structure, a
+%        'region' object, or an fmri_data / statistic_image object whose
+%        blobs you want to display.
+%
+%        You can also obtain a thresholded image suitable for input from
+%        a number of places: by thresholding your results in SPM and
+%        using 'write filtered' to save the image; by creating masks
+%        from meta-analysis or anatomical atlases; or by using
+%        mediation_brain_results, robust_results_threshold,
+%        robust_results_batch_script, threshold_imgs, or object oriented
+%        tools including fmri_data and statistic_image objects.
+%
+% :Optional Inputs:
+%
+%   **'noblobs':**
+%        Do not display blobs.
+%
+%   **'outline':**
+%        Display blob outlines.
+%
+%   **'nooutline':**
+%        Do not display blob outlines (default).
+%
+%   **'addmontages':**
+%        When entering an existing fmridisplay obj, add new montages.
+%
+%   **'noremove':**
+%        Do not remove current blobs when adding new ones.
+%
+%   **'nofigure':**
+%        Do not create a new figure (for selected montage sets only).
+%
+%   **'outlinecolor':**
+%        Followed by new outline color.
+%
+%   **'splitcolor':**
+%        Followed by a 4-cell new split colormap colors specification
+%        (see help fmridisplay or the function code for defaults).
+%
+%   **'montagetype':**
+%        Note: for surface plotting, MNI surface projection is available.
+%        See help render_on_surface for additional options to specify
+%        the necessary transformations. Otherwise naive sampling based
+%        on surface vertex coordinates will be used, which in most cases
+%        will not correctly map to your data volume.
+%
+%        Available types:
+%
+%        - 'full'            Axial, coronal, and sagittal slices, 4
+%          cortical surfaces.
+%        - 'compact'         Midline sagittal and two rows of axial
+%          slices [the default].
+%        - 'compact2'        A single row showing midline sagittal and
+%          axial slices.
+%        - 'compact3'        One row of axial slices, midline sagittal,
+%          and 4 HCP surfaces.
+%        - 'multirow'        A series of 'compact2' displays in one
+%          figure for comparing different images/maps side by side.
+%          Followed by number of rows, e.g.,
+%          o2 = canlab_results_fmridisplay([], 'multirow', 2);
+%        - 'regioncenters'   A series of separate axes, each focused on
+%          one region.
+%        - 'full2'           For a slightly less full montage that
+%          avoids colorbar overlap issues.
+%        - 'full hcp'        Full montage, but with surfaces and volumes
+%          from HCP data.
+%        - 'full hcp inflated' Full montage using HCP inflated surfaces.
+%        - 'hcp grayordinates' 4 surfaces and 18 zoomed-in subcortical
+%          slices.
+%        - 'hcp grayordinates compact' 4 surfaces and 4 zoomed-in
+%          subcortical slices.
+%        - 'hcp grayordinates subcortex' Zoomed-in subcortical slices.
+%        - 'hcp inflated'    Connectome Workbench-style layout without
+%          volumetric slices.
+%        - 'freesurfer inflated' Connectome Workbench-style layout (no
+%          volumetric slices) with fsaverage 164k surfaces.
+%        - 'MNI152NLin[2009c|6]Asym [pial|midthickness|white]'
+%          Connectome Workbench-style layout (no volumetric slices)
+%          using MNI152NLin2009cAsym or MNI152NLin6Asym surfaces sampled
+%          at one of three depths. This will work with data that's
+%          already in the corresponding MNI template space with naive
+%          mesh interpolation (no need for special surface projection
+%          transformations), unlike all other surfaces (see help
+%          render_on_surface for details on projection options
+%          otherwise). When projecting data to other surfaces you need a
+%          sampling depth, and these MNI space surfaces can be helpful
+%          for deciding on a sampling depth to use in your projections
+%          (see srcdepth argument to render_on_surface). Simply render
+%          on the surface corresponding to your data's template space
+%          and the desired depth to see what data would be extracted
+%          from your volumes with that srcdepth argument (pial,
+%          midthickness, white), and then include that with your
+%          srcdepth argument when plotting your surface data.
+%        - {'blobcenters', 'regioncenters'}: Slices for the center of
+%          each blob/region. Note: this creates a new figure, tagged
+%          'fmridisplay_regioncenters', and is not compatible with
+%          'nofigure'.
+%
+%   **'noverbose':**
+%        Suppress verbose output, good for scripts/publish to html, etc.
+%
+%   **'overlay':**
+%        Specify anatomical image for montage (not surfaces), followed
+%        by image name. e.g.,
+%        o2 = canlab_results_fmridisplay([], 'overlay', ...
+%             'icbm152_2009_symmetric_for_underlay.img');
+%
+%        The default brain for overlays is the brain-extracted
+%        MNI152NLin2009cAsym T1 1mm template from templateFlow.
+%        For legacy brains based on Keuken et al. 2014 enter:
+%        'overlay', which('keuken_2014_enhanced_for_underlay.img')
+%        For legacy SPM8 single subject, enter:
+%        'overlay', which('SPM8_colin27T1_seg.img')
+%
+%   **'coordinates':**
+%        Toggle coordinates visibility on the displayed slices.
+%
+%   Other inputs to addblobs and render_on_surface (fmridisplay methods)
+%   are allowed, e.g., 'cmaprange', [-2 2], 'trans', 'color', [1 0 0].
+%   See help fmridisplay.
+%
+% :Outputs:
+%
+%   **o2:**
+%        fmridisplay object with the requested anatomical underlays and
+%        overlaid activation blobs. Reuse this object with addblobs /
+%        removeblobs / render_on_surface to update the display.
+%
+% :Examples:
+% ::
+%
+%     input_activation = 'Pick_Atlas_PAL_large.nii';
+%
+%     % Set up the anatomical overlay and display blobs
+%     % (see the code of this function and help fmridisplay for more examples)
+%     o2 = canlab_results_fmridisplay(input_activation);
+%
+%     %% ========== remove those blobs and change the color ==========
+%     cl = mask2clusters(input_activation);
+%     removeblobs(o2);
+%     o2 = addblobs(o2, cl, 'color', [0 0 1]);
+%
+%     %% ========== OR
+%     r = region(input_activation);
+%     o2 = removeblobs(o2);
+%     o2 = addblobs(o2, r, 'color', [1 0 0]);
+%
+%     %% ========== Create empty fmridisplay object on which to add blobs:
+%     o2 = canlab_results_fmridisplay;
+%     o2 = canlab_results_fmridisplay([], 'compact2', 'noverbose');
+%
+%     %% ========== If you want to start over with a new fmridisplay object,
+%     % make sure to clear o2, because it uses lots of memory.
+%     %
+%     % This image should be on your path in the 'canlab_canonical_brains'
+%     % subfolder:
+%     input_activation = 'pain-emotion_2s_z_val_FDR_05.img';
+%     clear o2
+%     close all
+%     o2 = canlab_results_fmridisplay(input_activation);
+%
+%     %% ========== Save PNGs of your images for powerpoint, etc.
+%     scn_export_papersetup(400);
+%     saveas(gcf, 'results_images/pain_meta_fmridisplay_example_sagittal.png');
+%
+%     scn_export_papersetup(350);
+%     saveas(gcf, 'results_images/pain_meta_fmridisplay_example_sagittal.png');
+%
+%     % Change colors, removing old blobs and replacing with new ones:
+%     o2 = canlab_results_fmridisplay(d, o2, 'cmaprange', [.3 .45], ...
+%         'splitcolor', {[0 0 1] [.3 0 .8] [.9 0 .5] [1 1 0]}, ...
+%         'outlinecolor', [.5 0 .5]);
+%
+%     %% ========== Legend control
+%     % There is a 'nolegend' option.
+%     % Colorbar legends are created in render_on_surface.
+%     % You can access and control the handles like this:
+%     set(obj.activation_maps{1}.legendhandle, 'Position', ...
+%         [0.965 0.0994 0.01 0.4037]);
+%
+%     %% ========== Colormap range control
+%     % Range is set automatically by default, and stored in
+%     % obj.activation_maps{wh_to_display}.cmaprange.
+%     % You can enter 'cmaprange', followed by inputs in the correct
+%     % format, to manually control this.
+%
+% :See also:
+%   - fmridisplay
+%   - addblobs
+%   - removeblobs
+%   - render_on_surface
+%   - region
+%   - fmri_data
+%   - statistic_image
 
 % Toggle coordinates visibility
 coordinates = 0;

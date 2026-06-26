@@ -3,7 +3,7 @@ function similarity_output = canlab_pattern_similarity(dat, pattern_weights, var
 %
 % - Similarity options: dot product, cosine similarity, and correlation
 % - Columns are often images, e.g., from fmri_data.dat for fmri_data objects
-% - weights are pattern weights from one or more 'signature' patterns or binary masks (each pattern is a column)
+% - weights are pattern weights from one or more 'signature' patterns (each pattern is a column)
 %
 % - Assumes dat and pattern_weights matrices have equal rows (voxels) and include valid voxels
 % - Removes empty column data column-wise (image-wise) in case some images have uneven voxel coverage
@@ -63,6 +63,7 @@ function similarity_output = canlab_pattern_similarity(dat, pattern_weights, var
 %       can use 'treat_zero_as_data', 1 to treat the zeros as data values.
 %
 %   **exclude_zero_mask_values**
+%       Excludes zero values in pattern_weights input
 %
 % :Outputs:
 %   **similarity_output**
@@ -139,6 +140,13 @@ function similarity_output = canlab_pattern_similarity(dat, pattern_weights, var
 %   - added option for treating zero value in the map as real value rather
 %   than missing data
 %
+% 2026/01/13 Lukas Van Oudenhove
+%   - fixed a bug in main function and subfunction for sim_metric = corr
+%
+% 2026/06/24 Lukas Van Oudenhove
+%   - fixed a small bug (lack of parsing of exclude_zero_mask_values
+%   optional input)
+
 
 % ---------------------------------
 % Defaults and optional inputs
@@ -216,16 +224,6 @@ else
 
 end
 
-if exclude_zero_mask_values
-    
-    badvals_mask = pattern_weights == 0 | isnan(pattern_weights);
-    
-else
-
-    badvals_mask = isnan(pattern_weights);
-
-end
-
 
 % ---------------------------------
 % Main similarity calculation
@@ -245,6 +243,16 @@ else
         
         switch sim_metric
             case 'corr'
+                
+                if exclude_zero_mask_values
+    
+                    badvals_mask = pattern_weights(:,i) == 0 | isnan(pattern_weights(:,i));
+    
+                else
+
+                    badvals_mask = isnan(pattern_weights(:,i));
+
+                end
                
                 similarity_output(:, i) = image_correlation(dat, pattern_weights(:, i), badvals, badvals_mask);
 
@@ -396,7 +404,7 @@ function r = image_correlation(dat, pattern_weights, badvals, badvals_mask)
 
 for i = 1:size(dat, 2)    % Loop because we may have different voxel exclusions in each image
     
-    inmask = ~badvals(:, i) & ~badvals_mask(:, i);
+    inmask = ~badvals(:, i) & ~badvals_mask(:);
             
     r(i, 1) = corr(pattern_weights(inmask), dat(inmask, i));  % Correlation, excluding out-of-image pattern_weights image-wise
         

@@ -1,98 +1,129 @@
 function [obj_out, statstab] = normalize_gm_by_wm_csf(obj, varargin)
+% normalize_gm_by_wm_csf Shift- and scale-normalize gray matter voxels using WM/CSF references.
+%
+% :Usage:
+% ::
+%
+%     [obj_out, statstab] = normalize_gm_by_wm_csf(obj)
+%     [obj_out, statstab] = normalize_gm_by_wm_csf(obj, ...
+%         'do_scale', true, 'log_scale', false, 'trim_pct', 5, ...
+%         'mask_files', masks_cell)
+%
 % Normalize gray-matter voxel intensities across subjects in an fmri_data
 % object by:
-%   (1) Removing a subject-specific additive shift estimated from CSF/WM
-%       medians
-%   (2) Correcting a subject-specific multiplicative scale estimated from
-%       MADs in GM, WM, and CSF
+%
+%   1. Removing a subject-specific additive shift estimated from CSF/WM
+%      medians.
+%   2. Correcting a subject-specific multiplicative scale estimated from
+%      MADs in GM, WM, and CSF.
 %
 % The method:
+%
 %   - Uses canonical masks for GM, WM, and CSF:
-%       {'gray_matter_mask_sparse.img', ...
-%        'canonical_white_matter.img', ...
-%        'canonical_ventricles.img'}
+%
+%     ::
+%
+%         {'gray_matter_mask_sparse.img', ...
+%          'canonical_white_matter.img', ...
+%          'canonical_ventricles.img'}
+%
 %   - Resamples masks into the space of the fmri_data object using
-%     RESAMPLE_SPACE to ensure voxel alignment.
-%   - Calls NORMALIZE_GM_SHIFT_SCALE (voxel-level function) on the data.
-%   - Returns:
-%       * an fmri_data object with GM voxels shift- and scale-normalized,
-%         and non-GM voxels left unchanged except that they are not further
-%         processed
-%       * a MATLAB table containing all values from the STATS output of
-%         normalize_gm_shift_scale, appended to the existing
-%         metadata_table.
+%     resample_space to ensure voxel alignment.
+%   - Calls normalize_gm_shift_scale (voxel-level function) on the
+%     data.
+%   - Returns an fmri_data object with GM voxels shift- and
+%     scale-normalized (non-GM voxels are copied from the input
+%     unchanged), and a MATLAB table of all per-subject statistics from
+%     the STATS output of normalize_gm_shift_scale, appended to the
+%     existing metadata_table.
 %
-% USAGE
-%   [obj_out, statstab] = normalize_gm_by_wm_csf(obj, ...
-%                                'log_scale', false, 'trim_pct', 5, ...
-%                                'mask_files', masks_cell);
+% :Inputs:
 %
-% INPUTS
-%   obj       : fmri_data object with .dat of size [V x S]
-%               - V = number of voxels
-%               - S = number of images/subjects
+%   **obj:**
+%        fmri_data object with .dat of size [V x S], where V = number of
+%        voxels and S = number of images / subjects.
 %
-% OPTIONAL NAME/VALUE INPUTS
-%   'log_scale' : logical (default = false)
-%                 - Passed to NORMALIZE_GM_SHIFT_SCALE.
-%                 - If true: log-scale regression for scale model
-%                   log(r_GM) ~ log(r_CSF) + log(r_WM)
-%                 - If false: linear scale regression
-%                   r_GM ~ r_CSF + r_WM
+% :Optional Inputs:
 %
-%   'trim_pct'  : scalar (default = 5)
-%                 - Percentage trimmed from lower and upper tails when
-%                   estimating medians/MADs in each tissue.
+%   **'do_scale', logical:**
+%        Default: true. Passed to normalize_gm_shift_scale.
+%        If true, estimate and apply multiplicative scale normalization.
+%        If false, skip scale estimation and apply shift-only
+%        normalization.
 %
-%   'mask_files': 1 x 3 cell array of mask filenames
-%                 (default):
-%                 {'gray_matter_mask_sparse.img', ...
-%                  'canonical_white_matter.img', ...
-%                  'canonical_ventricles.img'}
+%   **'log_scale', logical:**
+%        Default: false. Passed to normalize_gm_shift_scale.
+%        If true, log-scale regression is used for the scale model
+%        log(r_GM) ~ log(r_CSF) + log(r_WM). If false, linear
+%        regression r_GM ~ r_CSF + r_WM.
 %
-% OUTPUTS
-%   obj_out  : fmri_data object
-%              - .dat is V x S, with GM voxels normalized by the shift/scale
-%                model; non-GM voxels are copied from the input.
-%              - .metadata_table is the input metadata_table with new
-%                columns appended containing all (subject-level) values from
-%                STATS.
+%   **'trim_pct', scalar:**
+%        Default: 5. Percentage trimmed from the lower and upper
+%        tails when estimating medians / MADs in each tissue.
 %
-%   statstab : MATLAB table (S rows)
-%              - All values from STATS struct are represented as columns.
-%              - This same table is appended to obj_out.metadata_table.
+%   **'mask_files', 1x3 cellstr:**
+%        Default:
 %
-% NOTES
-%   - This method does not reduce the number of voxels; it keeps the full
-%     spatial geometry but only modifies GM voxels in .dat.
+%        ::
+%
+%            {'gray_matter_mask_sparse.img', ...
+%             'canonical_white_matter.img', ...
+%             'canonical_ventricles.img'}
+%
+%        Resolved with which() if a bare filename is supplied.
+%
+% :Outputs:
+%
+%   **obj_out:**
+%        fmri_data object. .dat is V x S, with GM voxels normalized
+%        by the shift/scale model; non-GM voxels are copied from the
+%        input. .metadata_table is the input metadata_table with new
+%        columns appended containing all subject-level values from STATS.
+%
+%   **statstab:**
+%        MATLAB table with S rows. Every value from the STATS struct is
+%        represented as one or more columns. The same table is appended
+%        to obj_out.metadata_table.
+%
+% :Notes:
+%
+%   - This method does not reduce the number of voxels; it keeps the
+%     full spatial geometry but only modifies GM voxels in .dat.
 %   - If you prefer to hard-mask to GM (retain only GM voxels in .dat),
 %     you can add an additional step to subset voxels by the GM mask.
 %
-% Examples:
+% :Examples:
+% ::
 %
-% imgs = load_image_set('emotionreg');
+%     imgs = load_image_set('emotionreg');
 %
-% % T-test on un-normalized data:
-% t = ttest(imgs)
-% histogram(t)
-% set(gcf, 'Tag', 'unnormalized');
+%     % T-test on un-normalized data:
+%     t = ttest(imgs);
+%     histogram(t);
+%     set(gcf, 'Tag', 'unnormalized');
 %
-% % Normalize and re-run t-test
-% imgs_normalized = normalize_gm_by_wm_csf(imgs);
-% t2 = ttest(imgs_normalized)
-% histogram(t2)
+%     % Normalize and re-run t-test
+%     imgs_normalized = normalize_gm_by_wm_csf(imgs);
+%     t2 = ttest(imgs_normalized);
+%     histogram(t2);
 %
-% % Compare the t-values:
-% figure; plot(t.dat, t2.dat, '.');
-% hold on; plot([-10 10], [-10 10], '--', 'Color', 'k');
-% ylabel('t-values after normalization'); xlabel('t-values before normalization');
-% 
-% % or:
-% h = image_scatterplot(t, t2, 'pvaluebox', 0.005, 'colorpoints');
+%     % Compare the t-values:
+%     figure; plot(t.dat, t2.dat, '.');
+%     hold on; plot([-10 10], [-10 10], '--', 'Color', 'k');
+%     ylabel('t-values after normalization');
+%     xlabel('t-values before normalization');
 %
-%   Author:  Tor Wager + ChatGPT5.2
-%   Date:    2025-12-09
+%     % or:
+%     h = image_scatterplot(t, t2, 'pvaluebox', 0.005, 'colorpoints');
 %
+% :See also:
+%   - normalize_gm_shift_scale (voxel-level function called internally)
+%   - rescale, windsorize (other intensity-normalization options)
+%
+% ..
+%    Author:  Tor Wager + ChatGPT5.2
+%    Date:    2025-12-09
+% ..
 
 % -------------------------------------------------------------------------
 % Parse inputs
@@ -106,11 +137,13 @@ default_masks = {'gray_matter_mask_sparse.img', ...
                  'canonical_ventricles.img'};
 
 p.addParameter('log_scale', false, @(x) islogical(x) && isscalar(x));
+p.addParameter('do_scale',  true,  @(x) islogical(x) && isscalar(x));
 p.addParameter('trim_pct',  5,     @(x) isnumeric(x) && isscalar(x) && x >= 0 && x < 50);
 p.addParameter('mask_files', default_masks, @(x) iscell(x) && numel(x) == 3);
 
 p.parse(obj, varargin{:});
 
+do_scale   = p.Results.do_scale;
 log_scale  = p.Results.log_scale;
 trim_pct   = p.Results.trim_pct;
 mask_files = p.Results.mask_files;
@@ -130,6 +163,8 @@ if isempty(obj.dat)
     error('gm_shift_scale_normalize:EmptyData', ...
         'The fmri_data object has an empty .dat field.');
 end
+
+obj = replace_empty(obj);
 
 [V, S] = size(obj.dat);
 
@@ -169,6 +204,7 @@ end
 Y = obj.dat;  % V x S
 
 [Z, stats] = normalize_gm_shift_scale(Y, gm_mask, wm_mask, csf_mask, ...
+                                     'do_scale',  do_scale, ...
                                      'log_scale', log_scale, ...
                                      'trim_pct',  trim_pct);
 
@@ -188,13 +224,18 @@ obj_out.dat = Z;          % normalized data
 % Metadata table: append stats columns
 if istable(obj.metadata_table)
     mt_in = obj.metadata_table;
-    if height(mt_in) ~= S
+    if isempty(mt_in) && height(mt_in) == 0
+        % Treat an empty metadata table like a missing one
+        obj_out.metadata_table = statstab;
+    elseif height(mt_in) ~= S
         warning('gm_shift_scale_normalize:MetadataHeightMismatch', ...
             ['metadata_table height (%d) does not match number of images (%d). ', ...
-             'Stats table will still be appended; please verify correspondence.'], ...
+             'Returning stats table only; please verify correspondence.'], ...
              height(mt_in), S);
+        obj_out.metadata_table = statstab;
+    else
+        obj_out.metadata_table = [mt_in statstab];
     end
-    obj_out.metadata_table = [mt_in statstab];
 else
     % If no metadata_table, create a new one from stats
     obj_out.metadata_table = statstab;
@@ -246,12 +287,21 @@ for k = 1:numel(fn)
             vars.(newname) = val(:, j);
         end
 
-    % Case 5: 1 x K vector (e.g., beta_mean, lambda) -> replicate as K columns
+    % Case 5: 1 x K vector -> replicate as K columns
     elseif ndims(val) == 2 && sz(1) == 1 && sz(2) > 1
         K = sz(2);
         for j = 1:K
             newname = sprintf('%s_%d', fname, j);
             vars.(newname) = repmat(val(1, j), S, 1);
+        end
+
+    % Case 6: K x 1 vector not matching subjects (e.g., beta_mean, beta_scale)
+    % -> replicate each entry across subjects as its own column
+    elseif ndims(val) == 2 && sz(2) == 1 && sz(1) > 1 && sz(1) ~= S
+        K = sz(1);
+        for j = 1:K
+            newname = sprintf('%s_%d', fname, j);
+            vars.(newname) = repmat(val(j, 1), S, 1);
         end
 
     else

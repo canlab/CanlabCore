@@ -1,5 +1,33 @@
 function history(dat)
-% Display history for image_vector object
+% history Display history for image_vector object.
+%
+% Prints the .dat_descrip and .history fields of an image_vector
+% (or subclass) object to the command window, separated by underline
+% rows.
+%
+% :Usage:
+% ::
+%
+%     history(dat)
+%
+% :Inputs:
+%
+%   **dat:**
+%        An image_vector (or subclass) object whose .history is a cell
+%        or character array of provenance strings.
+%
+% :Outputs:
+%
+%   None. Output is printed to the command window.
+%
+% :Examples:
+% ::
+%
+%     history(dat);
+%
+% :See also:
+%   - descriptives
+%   - image_vector
 
 u = '_________________________________________________';
 disp(u)

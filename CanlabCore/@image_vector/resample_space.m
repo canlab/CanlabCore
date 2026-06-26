@@ -1,32 +1,63 @@
 function obj = resample_space(obj, sampleto, varargin)
-% Resample the images in an fmri_data object (obj) to the space of another
-% image (sampleto; e.g., a mask image). Works for all image_vector objects.
-% The object includes only voxels in the in-mask region in the target
-% (sampleto) image.
+% resample_space Resample the images in an image_vector object to the space of another image.
+%
+% Resample the images in an fmri_data object (obj) to the space of
+% another image (sampleto; e.g., a mask image). Works for all
+% image_vector objects. The object includes only voxels in the in-mask
+% region in the target (sampleto) image.
 %
 % :Usage:
 % ::
 %
 %    obj = resample_space(obj, sampleto, [sampling method])
 %
-% Sampleto may be one of these:
-%   1. a volInfo structure (the image does not have to exist on the path)
-%   2. an image_vector, fmri_data, fmri_mask_image object
-%   3. a string with the name of an image
+% :Inputs:
 %
-% Can enter resampling method as optional input. Takes any input to
-% interp3:
-%       'nearest' - nearest neighbor interpolation
-%       'linear'  - linear interpolation (default)
-%       'spline'  - spline interpolation
-%       'cubic'   - cubic interpolation as long as the data is uniformly
-%                   spaced, otherwise the same as 'spline'
+%   **obj:**
+%        An image_vector / fmri_data / statistic_image / atlas object
+%        to resample.
+%
+%   **sampleto:**
+%        The target space, in any of these forms:
+%
+%        1. a volInfo structure (the image does not have to exist on the path)
+%        2. an image_vector, fmri_data, fmri_mask_image object
+%        3. a string with the name of an image
+%
+% :Optional Inputs:
+%
+%   **sampling method:**
+%        Can enter resampling method as optional input. Takes any input
+%        to interp3:
+%
+%        - 'nearest' - nearest neighbor interpolation
+%        - 'linear'  - linear interpolation (default)
+%        - 'spline'  - spline interpolation
+%        - 'cubic'   - cubic interpolation as long as the data is
+%          uniformly spaced, otherwise the same as 'spline'
+%
+% :Outputs:
+%
+%   **obj:**
+%        The input object resampled into the target space. .volInfo is
+%        replaced with sampleto.volInfo, .dat is interpolated into the
+%        new space, .removed_voxels is updated, and clusters are
+%        re-parsed. For atlas objects, the .probability_maps and label
+%        index are rebuilt; for statistic_image, .p / .ste / .sig / .N
+%        are resampled appropriately (with .sig defaulting to nearest
+%        neighbor).
 %
 % :Examples:
 % ::
 %
 %    label_mask = fmri_data(which('atlas_labels_combined.img'));
 %    label_mask = resample_space(label_mask, ivec, 'nearest') % resamples and masks label image
+%
+% :See also:
+%   - resample_to_image_space
+%   - interp3
+%   - reparse_contiguous
+%   - probability_maps_to_region_index
 %
 % ..
 %    Programmers' notes:
@@ -46,7 +77,7 @@ function obj = resample_space(obj, sampleto, varargin)
 %   to nearest neighbor, and add related warnings
 %   3/9/2026    Tor Wager changed sampling method to match SPM style,
 %   correcting bug with 1-voxel shift in-plane, using affine transformation
-%   matrix T instead to map all voxels. 
+%   matrix T instead to map all voxels.
 % ..
 
 n_imgs = size(obj.dat, 2);
@@ -123,7 +154,7 @@ else % if  isa(obj, 'atlas')
             
         end
     
-        obj_out.probability_maps(:, i) = resampled_dat(Vto.wh_inmask);
+        obj_out.probability_maps(:, i) = resampled_dat(sampleto.volInfo.wh_inmask);
         
         % rebuild .dat from probability images - done below
         %     if n_prob_imgs
@@ -217,7 +248,7 @@ if isa(obj_out, 'statistic_image')
             resampled_dat = interp3(S.y_vox_orig, S.x_vox_orig, S.z_vox_orig, voldata, S.y_vox_query, S.x_vox_query, S.z_vox_query, varargin{:});
 
             resampled_dat = resampled_dat(:);
-            obj_out.ste(:, i) = resampled_dat(sampleto.volIn.wh_inmask);
+            obj_out.ste(:, i) = resampled_dat(sampleto.volInfo.wh_inmask);
             
         end
         
@@ -268,7 +299,9 @@ if isa(obj_out, 'statistic_image')
 
             resampled_dat = resampled_dat(:);
             resampled_dat(isnan(resampled_dat)) = 0;
-            obj_out.sig(:, i) = logical(resampled_dat(Vto.wh_inmask));
+            % obj_out.sig(:, i) = logical(resampled_dat(Vto.wh_inmask)); % Vto no longer exists - Michael Sun, 03/30/2026
+            obj_out.sig(:, i) = logical(resampled_dat(obj_out.volInfo.wh_inmask));
+
         end % .sig field for statistic_image
         
     end % image loop k
@@ -282,7 +315,8 @@ if isa(obj_out, 'statistic_image')
             resampled_dat = interp3(S.y_vox_orig, S.x_vox_orig, S.z_vox_orig, voldata, S.y_vox_query, S.x_vox_query, S.z_vox_query, varargin{:});
 
             resampled_dat = resampled_dat(:);
-            obj_out.N = resampled_dat(Vto.wh_inmask);
+            % obj_out.N = resampled_dat(Vto.wh_inmask); % Vto no longer exists - Michael Sun, 03/30/2026
+            obj_out.N = resampled_dat(obj_out.volInfo.wh_inmask); 
             
         end % N field for statistic_image
     

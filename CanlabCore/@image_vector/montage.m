@@ -1,20 +1,69 @@
 function fig_handle = montage(image_obj, varargin)
-% Create a montage of an image_vector (or statistic_image or fmri_data)
-% object, on top of a standard anatomical underlay.
+% montage Create a montage of an image_vector (or statistic_image or fmri_data) object.
+%
+% Renders blobs from an image_vector, statistic_image, or fmri_data object
+% on top of a standard anatomical underlay.
+%
 % - Takes optional inputs to fmridisplay.addblobs (see help for options)
 % - Max 4 images in object. Use get_wh_image to select images from object if needed.
 %
-% *Usage:
+% :Usage:
 % ::
 %
 %    [fig_handle or o2 fmridisp object] = montage(image_obj, [optional arguments])
 %
-% :Optional inputs:
+% :Inputs:
+%
+%   **image_obj:**
+%        An image_vector, statistic_image, or fmri_data object containing
+%        up to four images to render as blobs.
+%
+% :Optional Inputs:
+%
 %   **fmridisplay:**
 %        for fmridisplay object style montage [default]
 %
 %   **scnmontage:**
 %        for circa 2008-style SCN lab montage for each image vector
+%
+%   **'targetsurface', name:**
+%        Pass a surface name through to addblobs (e.g., 'fsLR_32k').
+%
+%   **'sourcespace', name:**
+%        Pass a source space name through to addblobs.
+%
+%   Options for canlab_results_fmridisplay are passed forward, so different
+%   named montage types can be used. E.g.:
+%
+%        'full'            Axial, coronal, and saggital slices, 4 cortical surfaces
+%        'compact'         Midline saggital and two rows of axial slices [the default]
+%        'compact2'        A single row showing midline saggital and axial slices
+%        'compact3'        One row of axial slices, midline sagg, and 4 HCP surfaces
+%        'multirow'        A series of 'compact2' displays in one figure for comparing different images/maps side by side
+%        'regioncenters'   A series of separate axes, each focused on one region
+%        'full2'           for a slightly less full montage that avoids colorbar overlap issues
+%        'full hcp'        for full montage, but with surfaces and volumes from HCP data
+%
+%   See help canlab_results_fmridisplay for more info and options.
+%
+%   Legend control: the colorbar legend on the montage FIGURE is OFF by
+%   default. The display controller (controller.m) shows a per-layer legend
+%   (colour bar + numeric end labels) in its own panel instead, keeping the
+%   figure clean. Pass 'legend' to draw the colorbar on the montage figure
+%   (single-row montages only; useful for publication export). You can then
+%   access/control the handle like this:
+%       set(obj.activation_maps{1}.legendhandle, 'Position', [0.965 0.0994 0.01 0.4037]);
+%
+%   Colormap range control: Range is set automatically by default, and
+%   stored in obj.activation_maps{wh_to_display}.cmaprange. You can enter
+%   'cmaprange', followed by inputs in the correct format, to manually
+%   control this.
+%
+% :Outputs:
+%
+%   **fig_handle:**
+%        For 'fmridisplay' style: the fmridisplay object (o2). For
+%        'scnmontage' style: a vector of figure handles, one per image.
 %
 % :Examples:
 % ::
@@ -27,59 +76,61 @@ function fig_handle = montage(image_obj, varargin)
 %    o2 = montage(dat, 'trans', 'maxcolor', [1 .3 0], 'mincolor', [.5 0 1]);
 %    o2 = montage(dat, 'trans', 'mincolor', [.5 0 1], 'transvalue', .5);
 %
-%    Options for canlab_results_fmridisplay are also passed forward, so that
-%    different named montage types can be used.  E.g.,:
-%
 %    o2 = montage(t, 'trans', 'full');
 %
-%        'full'            Axial, coronal, and saggital slices, 4 cortical surfaces
-%        'compact'         Midline saggital and two rows of axial slices [the default] 
-%        'compact2'        A single row showing midline saggital and axial slices
-%        'compact3'        One row of axial slices, midline sagg, and 4 HCP surfaces
-%        'multirow'        A series of 'compact2' displays in one figure for comparing different images/maps side by side
-%        'regioncenters'   A series of separate axes, each focused on one region
-%        'full2'           for a slightly less full montage that avoids colorbar overlap issues
-%        'full hcp'        for full montage, but with surfaces and volumes from HCP data
+%    % Set all color maps to the same range:
+%    o2 = montage(dat, 'trans', 'mincolor', [.5 0 1], 'transvalue', .7, 'cmaprange', [0 3]);
 %
-%    See help canlab_results_fmridisplay for more info and options
-%
-%   %% ========== Legend control
-%   There is a 'nolegend' option.
-%   Colorbar legends are created in render_on_surface
-%   You can access and control the handles like this:
-%   set(obj.activation_maps{1}.legendhandle, 'Position', [[0.965 0.0994 0.01 0.4037]]);
-%
-%   %% ========== Colormap range control
-%   Range is set automatically by default, and stored in
-%   obj.activation_maps{wh_to_display}.cmaprange 
-%   You can enter 'cmaprange', followed by inputs in the correct format, to
-%   manually control this.
-%
-% Set all color maps to the same range:
-% o2 = montage(dat, 'trans', 'mincolor', [.5 0 1], 'transvalue', .7, 'cmaprange', [0 3]);
+% :See also:
+%   - canlab_results_fmridisplay
+%   - fmridisplay
+%   - addblobs
+%   - render_on_surface
+%   - get_wh_image
 
 meth = 'fmridisplay';
 
 % if user specified a target surface use it. We
-% pass targetsurface explicitly below so we need to remove it fro mvarargin
+% pass targetsurface explicitly below so we need to remove it from varargin
 % too to not have any redundancy
+
+
+% wh = find(strcmp(varargin,'targetsurface'));
+% if ~isempty(wh)
+%     targetsurface = varargin{wh + 1};
+%     varargin{wh+1} = [];
+%     varargin{wh} = [];
+% else
+%     targetsurface = [];
+% end
+% % this isn't really needed but helps suppress a warning
+% wh = find(strcmp(varargin,'sourcespace'));
+% if ~isempty(wh)
+%     sourcespace = varargin{wh + 1};
+%     varargin{wh+1} = [];
+%     varargin{wh} = [];
+% else
+%     sourcespace = [];
+% end
+
+% Fix above to actually delete cells instead of emptying contents:
 wh = find(strcmp(varargin,'targetsurface'));
 if ~isempty(wh)
     targetsurface = varargin{wh + 1};
-    varargin{wh+1} = [];
-    varargin{wh} = [];
+    varargin(wh:wh+1) = [];   % <-- delete cells, don’t set contents to []
 else
     targetsurface = [];
 end
-% this isn't really needed but helps suppress a warning
+
 wh = find(strcmp(varargin,'sourcespace'));
 if ~isempty(wh)
     sourcespace = varargin{wh + 1};
-    varargin{wh+1} = [];
-    varargin{wh} = [];
+    varargin(wh:wh+1) = [];   % <-- same
 else
     sourcespace = [];
 end
+
+
 for i = 1:length(varargin)
     if ischar(varargin{i})
         switch varargin{i}
@@ -88,7 +139,7 @@ for i = 1:length(varargin)
             case {'trans', 'color' 'maxcolor', 'mincolor', 'transvalue', 'cmaprange', 'full', 'full2', ...
                     'full no surfaces', 'MNI152NLin6Asym white', 'MNI152NLin6Asym midthickness', 'MNI152NLin6Asym pial', ...
                     'MNI152NLin2009cAsym white', 'MNI152NLin2009cAsym midthickness', 'MNI152NLin2009cAsym pial', ...
-                    'MNI152NLin6Asym sphere', 'compact2', 'compact3', 'nolegend', 'clim', 'colormap', 'pos_colormap', 'neg_colormap', 'gray_buffer', ...
+                    'MNI152NLin6Asym sphere', 'compact2', 'compact3', 'nolegend', 'legend', 'clim', 'colormap', 'pos_colormap', 'neg_colormap', 'gray_buffer', ...
                     'noverbose', 'indexmap','hcp grayordinates compact','hcp grayordinates', 'hcp grayordinates subcortex','disableVis3d'}
             case { 'compact', ...
                     'compact2', ...
@@ -180,13 +231,13 @@ switch meth
                 end
             
                 if ~isempty(o2.montage)
-                    o2 = addblobs(o2, region(obj, 'noverbose'), 'cmaprange', cmaprange, 'nooutline', ...
+                    o2 = addblobs(o2, region(obj, 'noverbose'), 'source_object', obj, 'cmaprange', cmaprange, 'nooutline', ...
                         'sourcespace', sourcespace, 'targetsurface', targetsurface, ...
                         varargin{:}, 'wh_montages', [montage_indx(i) montage_indx(i)+1]);
                 else
                     % error('Plotting multivolume data without volumetric montages (e.g. multivolume plotting on surfaces) is not yet supported.')
                     warning('Plotting multivolume data without volumetric montages (e.g. multivolume plotting on surfaces) is not yet supported. Plotting only first image.')
-                    o2 = addblobs(o2, region(obj, 'noverbose'), 'cmaprange', cmaprange, 'nooutline', ...
+                    o2 = addblobs(o2, region(obj, 'noverbose'), 'source_object', obj, 'cmaprange', cmaprange, 'nooutline', ...
                         'sourcespace', sourcespace, 'targetsurface', targetsurface, ...
                         varargin{:});
                 end
@@ -201,21 +252,27 @@ switch meth
                     end
                 end
                 
-                o2 = addblobs(o2, region(obj, 'noverbose'), 'nooutline', 'sourcespace', sourcespace, 'targetsurface', targetsurface, varargin{:});
+                o2 = addblobs(o2, region(obj, 'noverbose'), 'source_object', obj, 'nooutline', 'sourcespace', sourcespace, 'targetsurface', targetsurface, varargin{:});
                 
             end
             
             % drawnow
             pause(0.005)
+            drawnow limitrate;
             
         end
         
-        if ~do_multirow
-            
-            % Plot legend only for single-row, otherwise obscures some images
-            
+        if ~do_multirow && any(strcmp(varargin, 'legend'))
+
+            % Colorbar legend on the montage FIGURE is now OFF by default: the
+            % display controller (controller.m) shows a per-layer legend in its
+            % own panel, so the figure stays clean. Pass 'legend' to draw the
+            % colorbar on the montage figure anyway (e.g. for a publication
+            % export). Only single-row montages are eligible (a legend would
+            % obscure images in a multi-row layout).
+
             o2 = legend(o2, varargin{:});  % pass through "noverbose" option
-            
+
         end
         
         fig_handle = o2;

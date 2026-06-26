@@ -129,9 +129,9 @@ function write_file(voldata, volInfo, outname, descrip, varargin)
         % correct .private loaded from file by re-mapping volume.
         spm_write_plane(spm_vol(volInfo.fname), voldata, slice_number);
     else
-        warning('off'); % empty images return many warnings
+        warnstate = warning('off', 'all'); % empty images return many warnings
         spm_write_vol(volInfo, voldata);
-        warning('on');
+        warning(warnstate);
     end
 end
 
@@ -149,7 +149,10 @@ if ~isempty(t)
     t = t(1);
     n1 = ext((t+1):end);
     if ~isempty(n1),
-        n   = str2num(n1);
+        n = str2double(n1);
+        if isnan(n)
+            n = 1;  % Fall back to 1 for non-numeric values
+        end
         ext = ext(1:(t-1));
     end
 end

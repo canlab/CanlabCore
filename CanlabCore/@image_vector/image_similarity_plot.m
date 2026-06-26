@@ -1,54 +1,39 @@
 function [stats, hh, hhfill, table_group, multcomp_group] = image_similarity_plot(obj, varargin)
-% Associations between data images in object and set of 'spatial basis function' images (e.g., 'signatures' or pre-defined maps)
-% - Similarity metric is point-biserial correlations or cosine-similarity
+% image_similarity_plot Plot associations between data images and a set of spatial basis maps.
 %
-% Usage:
+% Compares one or more input images to a specified set of a priori
+% spatial basis maps (e.g., 'signatures' or pre-defined maps) and
+% visualizes the similarity values as either a wedge or polar plot.
+%
+% - Similarity metric is point-biserial correlation (Pearson's r) by
+%   default; cosine similarity and binary overlap are also available.
+% - If multiple images are entered, the 'average' option returns a plot
+%   with standard error bars and statistics on the significance of the
+%   correlation with each basis map (across input images) and the
+%   differences (inhomogeneity) in similarity across basis maps.
+% - If a grouping variable is entered, statistics are calculated for
+%   multivariate differences across the groups of input images. Such
+%   differences are assessed treating the basis maps as variables and
+%   input images as cases.
+% - There are many basis map sets ("mapset" in code) that can be
+%   specified by keyword. E.g., "NPSplus" includes the NPS map from
+%   Wager et al. 2013, Romantic Rejection classifier (Woo 2015),
+%   Negative emotion map (Chang 2015), and vicarious pain (Krishnan et
+%   al. 2016). Other sets are "bucknerlab" including 7 cortical [only]
+%   networks from the Buckner Lab's 1000-person resting-state analyses
+%   and "kragelemotion", including 7 emotion-predictive maps from
+%   Kragel 2015.
+% - Be thoughtful about how your code is treating zero-valued voxels,
+%   which are typically missing data in brain images. The main
+%   calculations here are done by canlab_pattern_similarity.m, which
+%   treats zeros as missing in data images but not pattern basis maps
+%   (which can be binary or other 'signatures'). See
+%   "help canlab_pattern_similarity".
+%
+% :Usage:
 % ::
 %
 %    [stats, hh, hhfill, table_group, multcomp_group] = image_similarity_plot(obj, 'average');
-%
-% - This is a method for an image_vector object that compares the spatial
-% similarity of input image(s) to a specified set of a priori spatial basis maps.
-% It returns similarity values (Pearson's r by default) to each a priori basis map,
-% and a plot that shows these values.
-% - If multiple images are entered, the 'average' function can return a plot with
-% standard error bars and statistics on the significance of the correlation with each basis map
-% (across input images) and the differences (inhomogeneity) in similarity across basis
-% maps.
-% - If a grouping variable is entered, statistics are calculated for
-% multivariate differences across the groups of input images. Such
-% differences are assessed treating the basis maps as variables and input
-% images as cases.
-% - There are many basis map sets ("mapset" in code) that can be specified by keyword.
-% e.g., "NPSplus" includes the NPS map from Wager et al. 2013, Romantic Rejection
-% classifier (Woo 2015), Negative emotion map (Chang 2015), and vicarious
-% pain (Krishnan et al. 2016).  Other sets are "bucknerlab" including 7 cortical [only]
-% networks from the Buckner Lab's 1000-person resting-state analyses and
-% "kragelemotion", including 7 emotion-predictive maps from Kragel 2015.
-% - Be thoughtful about how your code is treating zero-valued voxels, which
-% are typically missing data in brain images. The main calculations here
-% are done by canlab_pattern_similarity.m, which treats zeros as missing in
-% data images but not pattern basis maps (which can be binary or other
-% 'signatures'. See "help canlab_pattern_similarity".
-%
-% ..
-%     Author and copyright information:
-%
-%     Copyright (C) 2015 Tor Wager, stats added by Phil Kragel
-%
-%     This program is free software: you can redistribute it and/or modify
-%     it under the terms of the GNU General Public License as published by
-%     the Free Software Foundation, either version 3 of the License, or
-%     (at your option) any later version.
-%
-%     This program is distributed in the hope that it will be useful,
-%     but WITHOUT ANY WARRANTY; without even the implied warranty of
-%     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-%     GNU General Public License for more details.
-%
-%     You should have received a copy of the GNU General Public License
-%     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-% ..
 %
 % :Inputs:
 %
@@ -185,6 +170,10 @@ function [stats, hh, hhfill, table_group, multcomp_group] = image_similarity_plo
 %           - .multcomp_spatial, multiple comparisons of means across
 %             different spatial bases, critical value determined
 %             by Tukey-Kramer method (see multcompare)
+%           - .group.p list of p-values from between-group ANOVAs (see
+%             table_group below)
+%           - .group.q corresponding FDR-corrected p-values
+%
 %   **hh:**
 %             Handles to lines
 %
@@ -194,7 +183,7 @@ function [stats, hh, hhfill, table_group, multcomp_group] = image_similarity_plo
 %   **table_group**
 %             multiple one-way ANOVA tables (one for each
 %             spatial basis) with group as column factor (requires
-%             'average' to be specified)
+%             'average' and 'compareGroups' to be specified)
 %
 %   **multcomp_group**
 %             mutiple comparisons of means across groups, one output
@@ -221,10 +210,29 @@ function [stats, hh, hhfill, table_group, multcomp_group] = image_similarity_plo
 %    stats = image_similarity_plot(fmri_data(img), 'cosine_similarity', 'bucknerlab', 'colors', color);
 %
 % :See also:
+%   - tor_polar_plot
+%   - tor_wedge_plot
+%   - canlab_pattern_similarity
+%   - load_image_set
 %
-% tor_polar_plot, tor_wedge_plot
-
 % ..
+%    Author and copyright information:
+%
+%    Copyright (C) 2015 Tor Wager, stats added by Phil Kragel
+%
+%    This program is free software: you can redistribute it and/or modify
+%    it under the terms of the GNU General Public License as published by
+%    the Free Software Foundation, either version 3 of the License, or
+%    (at your option) any later version.
+%
+%    This program is distributed in the hope that it will be useful,
+%    but WITHOUT ANY WARRANTY; without even the implied warranty of
+%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%    GNU General Public License for more details.
+%
+%    You should have received a copy of the GNU General Public License
+%    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+%
 %    Programmers' notes:
 %    List dates and changes here, and author of changes
 % List dates and changes here, and author of changes
@@ -261,6 +269,10 @@ function [stats, hh, hhfill, table_group, multcomp_group] = image_similarity_plo
 % 2023/12/19 Lukas Van Oudenhove
 %   - debugged and improved wedge and polarplot code for multiple
 %       groups, see notes in code below for details
+% 2026/01/13 Lukas Van Oudenhove
+%   - added fdr corrected p-values to correlation and ANOVA tables
+%   - corrected stars for significances for group comparison polar plot
+
 
 % PRELIMINARIES
 % ------------------------------------------------------------------------
@@ -285,6 +297,7 @@ force_noaverage = false; % averaging mode determined by plot style below, which 
                          % functions, e.g., riverplot
 
 mapset = 'bucknerlab';  % 'bucknerlab'
+stats = struct(); %initialize output
 table_group = {}; %initialize output
 multcomp_group = {}; %initialize output
 dofigure = true;
@@ -321,7 +334,6 @@ for i = 1:length(varargin)
                 force_noaverage = true;
 
             case 'cosine_similarity', sim_metric = 'cosine';
-%               case 'cosine_similarity', sim_metric = 'corr';
 
             case 'binary_overlap', sim_metric = 'overlap';
 
@@ -607,19 +619,42 @@ elseif doaverage
         groupValues=unique(group, 'stable');
         g=num2cell(groupValues); %create cell array of group numbers
 
-        for i=1:size(z,2) %for each spatial basis do an anova across groups
+        for i=1:size(z,2) % for each spatial basis do an anova across groups
 
-            [p, table_group{i}, st]=anova1(z(:,i), group, 'off'); %get anova table
-            [c,~] = multcompare(st, 'Display', 'off'); %perform multiple comparisons
+            [stats.group.p(i), table_group{i}, st]=anova1(z(:,i), group, 'off'); %get anova table
+            [c,~] = multcompare(st, 'Display', 'off'); % perform multiple comparisons
             multcomp_group{i}=[g(c(:,1)), g(c(:,2)), num2cell(c(:,3:end)), pValueToStars(c(:,end))]; %format table for output
+            
+            if length(groupValues) > 1
+                starCellArray_bg(i) = pValueToStars(c(:,end));
+            end
 
         end
-
+        
+        if strcmp(sim_metric,'corr')
+            stats.group.descrip = 'one-way ANOVA comparing Fisher''s r to Z transformed point-biserial correlations between groups';
+        else
+            stats.group.descrip = ['one-way ANOVA comparing raw similarity measured by ' sim_metric ' between groups'];
+        end
+        
+        [~, stats.group.q, stats.group.aprioriprob] = mafdr(stats.group.p);
+        if stats.group.aprioriprob > .99
+           stats.group.q = mafdr(stats.group.p, 'BHFDR',true); % B-H rather than Storey if estimated probability of true positives = 1 as in SAS proc multtest
+           label_FDR_group = 'q_B-H';
+        else
+            for q = 1:size(stats.group.q,2) % implementing the constraint q >= p as in SAS proc multtest
+                if stats.group.q(1,q) < stats.group.p(1,q)
+                    stats.group.q(1,q) = stats.group.p(1,q);
+                end
+            end
+            label_FDR_group = 'q_Storey';
+        end
+                                    
         if printTable
             for i=1:size(z,2)
                 disp(['Between-group comparisons for ' networknames{i} ':']);
                 disp('--------------------------------------');
-                disp(['One-way ANOVA: F(' num2str(table_group{i}{2,3}) ','  num2str(table_group{i}{3,3}) ') = ' num2str(table_group{i}{2,5},3) ', P = ' num2str(table_group{i}{2,6},3)])
+                disp(['One-way ANOVA: F(' num2str(table_group{i}{2,3}) ','  num2str(table_group{i}{3,3}) ') = ' num2str(table_group{i}{2,5},3) ', P = ' num2str(table_group{i}{2,6},3) ', ' label_FDR_group ' = ' num2str(stats.group.q(1,i))])
                 disp(' ')
                 disp('Multiple comparisons of means:')
                 disp(' ');
@@ -692,25 +727,51 @@ elseif doaverage
         stats(g).t = stat.tstat';
         stats(g).df = stat.df';
         starCellArray = pValueToStars(stats(g).p);
+        
+        if size(stats(g).p,1) > 1
+        
+            [~, stats(g).q, stats(g).aprioriprob] = mafdr(stats(g).p);
+            if stats(g).aprioriprob > .99
+               stats(g).q = mafdr(stats(g).p, 'BHFDR',true); % B-H rather than Storey if estimated probability of true positives = 0 as in SAS proc multtest
+               label_FDR = 'q_B-H';
+            else
+                for q = 1:size(stats(g).q,1) % implementing the constraint q >= p as in SAS proc multtest
+                    if stats(g).q(q) < stats(g).p(q)
+                        stats(g).q(q) = stats(g).p(q);
+                    end
+                end
+                label_FDR = 'q_Storey';
+            end
+        
 
-        %perform repeated measures anova  (two way anova with subject as the
-        %row factor
-        [~, stats(g).table_spatial, st]=anova2(z_group(~any(isnan(z_group')),:),1,'off');
-        [c,~] = multcompare(st,'Display','off');
-        stats(g).multcomp_spatial=[networknames(c(:,1))', networknames(c(:,2))', num2cell(c(:,3:end))];
+            %perform repeated measures anova  (two way anova with subject as the
+            %row factor
+            [~, stats(g).table_spatial, st]=anova2(z_group(~any(isnan(z_group')),:),1,'off');
+            [c,~] = multcompare(st,'Display','off');
+            stats(g).multcomp_spatial=[networknames(c(:,1))', networknames(c(:,2))', num2cell(c(:,3:end))];
 
 
-        if printTable
-            disp(['Table of correlations Group:' num2str(g)]);
-            disp('--------------------------------------');
-            disp(stats(g).descrip)
+            if printTable
+                if length(groupValues) == 1
+                    disp('Table of correlations entire sample');
+                else
+                    disp(['Table of correlations Group:' num2str(g)]);
+                end
+                disp('--------------------------------------');
+                disp(stats(g).descrip)
 
-            print_matrix([m(:,g) stats(g).t stats(g).p stats(g).sig], {'R_avg' 'T' 'P' 'sig'}, networknames, '%3.4f', starCellArray);
+                print_matrix([m(:,g) stats(g).t stats(g).p stats(g).sig, stats(g).q], {'R_avg' 'T' 'P' 'sig', label_FDR}, networknames, '%3.4f', starCellArray);
 
-            disp(' ');
+                disp(' ');
+            end
+
+            if length(groupValues) == 1
+                networknames=strcat(networknames, starCellArray');
+            else
+                networknames=strcat(networknames, starCellArray_bg);
+            end
+        
         end
-
-        networknames=strcat(networknames, starCellArray');
 
     end %groups
 

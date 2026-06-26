@@ -206,6 +206,7 @@ neg_colormap = [];
 clim = [];
 axis_handle = get(surface_handles, 'Parent');          % axis handle to apply colormap to; can be altered with varargin
 dolegend = true;
+single_colorbar = false;   % draw ONE colorbar (single-ramp/solid map) instead of pos+neg pair
 doindexmap = false;
 splitcolors = {};
 doscaledtrans = 0;
@@ -215,6 +216,8 @@ srcdepth = {'midthickness','pial','white'}; % default depth to sample a surface 
 targetsurface = [];
 interp = 'linear';
 gray_buffer = true;
+truecolor_cmap = [];   % optional canlab_colormap -> true-colour (N x 3 RGB) vertices
+truecolor_alpha = 1;   % opacity for the true-colour layer (blend with what's underneath)
 
 allowable_sourcespace = {'colin27','MNI152NLin6Asym','MNI152NLin2009cAsym'};
 allowable_targetsurface = {'fsaverage_164k','fsLR_32k'};
@@ -258,9 +261,14 @@ for i = 1:length(varargin)
                     
                 
             case 'nolegend'
-                
+
                 dolegend = false;
-                
+
+            case 'single_colorbar'
+                % One colorbar spanning the full range, for single-ramp / solid
+                % maps (a split +/- pair would wrongly imply two colour scales).
+                single_colorbar = true;
+
             case 'indexmap'
                 if ~contains('colormap',varargin(cellfun(@ischar,varargin))),...
                         warning('render_on_surface() given ''indexmap'' argument, but no ''colormap'' argument. ''indexmap'' doesn''t do anything without a ''colormap'' argument.');
@@ -276,6 +284,16 @@ for i = 1:length(varargin)
                 mylabels=varargin{i+1};
                 
                 
+            case 'truecolor'
+                % Followed by a canlab_colormap; colours vertices via map() as
+                % true-colour RGB instead of the indexed colormap path.
+                truecolor_cmap = varargin{i + 1};
+
+            case 'truecolor_alpha'
+                % Opacity (0..1) for the true-colour layer: its coloured vertices
+                % are blended with what is underneath (lower layers / gray).
+                truecolor_alpha = varargin{i + 1};
+
             case 'scaledtransparency'
                 doscaledtrans = 1;
 
@@ -660,7 +678,47 @@ for i = 1:length(surface_handles)
     end
             
     wh = c == 0 | isnan(c);                    % save these to replace with gray-scale later
-    
+
+    % ---- TRUE-COLOUR path (central canlab_colormap) ----------------------
+    % Colour each vertex directly via the central map (N x 3 RGB), compositing
+    % over the anatomy gray for uncoloured vertices. This makes surfaces match
+    % the montage colours and unlocks multi-layer compositing / per-layer
+    % visibility. Skips the indexed-colormap path below for this surface.
+    if ~isempty(truecolor_cmap)
+        sh_obj   = surface_handles(i);
+        nV       = size(get(sh_obj, 'Vertices'), 1);
+        anat     = get(sh_obj, 'FaceVertexCData');
+        % "base" = what is currently displayed: the anatomy gray on the first
+        % paint (resolved from the solid FaceColor when present, since the fresh
+        % FaceVertexCData can be a stale dark value), or the running composite of
+        % lower layers on later paints. Uncoloured vertices keep this base, which
+        % is what composites multiple layers (top layer wins per vertex).
+        base     = anatomy_to_rgb(anat, nV, get(sh_obj, 'FaceColor'));
+        % Save the TRUE gray ONCE so eraseblobs/removeblobs restore gray rather
+        % than a composite. Save-once -> UserData always holds the anatomy gray.
+        if isempty(get(sh_obj, 'UserData'))
+            set(sh_obj, 'UserData', base);
+        end
+        rgb      = truecolor_cmap.map(double(c(:)));        % N x 3, NaN = uncoloured
+        unc      = wh(:) | any(isnan(rgb), 2);
+        col      = ~unc;
+        % Blend this layer's coloured vertices with what is underneath by its
+        % opacity, so a semi-transparent layer lets the layer below show through
+        % (alpha 0 = fully transparent / hidden, alpha 1 = opaque).
+        a = max(0, min(1, truecolor_alpha));
+        if a < 1
+            rgb(col, :) = a .* rgb(col, :) + (1 - a) .* base(col, :);
+        end
+        rgb(unc, :) = base(unc, :);
+        set(sh_obj, 'FaceVertexCData', rgb, 'FaceColor', 'interp', ...
+            'CDataMapping', 'direct', 'EdgeColor', 'none');
+        if doscaledtrans
+            z = c ./ max(abs(datvec)); z = enhance_contrast(z);
+            set(sh_obj, 'FaceVertexAlphaData', abs(z(:)), 'FaceAlpha', 'interp');
+        end
+        continue
+    end
+
     %c_colored = map_function(c);    % Map to colormap indices (nvals = starting range, nvals elements)
     
     % FIX: rescale range so we don't map into gray range at edges due to
@@ -758,17 +816,31 @@ end
 [colorbar1_han, colorbar2_han] = deal([]);
 if ~dolegend, return, end
 
-if any(datvec > 0)
-    
-    % check for existing colorbars
-    children = get(gcf,'Children');
+% Parent the colorbar legend to the surface's OWN figure, not whatever figure
+% happens to be current (gcf). Otherwise the legend lands on the montage window
+% (a common source of "legend on top of the montage"). Fall back to gcf only if
+% the surface handle's figure can't be resolved.
+sh_for_fig = surface_handles;
+if iscell(sh_for_fig), sh_for_fig = [sh_for_fig{:}]; end
+sh_for_fig = sh_for_fig(ishandle(sh_for_fig));
+if isempty(sh_for_fig)
+    surf_fig = gcf;
+else
+    surf_fig = ancestor(sh_for_fig(1), 'figure');
+    if isempty(surf_fig), surf_fig = gcf; end
+end
+
+if any(datvec > 0) || single_colorbar
+
+    % check for existing colorbars (in the SURFACE figure)
+    children = get(surf_fig,'Children');
     for i = 1:length(children)
         if isa(children(i),'matlab.graphics.illustration.ColorBar')
             delete(children(i));
         end
     end
 
-    bar1axis = axes('Position', [.55 .55 .38 .4]);
+    bar1axis = axes('Parent', surf_fig, 'Position', [.55 .55 .38 .4]);
     if doindexmap
         colormap(bar1axis, cm(2:end,:));
     else
@@ -788,8 +860,14 @@ if any(datvec > 0)
         set(colorbar1_han, 'YLim', [0 1], 'YTick', y_positions, 'YTickLabel', mylabels, 'FontSize', 18);
 
     else
-        minpos = min(datvec(datvec > 0));
-        ticklabels = [minpos clim(2)];
+        % Single-ramp/solid map: ONE bar over the full range [clim(1) clim(2)]
+        % (through zero). Otherwise the positive bar runs minpos -> clim(2).
+        if single_colorbar
+            ticklabels = [clim(1) clim(2)];
+        else
+            minpos = min(datvec(datvec > 0));
+            ticklabels = [minpos clim(2)];
+        end
         ticklabels = arrayfun(@(x1)(x1), ticklabels, 'UniformOutput', false); % make cell array
         for i = 1:length(ticklabels)
             if abs(ticklabels{i}) < 0.01
@@ -802,12 +880,12 @@ if any(datvec > 0)
         end
         set(colorbar1_han, 'YTick', [0 1], 'YTickLabel', ticklabels, 'FontSize', 12);
     end
-    
+
 end
 
-if any(datvec < 0)
+if any(datvec < 0) && ~single_colorbar
     
-    bar2axis = axes('Position', [.55 .1 .38 .4]);
+    bar2axis = axes('Parent', surf_fig, 'Position', [.55 .1 .38 .4]);
     if doindexmap
         colormap(bar1axis, cm(2:end,:));
     else
@@ -1135,4 +1213,35 @@ function M = ordered_mode(dat)
             M(i) = firstval;
         end
     end
+end
+
+
+function g = anatomy_to_rgb(anat, nV, facecolor)
+% Convert a surface's existing (gray anatomy) FaceVertexCData to N x 3 RGB, used
+% as the background for the true-colour path. Preserves per-vertex curvature
+% shading when present; falls back to a flat gray.
+%
+% If the surface is currently displayed as a SOLID colour (FaceColor is a 1x3
+% RGB triplet rather than 'interp'/'flat'), that solid colour is the gray
+% actually on screen, so use it — the per-vertex FaceVertexCData may be stale.
+if nargin >= 3 && isnumeric(facecolor) && numel(facecolor) == 3
+    g = repmat(double(facecolor(:)'), nV, 1);
+    return
+end
+if isempty(anat)
+    g = repmat([.5 .5 .5], nV, 1);
+elseif size(anat, 2) == 3 && size(anat, 1) == nV
+    g = double(anat);                                  % already per-vertex RGB
+elseif numel(anat) == 3
+    g = repmat(double(anat(:)'), nV, 1);               % a single solid colour
+else
+    a = double(anat(:));
+    if numel(a) ~= nV
+        g = repmat([.5 .5 .5], nV, 1);
+        return
+    end
+    rng = max(a) - min(a);
+    if rng > 0, a = (a - min(a)) ./ rng; else, a = 0.5 * ones(size(a)); end
+    g = repmat(0.30 + 0.55 * a, 1, 3);                 % gray ramp, keeps shading
+end
 end

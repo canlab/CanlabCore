@@ -28,6 +28,9 @@ function vif = getvif(X, no_add_intercept, varargin)
 %
 % See also:
 % scn_spm_design_check
+%
+% getvif is deprecated unless you are using OptimizeDesign with the GA
+% use VIF.m instead; see also cVIF.m
 
 % Remove intercept, we will add later to each model
 X = intercept(X, 'remove');         % remove if present

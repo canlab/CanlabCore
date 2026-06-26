@@ -47,15 +47,13 @@ function out = iimg_reslice(matchto, reslicethis, varargin)
             VO = volInfo2;
             VO.fname   = outname;
             
-            switch(spm('Ver'))
+            switch spm('Ver')
                 case 'SPM2'
                     VO.dim     = [volInfo.dim(1:3) volInfo2.dim(4)];
-                case {'SPM5', 'SPM8'}
+                otherwise
+                    % SPM5+, including any future versions
                     VO.dt = volInfo.dt;
                     VO.private.dat.fname = outname;
-                    
-                otherwise
-                    error('Unknown SPM version "%s": neuroscientists of the future, fix me!', spm('Ver'));
             end
 
             VO.mat     = volInfo.mat;

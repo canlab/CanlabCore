@@ -99,10 +99,13 @@ function out = regress(obj, varargin)
 % :Outputs:
 %
 %  **regression_results:**
-%        A structure containing stats_img and fmri_data objects.
-%        In addition to the main outputs below, the regression_results structure also has
-%        fields for input_parameters, the design matrix (X), variable
-%        names, and warnings.
+%        A glm_map object containing stats_img and fmri_data objects.
+%        (Historically this was a plain struct; it is now re-cast as a
+%        glm_map whose property names match the field names documented here,
+%        so out.b, out.t, out.contrast_images, out.con_t, etc. all still
+%        work. See help glm_map.) In addition to the main outputs below, it
+%        also carries input_parameters, input_image_metadata, the design
+%        matrix (X), variable names, diagnostics, and warnings.
 %
 %  **regression_results.b:**
 %        stats_img object of beta values estimated from regression
@@ -121,7 +124,8 @@ function out = regress(obj, varargin)
 %
 %  **regression_results.diagnostics:***
 %        A structure containing VIFs and leverage values for the design matrix
-%        regression_results.diagnostics.Variance_inflation_factors = VIFs
+%        regression_results.diagnostics.Variance_inflation_factors = VIFs (from VIF.m)
+%        regression_results.diagnostics.Contrast_variance_inflation_factors = contrast VIFs (cVIF.m), if C provided
 %        regression_results.diagnostics.Leverages = leverage values
 %
 % :Examples:
@@ -563,13 +567,26 @@ end
 
 % Variance inflation
 % ---------------------------------------------------------------------
+% Use canonical VIF.m (getvif is deprecated). When a contrast matrix C is
+% present, VIF also returns contrast VIFs (cVIF) for the contrasts. C is
+% stored column-wise [regressors x contrasts]; VIF/cVIF expect one contrast
+% per row, so pass C'.
 
-vifs = getvif(X);
+contrast_vifs = [];
+if ~isempty(C) && size(C, 1) == size(X, 2)
+    [vifs, contrast_vifs] = VIF(X, C');
+else
+    vifs = VIF(X);
+end
 
 if any(vifs > 4)
 
     mywarnings{end+1} = 'Warning!!!  Design multicolinearity. Some regressors have variance inflation factors > 4. Check regression_results.diagnostics';
 
+end
+
+if ~isempty(contrast_vifs) && any(contrast_vifs > 4)
+    mywarnings{end+1} = 'Warning!!!  Some contrasts have contrast variance inflation factors (cVIF) > 4. Check regression_results.diagnostics.Contrast_variance_inflation_factors';
 end
 
 % Leverages
@@ -1067,7 +1084,8 @@ if ~isempty(C)
 
 end
 
-out.diagnostics = struct('Variance_inflation_factors', vifs, 'Leverages', leverages);
+out.diagnostics = struct('Variance_inflation_factors', vifs, ...
+    'Contrast_variance_inflation_factors', contrast_vifs, 'Leverages', leverages);
 out.warnings = mywarnings;
 
 % Create objects
@@ -1167,7 +1185,11 @@ if ~isempty(C)
     out.con_t.removed_images = false;  % this image does not have the same dims as the original dataset
     out.con_t.image_labels = contrast_names;
 
-    out.con_t = enforce_variable_types(out.con_t);
+    % out.con_t = enforce_variable_types(out.con_t); 
+    % Michael Sun 03/25/2026: This can introduce
+    % problems in that if one of the contrasts has no differences, then
+    % that image will get removed, which will lead to problems with
+    % thresholding in the next line.
 
     if doverbose
         fprintf('Thresholding t images at %3.6f %s\n', inputargs{1}, inputargs{2});
@@ -1193,6 +1215,25 @@ end
 % reset warning state if needed
 if warningwason
     warning on
+end
+
+% ---------------------------------------------------------------------
+% Re-cast the results structure as a glm_map object
+% ---------------------------------------------------------------------
+% The fields built above (b, t, df, sigma, contrast_images, con_t,
+% input_parameters, input_image_metadata, diagnostics, ...) map onto glm_map
+% properties of the same names. The object preserves struct-style field
+% access (out.b, out.t, out.con_t, ...) via Dependent aliases, so existing
+% callers continue to work. Guard the conversion so that any non-standard
+% output path (or a missing glm_map on the path) falls back to the struct.
+if isstruct(out) && isfield(out, 'b') && isfield(out, 't') && exist('glm_map', 'class') == 8
+    try
+        out = glm_map(out);
+        out = validate_object(out);   % ensure all nested-struct fields are present
+    catch ME
+        warning('fmri_data:regress:glm_mapCastFailed', ...
+            'Returning results as a struct; could not cast to glm_map: %s', ME.message);
+    end
 end
 
 % ---------------------------------------------------------------------

@@ -11,10 +11,10 @@ function files = scan_get_files(n, filt, mesg, wd)
         wd = pwd();
     end
 
-    switch(spm('Ver', [], 1))
+    switch spm('Ver', [], 1)
         case 'SPM2'
             files = spm_get(n, filt, mesg, wd);
-        case {'SPM5', 'SPM8'}
+        otherwise  % SPM5+, including any future versions
             if(any(n < 0))
                 typ = 'dir';
                 n = abs(n);

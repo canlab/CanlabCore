@@ -63,7 +63,9 @@ for k = 1:numel(matches)
         case 'include'
             % run everything
     end
-    suite = [suite, TestSuite.fromFile(fpath)]; %#ok<AGROW>
+    % canlab_safe_suite_from_file warn-skips files that are not valid test
+    % files instead of letting a NonTestFile error abort the whole run.
+    suite = [suite, canlab_safe_suite_from_file(fpath)]; %#ok<AGROW>
 end
 
 tag = char(p.Results.Tag);

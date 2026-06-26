@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(gh run watch *)",
+      "mcp__matlab__check_matlab_code"
+    ]
+  }
+}

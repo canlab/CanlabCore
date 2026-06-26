@@ -30,6 +30,10 @@ function obj = removeblobs(obj)
 %   - removepoints
 %   - addbrain
 
+% Drop any views whose figures were closed, so we never try to erase blobs
+% from deleted graphics handles.
+obj = prune_dead_views(obj);
+
 to_remove = [];
 
 for i = 1:length(obj.activation_maps)
@@ -64,14 +68,19 @@ obj.activation_maps(to_remove) = [];
 if ~isempty(obj.surface)
 
     for i = 1:length(obj.surface)
-        
+
         myhan = obj.surface{i}.object_handle;
-        
+
+        myhan = myhan(ishandle(myhan));   % skip any handles whose figure was closed
+        if isempty(myhan), continue, end
+
         myhan = addbrain('eraseblobs', myhan);
 
     end
-    
+
 end
 
+% Keep an open controller panel in sync after layers are removed.
+obj = update_controller(obj);
 
 end

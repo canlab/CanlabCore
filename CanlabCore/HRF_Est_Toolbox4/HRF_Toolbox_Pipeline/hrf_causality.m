@@ -17,17 +17,30 @@ function R = hrf_causality(out_dir, varargin)
 % -----
 %   R = hrf_causality(out_dir)                                  % signatures
 %   R = hrf_causality(out_dir, 'Unit','atlas', 'Atlas','ppat')  % regions
-%   R = hrf_causality(out_dir, 'Nodes',{'NPS','SIIPS'}, 'EvokedMode','both')
+%   R = hrf_causality({dir1, dir2})                             % POOL two dirs
+%   R = hrf_causality({lf,obs}, 'Condition','rest_stim')        % GC in blocks
 %   R = hrf_causality(out_dir, 'MaxRuns',2)                     % quick smoke test
+%
+% To CONTRAST two task states, run once per condition (or per dir) and pass
+% both results to hrf_causality_contrast:
+%   Rr = hrf_causality({lf,obs}, 'Condition','rest_stim');
+%   Rn = hrf_causality({lf,obs}, 'Condition','nback-stimblock');
+%   C  = hrf_causality_contrast(Rr, Rn);   hrf_plot_causality(C);
 %
 % Inputs
 % ------
-%   out_dir - a study output directory containing hrf_study_config.mat and the
-%             *_map_scores.csv score files.
+%   out_dir - a study output directory (with hrf_study_config.mat and
+%             *_map_scores.csv), OR a cell of such directories whose subjects
+%             are POOLED (e.g. {lf_distractmap, obs_distractmap} bodysites; the
+%             same subject id across dirs combines that subject's runs).
 %
 % Optional (name-value)
 % ---------------------
 %   'Unit'        - 'signature' (default) or 'atlas'.
+%   'Condition'   - restrict Granger to the event blocks of this trial_type
+%                   (glob ok; e.g. 'rest_stim', 'nback-stimblock'). Each block
+%                   becomes a separate GC realization. Default '' = whole run.
+%   'MinSegLen'   - drop condition blocks shorter than this many TRs. Default 20.
 %   'Atlas'       - for Unit='atlas': which atlas token (e.g. 'canlab2024',
 %                   'ppat'); default = first atlas in the config.
 %   'Nodes'       - restrict to these node names (region/signature), glob ok.
@@ -52,7 +65,7 @@ function R = hrf_causality(out_dir, varargin)
 %           hrf_granger_causality, hrf_apply_maps_to_wholebrain.
 
 p = inputParser;
-p.addRequired('out_dir', @(x) ischar(x) || isstring(x));
+p.addRequired('out_dir', @(x) ischar(x) || isstring(x) || iscell(x));
 p.addParameter('Unit', 'signature', @(x) ischar(x) || isstring(x));
 p.addParameter('Atlas', '', @(x) ischar(x) || isstring(x));
 p.addParameter('Nodes', {}, @(x) iscell(x) || isstring(x) || ischar(x));
@@ -65,6 +78,8 @@ p.addParameter('Order', 'bic', @(x) (ischar(x) || isstring(x)) || isscalar(x));
 p.addParameter('MaxOrder', 10, @(x) isscalar(x) && x >= 1);
 p.addParameter('Nperm', 0, @(x) isscalar(x) && x >= 0);
 p.addParameter('DeconvMethod', 'ridge', @(x) ischar(x) || isstring(x));
+p.addParameter('Condition', '', @(x) ischar(x) || isstring(x) || iscell(x));
+p.addParameter('MinSegLen', 20, @(x) isscalar(x) && x >= 4);
 p.addParameter('MaxRuns', Inf, @(x) isscalar(x) && x >= 1);
 p.addParameter('Verbose', true, @(x) islogical(x) || isnumeric(x));
 p.addParameter('doverbose', [], @(x) isempty(x) || islogical(x) || isnumeric(x));
@@ -72,69 +87,78 @@ p.parse(out_dir, varargin{:});
 opts = p.Results;
 verbose = logical(opts.Verbose);
 if ~isempty(opts.doverbose), verbose = logical(opts.doverbose); end
-od = char(out_dir);
+od_list = local_dir_list(out_dir);
 unit = lower(char(opts.Unit));
 
-cfg = local_load_config(od);
-TR = local_pa(cfg.pipeline_args, 'TR', NaN);
+cfgs = cell(1, numel(od_list));
+for di = 1:numel(od_list), cfgs{di} = local_load_config(od_list{di}); end
+TR = local_pa(cfgs{1}.pipeline_args, 'TR', NaN);
 if ~isfinite(TR), error('hrf_causality:NoTR', 'Could not read TR from config.pipeline_args.'); end
 
-% ---- 1. kernels from the score CSVs (group-mean sFIR curve per node) -----
-[kernels, nodes_all, lags] = local_build_kernels(od, unit, opts);
+% ---- 1. kernels from the score CSVs (group-mean sFIR curve per node), pooled across dirs
+[kernels, nodes_all, lags] = local_build_kernels(od_list, unit, opts);
 [kernels, nodes] = local_select_kernels(kernels, nodes_all, opts.Nodes);
 if isempty(nodes), error('hrf_causality:NoNodes', 'No %s nodes after Nodes filter.', unit); end
+cond_txt = local_cond_text(opts.Condition);
 if verbose
-    fprintf('hrf_causality: %d %s node(s); kernel = %s/%s curve over %d lags (TR=%.3g)\n', ...
-        numel(nodes), unit, char(opts.KernelModel), char(opts.KernelObject), numel(lags), TR);
+    fprintf('hrf_causality: %d %s node(s) over %d dir(s); kernel=%s/%s, %d lags, TR=%.3g; condition=%s\n', ...
+        numel(nodes), unit, numel(od_list), char(opts.KernelModel), char(opts.KernelObject), numel(lags), TR, cond_txt);
 end
 
-% ---- 2. per-run node timeseries from the 4-D BOLD -----------------------
-fmri_files = cellstr(string(cfg.fmri_files));
-events_files = local_cellstr_or_empty(cfg, 'events_files', numel(fmri_files));
-subjects = cellstr(string(cfg.subject_ids));
-nrun = min(numel(fmri_files), opts.MaxRuns);
-
-atlas_obj = [];
-if strcmp(unit, 'atlas'), atlas_obj = local_pick_atlas(cfg, opts.Atlas); end
-
-tsRuns = {}; confRuns = {}; subjUsed = {}; usedFiles = {};
-for r = 1:nrun
-    f = fmri_files{r};
-    if exist(f, 'file') ~= 2
-        warning('hrf_causality:MissingBOLD', 'Run %d BOLD not found, skipping: %s', r, f); continue
+% ---- 2. per-run node timeseries from the 4-D BOLD (across all dirs) ------
+tsRuns = {}; confRuns = {}; segRuns = {}; subjUsed = {}; usedFiles = {};
+total = 0;
+for di = 1:numel(od_list)
+    cfg = cfgs{di};
+    fmri_files = cellstr(string(cfg.fmri_files));
+    events_files = local_cellstr_or_empty(cfg, 'events_files', numel(fmri_files));
+    subjects = cellstr(string(cfg.subject_ids));
+    atlas_obj = [];
+    if strcmp(unit, 'atlas'), atlas_obj = local_pick_atlas(cfg, opts.Atlas); end
+    for r = 1:numel(fmri_files)
+        if total >= opts.MaxRuns, break; end
+        f = fmri_files{r};
+        if exist(f, 'file') ~= 2
+            warning('hrf_causality:MissingBOLD', 'BOLD not found, skipping: %s', f); continue
+        end
+        if verbose, fprintf('  [dir %d run %d] %s\n', di, r, local_short(f)); end
+        bold = fmri_data(f, 'noverbose');
+        ts = local_extract_timeseries(bold, unit, nodes, cfg, atlas_obj);
+        if isempty(ts), warning('hrf_causality:NoTS', 'No timeseries for %s; skipping.', local_short(f)); continue; end
+        T = size(ts, 1);
+        tsRuns{end + 1} = ts; %#ok<AGROW>
+        confRuns{end + 1} = local_events_design(events_files, r, T, TR); %#ok<AGROW>
+        segRuns{end + 1} = local_condition_mask(events_files, r, T, TR, opts.Condition); %#ok<AGROW>
+        subjUsed{end + 1} = subjects{min(r, numel(subjects))}; %#ok<AGROW>
+        usedFiles{end + 1} = f; %#ok<AGROW>
+        total = total + 1;
     end
-    if verbose, fprintf('  [%d/%d] %s\n', r, nrun, local_short(f)); end
-    bold = fmri_data(f, 'noverbose');
-    ts = local_extract_timeseries(bold, unit, nodes, cfg, atlas_obj);
-    if isempty(ts), warning('hrf_causality:NoTS', 'No timeseries for run %d; skipping.', r); continue; end
-    tsRuns{end + 1} = ts; %#ok<AGROW>
-    confRuns{end + 1} = local_events_design(events_files, r, size(ts, 1), TR); %#ok<AGROW>
-    subjUsed{end + 1} = subjects{min(r, numel(subjects))}; %#ok<AGROW>
-    usedFiles{end + 1} = f; %#ok<AGROW>
 end
 if isempty(tsRuns), error('hrf_causality:NoRuns', 'No runs produced timeseries.'); end
 
-% Prune nodes that are missing/constant in ANY run so kernels and every run's
-% timeseries stay column-aligned for the analyze step.
+% Prune nodes missing/constant in ANY run so kernels + ts stay column-aligned.
 valid = true(1, numel(nodes));
 for r = 1:numel(tsRuns)
-    finite_var = all(isfinite(tsRuns{r}), 1) & (std(tsRuns{r}, 0, 1) > 0);
-    valid = valid & finite_var;
+    valid = valid & (all(isfinite(tsRuns{r}), 1) & std(tsRuns{r}, 0, 1) > 0);
 end
-if ~all(valid) && verbose
-    fprintf('  pruning %d node(s) missing/constant in some run\n', sum(~valid));
-end
+if ~all(valid) && verbose, fprintf('  pruning %d node(s) missing/constant in some run\n', sum(~valid)); end
 kernels = kernels(:, valid); nodes = nodes(valid);
 for r = 1:numel(tsRuns), tsRuns{r} = tsRuns{r}(:, valid); end
 if isempty(nodes), error('hrf_causality:NoValidNodes', 'No nodes valid across all runs.'); end
 
-% kernels [L x N] and every run's ts are now in the same `nodes` order.
+% Warn if a condition was requested but matched no event blocks anywhere.
+if ~strcmp(cond_txt, '(whole run)') && ~any(cellfun(@(m) ~isempty(m) && any(m), segRuns))
+    warning('hrf_causality:NoConditionBlocks', ...
+        'Condition ''%s'' matched no event blocks in any run; check trial_type labels.', cond_txt);
+end
+
 R = hrf_causality_analyze(tsRuns, kernels, ...
     'Subjects', subjUsed, 'Nodes', nodes, 'EvokedMode', opts.EvokedMode, ...
-    'Confounds', confRuns, 'Conditional', opts.Conditional, 'Order', opts.Order, ...
-    'MaxOrder', opts.MaxOrder, 'Nperm', opts.Nperm, 'DeconvMethod', opts.DeconvMethod, ...
-    'doverbose', verbose);
+    'Confounds', confRuns, 'Segments', segRuns, 'MinSegLen', opts.MinSegLen, ...
+    'Conditional', opts.Conditional, 'Order', opts.Order, 'MaxOrder', opts.MaxOrder, ...
+    'Nperm', opts.Nperm, 'DeconvMethod', opts.DeconvMethod, 'doverbose', verbose);
 R.unit = unit; R.kernel_lags = lags; R.run_files = usedFiles(:);
+R.dirs = od_list(:)'; R.condition = cond_txt;
 end
 
 
@@ -148,17 +172,71 @@ S = load(cf, 'config'); cfg = S.config;
 end
 
 
+function L = local_dir_list(x)
+% Normalize the out_dir argument to a cellstr list of directories to pool.
+if iscell(x)
+    L = cellfun(@(c) char(string(c)), x, 'uni', 0);
+elseif isstring(x) && ~isscalar(x)
+    L = cellstr(x);
+else
+    L = {char(string(x))};
+end
+end
+
+
+function s = local_cond_text(c)
+cc = cellstr(string(c));
+cc = cc(~cellfun(@(z) isempty(strtrim(z)), cc));
+if isempty(cc), s = '(whole run)'; else, s = strjoin(cc, '|'); end
+end
+
+
+function mask = local_condition_mask(events_files, r, T, TR, condition)
+% Logical [T x 1] marking the run frames inside the requested condition's
+% event blocks (trial_type glob-matched). [] if no condition / no events ->
+% the analyze step then treats the whole run as one segment.
+mask = [];
+cond = cellstr(string(condition));
+cond = cond(~cellfun(@(z) isempty(strtrim(z)), cond));
+if isempty(cond), return; end
+if isempty(events_files) || r > numel(events_files), return; end
+ef = events_files{r};
+if isempty(ef) || exist(ef, 'file') ~= 2, return; end
+try
+    E = readtable(ef, 'FileType', 'text', 'Delimiter', '\t', 'TextType', 'string');
+catch
+    return
+end
+v = E.Properties.VariableNames;
+if ~all(ismember({'onset', 'trial_type'}, v)), return; end
+onset = double(E.onset);
+dur = zeros(size(onset)); if any(strcmp('duration', v)), dur = double(E.duration); end
+tt = cellstr(string(E.trial_type));
+sel = local_node_mask(tt, cond);          % glob trial-type match
+mask = false(T, 1);
+rows = find(sel);
+for j = rows(:)'
+    on = max(1, floor(onset(j) / TR) + 1);
+    off = min(T, on + max(1, round(dur(j) / TR)) - 1);
+    if on <= T, mask(on:off) = true; end
+end
+end
+
+
 function [K, nodes, lags] = local_build_kernels(od, unit, opts)
 % Group-mean sFIR curve per node, averaged across the kernel condition(s),
-% pooled across all subjects' score CSVs for the chosen model/object.
+% pooled across all subjects' score CSVs (and all dirs) for the model/object.
 prefix = local_unit_prefix(unit);
 model = lower(char(opts.KernelModel)); object = lower(char(opts.KernelObject));
-csvs = dir(fullfile(od, sprintf('*_hrf_%s_%s_map_scores.csv', model, object)));
-if isempty(csvs)
-    csvs = dir(fullfile(od, sprintf('*_hrf_%s_map_scores.csv', object)));   % single-model naming
+dirs = od; if ~iscell(dirs), dirs = {char(dirs)}; end
+csvs = [];
+for di = 1:numel(dirs)
+    cc = dir(fullfile(dirs{di}, sprintf('*_hrf_%s_%s_map_scores.csv', model, object)));
+    if isempty(cc), cc = dir(fullfile(dirs{di}, sprintf('*_hrf_%s_map_scores.csv', object))); end
+    csvs = [csvs; cc]; %#ok<AGROW>
 end
 if isempty(csvs)
-    error('hrf_causality:NoKernelCsv', 'No %s/%s score CSVs in %s.', model, object, od);
+    error('hrf_causality:NoKernelCsv', 'No %s/%s score CSVs in the given dir(s).', model, object);
 end
 acc = containers.Map('KeyType', 'char', 'ValueType', 'any');   % node -> running [L x k] curves
 lags = [];

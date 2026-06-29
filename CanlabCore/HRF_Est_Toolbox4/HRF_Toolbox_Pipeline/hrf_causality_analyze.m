@@ -39,6 +39,15 @@ function R = hrf_causality_analyze(tsRuns, kernels, varargin)
 %                  is 'remove'/'both'. For proxy-space removal these should be
 %                  NEURAL-level (UNconvolved) task regressors. Default {} =>
 %                  'remove' falls back to removing the per-run mean only.
+%   'Segments'   - cell{1..nRun} of logical [T x 1] masks. When given, each
+%                  run's proxy is split into the contiguous TRUE blocks of its
+%                  mask and each block becomes a separate GC realization, so
+%                  Granger is computed ONLY within that condition's blocks
+%                  (no autoregression across block gaps). This is how
+%                  condition-specific causality is done (e.g. rest_stim vs
+%                  nback blocks). Default {} => whole run.
+%   'MinSegLen'  - drop condition blocks shorter than this many samples.
+%                  Default 20.
 %   'DeconvMethod','Lambda' - passed to hrf_deconv_timeseries. Default ridge.
 %   'Conditional','Order','MaxOrder','Nperm' - passed to hrf_granger_causality.
 %   'Verbose'/'doverbose' - print a summary (default true).
@@ -52,7 +61,7 @@ function R = hrf_causality_analyze(tsRuns, kernels, varargin)
 %         .t,.p      [N x N]  one-sample t and p across subjects (diag NaN)
 %         .p_fdr     [N x N]  BH-FDR-corrected p over the off-diagonal
 %         .net_subj  [N x N x nSubj]  per-subject net-flow matrices
-%     .nodes, .nsubj, .nrun, .order
+%     .nodes, .subjects, .nsubj, .nrun, .order
 %
 % See also: hrf_deconv_timeseries, hrf_granger_causality, hrf_causality.
 
@@ -63,6 +72,8 @@ p.addParameter('Subjects', [], @(x) isempty(x) || isvector(x) || iscell(x));
 p.addParameter('Nodes', {}, @(x) iscell(x) || isstring(x) || ischar(x));
 p.addParameter('EvokedMode', 'both', @(x) ischar(x) || isstring(x));
 p.addParameter('Confounds', {}, @(x) iscell(x));
+p.addParameter('Segments', {}, @(x) iscell(x));
+p.addParameter('MinSegLen', 20, @(x) isscalar(x) && x >= 4);
 p.addParameter('DeconvMethod', 'ridge', @(x) ischar(x) || isstring(x));
 p.addParameter('Lambda', [], @(x) isempty(x) || isscalar(x));
 p.addParameter('Conditional', false, @(x) islogical(x) || isnumeric(x));
@@ -88,6 +99,8 @@ nSubj = numel(usubj);
 
 modes = local_modes(opts.EvokedMode);
 have_conf = ~isempty(opts.Confounds);
+have_seg = ~isempty(opts.Segments);
+minseglen = opts.MinSegLen;
 
 % Deconvolve every run once (kernel is mode-independent).
 proxy = cell(1, nRun);
@@ -100,13 +113,14 @@ gargs = {'Nodes', nodes, 'Conditional', opts.Conditional, 'Order', opts.Order, .
     'MaxOrder', opts.MaxOrder, 'Nperm', opts.Nperm, 'doverbose', false};
 
 R = struct('modes', {modes}, 'nodes', string(nodes), 'nsubj', nSubj, 'nrun', nRun, 'order', NaN);
+R.subjects = usubj(:)';
 for mi = 1:numel(modes)
     mode = modes{mi};
     net_subj = nan(N, N, nSubj);
     order_used = nan(1, nSubj);
     for s = 1:nSubj
         runs_s = find(sidx == s);
-        Xs = cell(1, numel(runs_s));
+        Xs = {};
         for q = 1:numel(runs_s)
             rr = runs_s(q);
             Xr = proxy{rr};
@@ -115,11 +129,19 @@ for mi = 1:numel(modes)
                 if have_conf && rr <= numel(opts.Confounds), conf = opts.Confounds{rr}; end
                 Xr = local_remove_evoked(Xr, conf);
             end
-            Xs{q} = Xr;
+            segmask = [];
+            if have_seg && rr <= numel(opts.Segments), segmask = opts.Segments{rr}; end
+            Xs = [Xs, local_segment(Xr, segmask, minseglen)]; %#ok<AGROW>
         end
-        G = hrf_granger_causality(Xs, gargs{:});
-        net_subj(:, :, s) = G.net;
-        order_used(s) = G.order;
+        if isempty(Xs), continue; end       % no usable blocks for this subject
+        try
+            G = hrf_granger_causality(Xs, gargs{:});
+            net_subj(:, :, s) = G.net;
+            order_used(s) = G.order;
+        catch ge
+            warning('hrf_causality_analyze:SubjectGCFailed', ...
+                'Subject %s GC failed (%s); skipping.', usubj{s}, ge.message);
+        end
     end
     R.(mode) = local_group_stats(net_subj, nodes);
     R.(mode).net_subj = net_subj;
@@ -158,6 +180,31 @@ if nSubj >= 2
 end
 pv(logical(eye(N))) = NaN;
 S = struct('net_group', mu, 't', t, 'p', pv, 'p_fdr', local_fdr(pv), 'nodes', {nodes});
+end
+
+
+function segs = local_segment(X, mask, minlen)
+% Split X [T x N] into the contiguous blocks where mask is true (each >=
+% minlen rows). Empty mask => the whole run as a single segment. Each block
+% becomes a separate GC realization so no autoregression crosses a gap.
+if isempty(mask)
+    segs = {X};
+    return
+end
+mask = logical(mask(:));
+T = size(X, 1);
+if numel(mask) ~= T
+    L = min(numel(mask), T); mask = mask(1:L); X = X(1:L, :);
+end
+segs = {};
+d = diff([false; mask; false]);
+starts = find(d == 1);
+stops = find(d == -1) - 1;
+for b = 1:numel(starts)
+    if stops(b) - starts(b) + 1 >= minlen
+        segs{end + 1} = X(starts(b):stops(b), :); %#ok<AGROW>
+    end
+end
 end
 
 

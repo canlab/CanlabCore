@@ -81,6 +81,7 @@ p.addParameter('DeconvMethod', 'ridge', @(x) ischar(x) || isstring(x));
 p.addParameter('Condition', '', @(x) ischar(x) || isstring(x) || iscell(x));
 p.addParameter('MinSegLen', 20, @(x) isscalar(x) && x >= 4);
 p.addParameter('MaxRuns', Inf, @(x) isscalar(x) && x >= 1);
+p.addParameter('ReturnData', false, @(x) islogical(x) || isnumeric(x));
 p.addParameter('Verbose', true, @(x) islogical(x) || isnumeric(x));
 p.addParameter('doverbose', [], @(x) isempty(x) || islogical(x) || isnumeric(x));
 p.parse(out_dir, varargin{:});
@@ -106,7 +107,7 @@ if verbose
 end
 
 % ---- 2. per-run node timeseries from the 4-D BOLD (across all dirs) ------
-tsRuns = {}; confRuns = {}; segRuns = {}; subjUsed = {}; usedFiles = {};
+tsRuns = {}; confRuns = {}; segRuns = {}; subjUsed = {}; usedFiles = {}; usedEvents = {};
 total = 0;
 for di = 1:numel(od_list)
     cfg = cfgs{di};
@@ -126,11 +127,13 @@ for di = 1:numel(od_list)
         ts = local_extract_timeseries(bold, unit, nodes, cfg, atlas_obj);
         if isempty(ts), warning('hrf_causality:NoTS', 'No timeseries for %s; skipping.', local_short(f)); continue; end
         T = size(ts, 1);
+        ef = ''; if r <= numel(events_files), ef = events_files{r}; end
         tsRuns{end + 1} = ts; %#ok<AGROW>
         confRuns{end + 1} = local_events_design(events_files, r, T, TR); %#ok<AGROW>
         segRuns{end + 1} = local_condition_mask(events_files, r, T, TR, opts.Condition); %#ok<AGROW>
         subjUsed{end + 1} = subjects{min(r, numel(subjects))}; %#ok<AGROW>
         usedFiles{end + 1} = f; %#ok<AGROW>
+        usedEvents{end + 1} = ef; %#ok<AGROW>
         total = total + 1;
     end
 end
@@ -145,6 +148,16 @@ if ~all(valid) && verbose, fprintf('  pruning %d node(s) missing/constant in som
 kernels = kernels(:, valid); nodes = nodes(valid);
 for r = 1:numel(tsRuns), tsRuns{r} = tsRuns{r}(:, valid); end
 if isempty(nodes), error('hrf_causality:NoValidNodes', 'No nodes valid across all runs.'); end
+
+% Early exit: hand back the extracted per-run timeseries + kernels + events so
+% other methods (e.g. hrf_causality_mediation) can reuse the expensive BOLD
+% extraction without re-loading the 4-D data.
+if logical(opts.ReturnData)
+    R = struct('tsRuns', {tsRuns}, 'kernels', kernels, 'nodes', {nodes}, ...
+        'subjects', {subjUsed}, 'events_files', {usedEvents}, 'run_files', {usedFiles(:)'}, ...
+        'TR', TR, 'dirs', {od_list(:)'}, 'unit', unit, 'kernel_lags', lags);
+    return
+end
 
 % Warn if a condition was requested but matched no event blocks anywhere.
 if ~strcmp(cond_txt, '(whole run)') && ~any(cellfun(@(m) ~isempty(m) && any(m), segRuns))

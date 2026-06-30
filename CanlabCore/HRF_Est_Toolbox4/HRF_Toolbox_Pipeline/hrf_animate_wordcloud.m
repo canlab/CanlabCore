@@ -15,11 +15,16 @@ function out = hrf_animate_wordcloud(source, varargin)
 % ::
 %     hrf_animate_wordcloud(score_csv, 'Condition','heat', 'OutputFile','terms.mp4')
 %     hrf_animate_wordcloud(input_table, 'Set','neurosynth', 'TopN',40)  % group mean
+%     hrf_animate_wordcloud({lf,obs}, 'Set','neurosynth', 'Model','sfir', ...
+%         'Condition','*heat*', 'OutputFile','pooled_terms.mp4')   % POOL dirs
 %     out = hrf_animate_wordcloud(struct('scores',M,'terms',t,'lags',L))   % direct
 %
 % :Inputs:
-%   **source:** a score CSV path; an input_table (subject/*_scores_file rows ->
-%             pooled group mean); or a struct with fields .scores [nLag x nTerm],
+%   **source:** any of -- a score CSV path; an input_table
+%             (subject/*_scores_file rows); an output DIRECTORY or a CELL of
+%             directories/input tables (collected and POOLED into one group
+%             mean across every subject of every dir -- same subject id across
+%             dirs combines); or a struct with fields .scores [nLag x nTerm],
 %             .terms (1 x nTerm), .lags (1 x nLag).
 %
 % :Optional Inputs:
@@ -125,6 +130,14 @@ if isstruct(source) && isfield(source, 'scores')
     lags = source.lags(:)'; condlabel = 'curve';
     return
 end
+% cell of dirs / input tables, or a single output DIRECTORY -> pool into one
+% input table (group-mean across every subject of every dir), then proceed.
+is_dir = (ischar(source) || isstring(source)) && isfolder(char(string(source)));
+if iscell(source) || is_dir
+    IT = local_pool_input_table(source);
+    [scores, terms, lags, condlabel] = local_matrix_from_input_table(IT, prefix, opts);
+    return
+end
 if (ischar(source) || isstring(source)) && endsWith(string(source), '.csv')
     [scores, terms, lags, condlabel] = local_matrix_from_csv(char(source), prefix, opts);
     return
@@ -133,7 +146,35 @@ if istable(source)
     [scores, terms, lags, condlabel] = local_matrix_from_input_table(source, prefix, opts);
     return
 end
-error('hrf_animate_wordcloud:Source', 'source must be a CSV path, input_table, or struct.');
+error('hrf_animate_wordcloud:Source', ...
+    'source must be a score CSV, an input_table, a struct, an output dir, or a cell of dirs/tables.');
+end
+
+
+function IT = local_pool_input_table(source)
+% Concatenate the collection tables of one or more output dirs (or pre-built
+% input tables) on their common columns. Same subject id across dirs pools
+% that subject's score files in the downstream group mean.
+if iscell(source), items = source(:)'; else, items = {source}; end
+IT = table();
+for i = 1:numel(items)
+    it = items{i};
+    if istable(it)
+        Ti = it;
+    else
+        Ti = hrf_collect_wholebrain_outputs(char(string(it)));
+    end
+    if isempty(Ti) || height(Ti) == 0, continue; end
+    if isempty(IT) || height(IT) == 0
+        IT = Ti;
+    else
+        c = intersect(IT.Properties.VariableNames, Ti.Properties.VariableNames, 'stable');
+        IT = [IT(:, c); Ti(:, c)]; %#ok<AGROW>
+    end
+end
+if isempty(IT) || height(IT) == 0
+    error('hrf_animate_wordcloud:NoRecords', 'No score records collected from the given dir(s).');
+end
 end
 
 

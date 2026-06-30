@@ -33,8 +33,22 @@ function out = hrf_animate_wordcloud(source, varargin)
 %   **'Condition':**  condition (glob ok) whose curve to animate. Default '' =
 %                     first condition present (errors if several and ambiguous).
 %   **'Model'/'Object':** for input_table iteration. Default 'sfir'/'beta'.
-%   **'TopN':**       number of terms shown (ranked by peak |score| over lags).
-%                     Default 35.
+%   **'Threshold':**  significance cutoff for selecting/displaying terms, via a
+%                     one-sample t across subjects at each (term,lag). Default
+%                     0.05. A term is SHOWN at the lags where its association is
+%                     significant (it lights up over the HRF), and a term is
+%                     selected only if significant at >=1 lag. Needs a group
+%                     (>=2 subjects); with a single CSV/struct there is no group
+%                     so it falls back to top-N by |score|.
+%   **'Correction':** 'fdr' (default, BH across terms within each lag) or
+%                     'none'.
+%   **'Persist':**    false (default) -- a selected term is drawn only at lags
+%                     where it is significant. true -- always draw selected
+%                     terms, greyed at sub-threshold lags.
+%   **'TopN':**       LEGIBILITY CAP on how many terms are shown (default 60),
+%                     applied AFTER the statistical selection, keeping the most
+%                     significant. (Only when there is no group does it act as
+%                     a pure top-N by |score|.)
 %   **'SizeBy':**     'abs' (default) | 'pos' | 'signed' -- which magnitude
 %                     drives font size (abs = both directions grow).
 %   **'FrameRate':**  fps of the movie. Default 4.
@@ -44,8 +58,8 @@ function out = hrf_animate_wordcloud(source, varargin)
 %   **'Verbose'/'doverbose':** chatter. Default true.
 %
 % :Outputs:
-%   **out:** struct with .scores [nLag x nTerm_kept], .terms, .lags, .pos
-%            (fixed [k x 2] layout), .file (written path or '').
+%   **out:** struct with .scores/.t/.p/.sig [nLag x nTerm_kept], .terms, .lags,
+%            .pos (fixed [k x 2] layout), .nsubj, .selection (label), .file.
 %
 % :Examples:
 % ::
@@ -63,7 +77,10 @@ p.addParameter('Set', 'neurosynth', @(x) ischar(x) || isstring(x));
 p.addParameter('Condition', '', @(x) ischar(x) || isstring(x) || iscell(x));
 p.addParameter('Model', 'sfir', @(x) ischar(x) || isstring(x));
 p.addParameter('Object', 'beta', @(x) ischar(x) || isstring(x));
-p.addParameter('TopN', 35, @(x) isscalar(x) && x >= 1);
+p.addParameter('Threshold', 0.05, @(x) isscalar(x) && x > 0 && x <= 1);
+p.addParameter('Correction', 'fdr', @(x) ischar(x) || isstring(x));
+p.addParameter('Persist', false, @(x) islogical(x) || isnumeric(x));
+p.addParameter('TopN', 60, @(x) isscalar(x) && x >= 1);
 p.addParameter('SizeBy', 'abs', @(x) ischar(x) || isstring(x));
 p.addParameter('FrameRate', 4, @(x) isscalar(x) && x > 0);
 p.addParameter('OutputFile', '', @(x) ischar(x) || isstring(x));
@@ -76,16 +93,47 @@ opts = p.Results;
 verbose = logical(opts.Verbose);
 if ~isempty(opts.doverbose), verbose = logical(opts.doverbose); end
 
-[scores, terms, lags, condlabel] = local_get_term_matrix(source, opts);   % scores [nLag x nTerm]
-if isempty(scores), error('hrf_animate_wordcloud:NoData', 'No map_%s_* scores found for the requested condition.', char(opts.Set)); end
-
-% rank + keep top terms by peak magnitude over lags
+S = local_get_term_stats(source, opts);          % .scores/.t/.p [nLag x nTerm], .nsubj
+if isempty(S.scores), error('hrf_animate_wordcloud:NoData', 'No map_%s_* scores found for the requested condition.', char(opts.Set)); end
+scores = S.scores; terms = S.terms; lags = S.lags; condlabel = S.condlabel;
+[nLag, nT] = size(scores);
 mag = local_size_metric(scores, opts.SizeBy);
-imp = max(mag, [], 1, 'omitnan');
-[~, ord] = sort(imp, 'descend');
-keep = ord(1:min(opts.TopN, numel(terms)));
-terms = terms(keep); scores = scores(:, keep); mag = mag(:, keep);
-pos = local_spiral_positions(numel(terms));        % fixed layout, importance-ordered
+
+% ---- significance: which (term,lag) associations are non-zero across subjects
+have_stats = isfield(S, 'p') && S.nsubj >= 2 && any(isfinite(S.p(:)));
+thr = opts.Threshold; corr = lower(char(opts.Correction));
+if have_stats
+    sig = local_sig_mask(S.p, thr, corr);        % [nLag x nT] logical
+    sel_note = sprintf('p<%.3g %s, group n=%d', thr, upper(corr), S.nsubj);
+else
+    sig = true(nLag, nT);
+    if verbose
+        warning('hrf_animate_wordcloud:NoGroupStats', ...
+            'No across-subject statistics (need >=2 subjects); selecting top %d terms by |score|.', opts.TopN);
+    end
+    sel_note = sprintf('top %d by |score| (no group stats)', opts.TopN);
+end
+
+% ---- select terms (significant at any lag), rank, cap at TopN -----------
+passed = any(sig, 1);
+gate = have_stats;                                % per-frame significance gating
+if ~any(passed)
+    warning('hrf_animate_wordcloud:NoneSignificant', ...
+        'No term significant at p<%.3g (%s); showing top %d by |score| instead.', thr, upper(corr), opts.TopN);
+    passed = true(1, nT); sig = true(nLag, nT); gate = false;
+    sel_note = sprintf('top %d by |score| (none reached p<%.3g)', opts.TopN, thr);
+end
+if have_stats && any(any(sig))
+    rankval = min(S.p, [], 1, 'omitnan'); rankval(~passed) = Inf;
+    [~, ord] = sort(rankval, 'ascend');
+else
+    imp = max(mag, [], 1, 'omitnan'); imp(~passed) = -Inf;
+    [~, ord] = sort(imp, 'descend');
+end
+keepN = min(opts.TopN, sum(passed));
+keep = ord(1:keepN);
+terms = terms(keep); scores = scores(:, keep); mag = mag(:, keep); sig = sig(:, keep);
+pos = local_spiral_positions(numel(terms));      % fixed layout, importance-ordered
 
 gmax = max(mag(:)); if gmax == 0 || ~isfinite(gmax), gmax = 1; end
 clim = max(abs(scores(:))); if clim == 0 || ~isfinite(clim), clim = 1; end
@@ -95,55 +143,69 @@ fig = figure('Color', 'w', 'Position', [80 80 900 700], 'Name', char(opts.Title)
 ax = axes(fig, 'Position', [0.02 0.05 0.96 0.88]); axis(ax, [0 1 0 1]); axis(ax, 'off'); hold(ax, 'on');
 
 vw = local_open_video(opts.OutputFile, opts.FrameRate);
-nLag = numel(lags);
+persist = logical(opts.Persist);
 for li = 1:nLag
     cla(ax); axis(ax, [0 1 0 1]); axis(ax, 'off');
     for ti = 1:numel(terms)
         s = scores(li, ti); m = mag(li, ti);
         if ~isfinite(m) || m <= 0, continue; end
+        % gate by per-lag significance (a term lights up only where it is
+        % significant), unless Persist or no group stats.
+        if gate && ~persist && ~sig(li, ti), continue; end
         fs = fr(1) + (fr(2) - fr(1)) * (m / gmax);
+        if gate && persist && ~sig(li, ti)
+            col = [0.7 0.7 0.7];                  % shown but greyed (sub-threshold)
+        else
+            col = local_sign_color(s, clim);
+        end
         text(ax, pos(ti, 1), pos(ti, 2), char(terms{ti}), 'FontSize', fs, ...
-            'Color', local_sign_color(s, clim), 'HorizontalAlignment', 'center', ...
+            'Color', col, 'HorizontalAlignment', 'center', ...
             'FontWeight', 'bold', 'Interpreter', 'none', 'Clipping', 'on');
     end
-    title(ax, sprintf('%s   —   %s   t = %.1f s', char(opts.Title), condlabel, lags(li)), ...
-        'Interpreter', 'none', 'FontSize', 12);
+    title(ax, sprintf('%s   —   %s   t = %.1f s   [%s]', char(opts.Title), condlabel, lags(li), sel_note), ...
+        'Interpreter', 'none', 'FontSize', 11);
     drawnow;
     vw = local_write_frame(vw, fig);
 end
 vw = local_close_video(vw);
 
 out = struct('scores', scores, 'terms', {terms}, 'lags', lags(:)', 'pos', pos, ...
-    'file', local_video_path(vw, opts.OutputFile));
+    't', S.t(:, keep), 'p', S.p(:, keep), 'sig', sig, 'nsubj', S.nsubj, ...
+    'selection', sel_note, 'file', local_video_path(vw, opts.OutputFile));
 if verbose
-    fprintf('hrf_animate_wordcloud: %d terms x %d lags (condition %s)%s\n', ...
-        numel(terms), nLag, condlabel, local_file_note(out.file));
+    fprintf('hrf_animate_wordcloud: %d terms shown (%s) x %d lags, condition %s%s\n', ...
+        numel(terms), sel_note, nLag, condlabel, local_file_note(out.file));
 end
 end
 
 
 % =========================================================================
-function [scores, terms, lags, condlabel] = local_get_term_matrix(source, opts)
+function S = local_get_term_stats(source, opts)
+% Returns S.scores/.t/.p [nLag x nTerm], .terms, .lags, .condlabel, .nsubj.
+% Group statistics (across-subject one-sample t) are produced for the
+% input_table / dir / cell sources; single CSV and struct sources have no
+% group (t/p NaN -> caller falls back to top-N by |score|).
 prefix = ['map_', char(opts.Set), '_'];
+S = struct('scores', [], 't', [], 'p', [], 'terms', {{}}, 'lags', [], 'condlabel', '', 'nsubj', 0);
 if isstruct(source) && isfield(source, 'scores')
-    scores = source.scores; terms = cellstr(string(source.terms));
-    lags = source.lags(:)'; condlabel = 'curve';
+    S.scores = source.scores; S.terms = cellstr(string(source.terms));
+    S.lags = source.lags(:)'; S.condlabel = 'curve';
+    S.t = nan(size(S.scores)); S.p = nan(size(S.scores)); S.nsubj = 1;
     return
 end
-% cell of dirs / input tables, or a single output DIRECTORY -> pool into one
-% input table (group-mean across every subject of every dir), then proceed.
 is_dir = (ischar(source) || isstring(source)) && isfolder(char(string(source)));
 if iscell(source) || is_dir
-    IT = local_pool_input_table(source);
-    [scores, terms, lags, condlabel] = local_matrix_from_input_table(IT, prefix, opts);
+    S = local_stats_from_input_table(local_pool_input_table(source), prefix, opts);
     return
 end
 if (ischar(source) || isstring(source)) && endsWith(string(source), '.csv')
-    [scores, terms, lags, condlabel] = local_matrix_from_csv(char(source), prefix, opts);
+    [M, terms, lags, cl] = local_matrix_from_csv(char(source), prefix, opts);
+    S.scores = M; S.terms = terms; S.lags = lags; S.condlabel = cl;
+    S.t = nan(size(M)); S.p = nan(size(M)); S.nsubj = 1;
     return
 end
 if istable(source)
-    [scores, terms, lags, condlabel] = local_matrix_from_input_table(source, prefix, opts);
+    S = local_stats_from_input_table(source, prefix, opts);
     return
 end
 error('hrf_animate_wordcloud:Source', ...
@@ -184,38 +246,91 @@ T = readtable(csv, 'TextType', 'string');
 end
 
 
-function [M, terms, lags, condlabel] = local_matrix_from_input_table(IT, prefix, opts)
-% Pool group-mean across subjects: average each (term, lag) over rows' CSVs.
+function S = local_stats_from_input_table(IT, prefix, opts)
+% Per-SUBJECT term matrices (average that subject's runs/files), stacked, then
+% group mean + one-sample t across subjects (the across-subject inference that
+% the statistical threshold uses).
+S = struct('scores', [], 't', [], 'p', [], 'terms', {{}}, 'lags', [], 'condlabel', '', 'nsubj', 0);
+vars = IT.Properties.VariableNames;
 file_col = '';
-if strcmpi(char(opts.Object), 't') && any(strcmp('t_scores_file', IT.Properties.VariableNames))
+if strcmpi(char(opts.Object), 't') && any(strcmp('t_scores_file', vars))
     file_col = 't_scores_file';
-elseif any(strcmp('beta_scores_file', IT.Properties.VariableNames))
+elseif any(strcmp('beta_scores_file', vars))
     file_col = 'beta_scores_file';
 end
 if isempty(file_col), error('hrf_animate_wordcloud:NoScoreFiles', 'input_table lacks *_scores_file columns.'); end
-model = char(opts.Model);   % strcmpi below is case-insensitive
-acc = []; terms = {}; lags = []; condlabel = '';
-nfile = 0;
-for i = 1:height(IT)
-    if any(strcmp('model', IT.Properties.VariableNames))
-        if ~strcmpi(char(string(IT.model(i))), model), continue; end
+model = char(opts.Model);
+if any(strcmp('subject', vars)), subjects = cellstr(string(IT.subject));
+else, subjects = arrayfun(@(i) sprintf('row%d', i), 1:height(IT), 'uni', 0); end
+usub = unique(subjects, 'stable');
+
+ref_terms = {}; ref_lags = []; condlabel = '';
+parts = {}; used = {};
+for s = 1:numel(usub)
+    rows = find(strcmp(subjects, usub{s}));
+    acc = []; nf = 0;
+    for ii = rows(:)'
+        if any(strcmp('model', vars)) && ~strcmpi(char(string(IT.model(ii))), model), continue; end
+        f = char(string(IT.(file_col)(ii)));
+        if isempty(f) || exist(f, 'file') ~= 2, continue; end
+        [Mi, ti, li, cl] = local_matrix_from_table(readtable(f, 'TextType', 'string'), prefix, opts);
+        if isempty(Mi), continue; end
+        if isempty(ref_terms), ref_terms = ti; ref_lags = li; condlabel = cl; end
+        if ~isequal(ti, ref_terms) || ~isequal(li, ref_lags)
+            warning('hrf_animate_wordcloud:GridMismatch', 'Skipping a score file whose term/lag grid differs.');
+            continue
+        end
+        if isempty(acc), acc = Mi; nf = 1; else, acc = acc + Mi; nf = nf + 1; end
     end
-    f = char(string(IT.(file_col)(i)));
-    if isempty(f) || exist(f, 'file') ~= 2, continue; end
-    T = readtable(f, 'TextType', 'string');
-    [Mi, ti, li, cl] = local_matrix_from_table(T, prefix, opts);
-    if isempty(Mi), continue; end
-    if isempty(acc)
-        acc = Mi; terms = ti; lags = li; condlabel = cl; nfile = 1;
-    elseif isequal(ti, terms) && isequal(li, lags)
-        acc = acc + Mi; nfile = nfile + 1;
+    if nf == 0, continue; end
+    parts{end + 1} = acc / nf; used{end + 1} = usub{s}; %#ok<AGROW>
+end
+if isempty(parts), return; end
+
+stack = cat(3, parts{:});
+n = size(stack, 3);
+m = mean(stack, 3, 'omitnan');
+S.scores = m; S.terms = ref_terms; S.lags = ref_lags; S.condlabel = condlabel; S.nsubj = n;
+if n >= 2
+    se = std(stack, 0, 3, 'omitnan') / sqrt(n);
+    t = m ./ se; t(se == 0) = 0;
+    S.t = t; S.p = 2 * (1 - local_tcdf(abs(t), n - 1));
+else
+    S.t = nan(size(m)); S.p = nan(size(m));
+end
+end
+
+
+function sig = local_sig_mask(p, thr, corr)
+% Per-lag significance: at each lag, test terms; FDR-correct across terms
+% within that lag (so each frame's "significant terms" is FDR-controlled).
+[L, T] = size(p);
+sig = false(L, T);
+for li = 1:L
+    pl = p(li, :);
+    valid = isfinite(pl);
+    if ~any(valid), continue; end
+    if strcmp(corr, 'fdr')
+        padj = local_fdr_row(pl(valid));
+        row = false(1, T); row(valid) = padj <= thr; sig(li, :) = row;
     else
-        warning('hrf_animate_wordcloud:GridMismatch', ...
-            'Skipping a score file whose term/lag grid differs from the first.');
+        sig(li, valid) = pl(valid) < thr;
     end
 end
-if isempty(acc), M = []; return; end
-M = acc / max(nfile, 1);
+end
+
+function padj = local_fdr_row(p)
+% Benjamini-Hochberg adjusted p-values for a vector.
+p = p(:)'; m = numel(p);
+[sp, ord] = sort(p);
+adj = min(1, fliplr(cummin(fliplr(sp .* m ./ (1:m)))));
+padj = nan(1, m); padj(ord) = adj;
+end
+
+function pcdf = local_tcdf(tval, df)
+% Student-t CDF via regularized incomplete beta (no Stats toolbox needed).
+x = df ./ (df + tval .^ 2);
+pcdf = 1 - 0.5 * betainc(x, df / 2, 0.5);
 end
 
 
@@ -307,12 +422,12 @@ end
 
 % ---- video helpers ------------------------------------------------------
 function vw = local_open_video(file, fps)
-vw = struct('type', 'none', 'obj', [], 'file', char(file), 'gifinit', false);
+vw = struct('type', 'none', 'obj', [], 'file', char(file), 'fps', fps, 'frames', {{}});
 f = char(file);
 if isempty(f), return; end
 [~, ~, e] = fileparts(f); e = lower(e);
 if strcmp(e, '.gif')
-    vw.type = 'gif';
+    vw.type = 'gif';                              % accumulate; write once at close
 elseif strcmp(e, '.avi')
     vw.obj = VideoWriter(f, 'Motion JPEG AVI'); vw.obj.FrameRate = fps; open(vw.obj); vw.type = 'avi';
 else
@@ -330,19 +445,29 @@ function vw = local_write_frame(vw, fig)
 if strcmp(vw.type, 'none'), return; end
 frame = getframe(fig);
 if strcmp(vw.type, 'gif')
-    [A, map] = rgb2ind(frame2im(frame), 256);
-    if ~vw.gifinit
-        imwrite(A, map, vw.file, 'gif', 'LoopCount', Inf, 'DelayTime', 0.25); vw.gifinit = true;
-    else
-        imwrite(A, map, vw.file, 'gif', 'WriteMode', 'append', 'DelayTime', 0.25);
-    end
+    vw.frames{end + 1} = frame2im(frame);        % keep truecolor; quantize at close
 else
     writeVideo(vw.obj, frame);
 end
 end
 
 function vw = local_close_video(vw)
-if ~strcmp(vw.type, 'none') && ~strcmp(vw.type, 'gif') && ~isempty(vw.obj)
+if strcmp(vw.type, 'gif')
+    F = vw.frames;
+    if isempty(F), return; end
+    % ONE global colormap from all frames, so colors (red/blue/grey) survive
+    % even when the first frame is near-blank (no significant terms yet).
+    [~, gmap] = rgb2ind(cat(1, F{:}), 256);
+    dt = 1 / max(vw.fps, 1);
+    for i = 1:numel(F)
+        A = rgb2ind(F{i}, gmap);
+        if i == 1
+            imwrite(A, gmap, vw.file, 'gif', 'LoopCount', Inf, 'DelayTime', dt);
+        else
+            imwrite(A, gmap, vw.file, 'gif', 'WriteMode', 'append', 'DelayTime', dt);
+        end
+    end
+elseif ~strcmp(vw.type, 'none') && ~isempty(vw.obj)
     close(vw.obj);
 end
 end

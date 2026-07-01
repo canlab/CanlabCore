@@ -84,8 +84,15 @@ function R = compute_rsm(dat, varargin)
 %                            'crossnobis'
 %
 %   Crossnobis:
-%     'fold_var'             Metadata column defining folds (required for
-%                            metric='crossnobis'). Default 'session_number'.
+%     'fold_var'             Metadata column defining cross-validation folds
+%                            (required for metric='crossnobis'). Default
+%                            'session_number'. Special value 'occurrence'
+%                            auto-builds folds by within-condition occurrence
+%                            rank (each condition's 1st image -> fold 1, 2nd ->
+%                            fold 2, ...), ordered by run_var when present.
+%                            Use 'occurrence' when no metadata column lines the
+%                            conditions up into shared folds (e.g. when run
+%                            numbers differ across conditions).
 %
 %   Whitening:
 %     'whiten'               'none' (default) | 'within_subject' |
@@ -221,19 +228,65 @@ end
 R_array = rsm.empty;
 if opt.verbose, fprintf('compute_rsm: running parcelwise (%d parcels)\n', n_parcels); end
 
-for i = 1:n_parcels
-    if opt.verbose && mod(i, 10) == 0, fprintf('  parcel %d/%d (%s)\n', i, n_parcels, labels{i}); end
-    parcel_mask = select_atlas_subset(atlas_obj, labels(i));
-    try
-        dat_i = apply_mask(dat, parcel_mask);
-        R_i = compute_rsm_one_mask(dat_i, opt, labels{i});
-    catch ME
-        warning('compute_rsm:parcelFailed', 'Parcel %s failed: %s', labels{i}, ME.message);
-        R_i = rsm();
-    end
-    R_array(end+1) = R_i; %#ok<AGROW>
+% Resample the atlas into the DATA space ONCE (handles atlas/data space
+% mismatch and avoids a per-parcel apply_mask, which is both slow and
+% fragile). codes(v) gives the integer parcel index for data voxel v.
+if compare_space(dat, atlas_obj) ~= 0
+    if opt.verbose, fprintf('  resampling atlas to data space...\n'); end
+    [~, atlas_rs] = evalc('resample_space(atlas_obj, dat)');
+else
+    atlas_rs = atlas_obj;
+end
+codes = round(double(atlas_rs.dat(:, 1)));
+
+% Align parcel codes to dat.dat rows (drop removed voxels if present)
+if ~isempty(dat.removed_voxels) && numel(dat.removed_voxels) == numel(codes)
+    codes = codes(~dat.removed_voxels);
+end
+if numel(codes) ~= size(dat.dat, 1)
+    % Last-resort fallback: per-parcel apply_mask (original slow path)
+    if opt.verbose, warning('compute_rsm:parcelCodeMismatch', ...
+        'Atlas codes (%d) do not align with data voxels (%d); using per-parcel apply_mask.', ...
+        numel(codes), size(dat.dat,1)); end
+    R_array = compute_rsm_parcelwise_applymask(dat, atlas_obj, labels, n_parcels, opt);
+    return
 end
 
+dat_mat = double(dat.dat);   % [voxels x images]
+for i = 1:n_parcels
+    if opt.verbose && mod(i, 50) == 0, fprintf('  parcel %d/%d\n', i, n_parcels); end
+    vox = (codes == i);
+    if nnz(vox) < 2
+        R_array(end+1) = rsm(); %#ok<AGROW>
+        continue
+    end
+    dat_i = dat;
+    dat_i.dat = dat_mat(vox, :);
+    try
+        R_array(end+1) = compute_rsm_one_mask(dat_i, opt, labels{i}); %#ok<AGROW>
+    catch ME
+        warning('compute_rsm:parcelFailed', 'Parcel %s failed: %s', labels{i}, ME.message);
+        R_array(end+1) = rsm(); %#ok<AGROW>
+    end
+end
+
+end
+
+
+% =========================================================================
+function R_array = compute_rsm_parcelwise_applymask(dat, atlas_obj, labels, n_parcels, opt)
+% Fallback: per-parcel apply_mask (used only when integer-code alignment fails).
+R_array = rsm.empty;
+for i = 1:n_parcels
+    try
+        parcel_mask = select_atlas_subset(atlas_obj, labels(i));
+        dat_i = apply_mask(dat, parcel_mask);
+        R_array(end+1) = compute_rsm_one_mask(dat_i, opt, labels{i}); %#ok<AGROW>
+    catch ME
+        warning('compute_rsm:parcelFailed', 'Parcel %s failed: %s', labels{i}, ME.message);
+        R_array(end+1) = rsm(); %#ok<AGROW>
+    end
+end
 end
 
 
@@ -281,13 +334,35 @@ for n = 1:N
     % Thread crossnobis fold_idx through opt (per-replicate)
     opt_n = opt;
     if strcmpi(opt.metric, 'crossnobis')
-        require_col(mt, opt.fold_var);
-        fold_vals = mt.(opt.fold_var)(rep_rows);
-        if iscategorical(fold_vals), fold_vals = double(fold_vals);
-        elseif iscell(fold_vals) || isstring(fold_vals), [~, ~, fold_vals] = unique(fold_vals, 'stable');
-        else, fold_vals = double(fold_vals);
+        if strcmpi(opt.fold_var, 'occurrence')
+            % Auto-build folds by within-condition occurrence rank. Each
+            % condition's 1st image -> fold 1, 2nd -> fold 2, etc. This aligns
+            % every condition into the same fold set (the crossnobis
+            % requirement) even when run/session numbering does not. Ordered
+            % by run_number when present, else by row order.
+            local_group = group_idx(rep_rows);
+            if ismember(opt.run_var, mt.Properties.VariableNames)
+                order_key = double(mt.(opt.run_var)(rep_rows));
+            else
+                order_key = (1:numel(rep_rows))';
+            end
+            fold_vals = zeros(numel(rep_rows), 1);
+            ug = unique(local_group);
+            for gg = 1:numel(ug)
+                idx_g = find(local_group == ug(gg));
+                [~, ord] = sort(order_key(idx_g));
+                fold_vals(idx_g(ord)) = 1:numel(idx_g);
+            end
+            opt_n.fold_idx = fold_vals(:);
+        else
+            require_col(mt, opt.fold_var);
+            fold_vals = mt.(opt.fold_var)(rep_rows);
+            if iscategorical(fold_vals), fold_vals = double(fold_vals);
+            elseif iscell(fold_vals) || isstring(fold_vals), [~, ~, fold_vals] = unique(fold_vals, 'stable');
+            else, fold_vals = double(fold_vals);
+            end
+            opt_n.fold_idx = fold_vals(:);
         end
-        opt_n.fold_idx = fold_vals(:);
         if numel(unique(opt_n.fold_idx)) < 2
             warning('compute_rsm:tooFewFolds', ...
                 'Replicate %d has only %d unique fold(s); crossnobis returns NaN slice.', ...

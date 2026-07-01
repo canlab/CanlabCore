@@ -42,7 +42,11 @@ function results = searchlight_rsa(dat, model_rdms, varargin)
 %                  RSMs averaged before comparison, slower but more rigorous.
 %   'mask'         image to restrict the searchlight (passed to apply_mask).
 %   'permutations' number of label permutations for inference. Default 0
-%                  (no permutation test; map holds raw correlations).
+%                  (no permutation test; map holds RAW correlations and the
+%                  returned statistic_image has placeholder p-values of 1, so
+%                  thresholding by p returns an empty map -- view the raw map
+%                  directly with montage(). Pass N>0 (e.g. 500) to get real
+%                  permutation p-values that threshold(map,0.05,'unc') honors).
 %   'use_parallel' logical (default false). Uses parfor over sphere centers.
 %   'verbose'      logical (default true).
 %
@@ -187,7 +191,15 @@ for m = 1:n_models
     end
 end
 
-if opt.verbose, fprintf('searchlight_rsa: done. %d map(s).\n', n_models); end
+if opt.verbose
+    fprintf('searchlight_rsa: done. %d map(s).\n', n_models);
+    if ~do_perm
+        fprintf(['searchlight_rsa: permutations=0 -> maps hold RAW correlations; ' ...
+            '.p are placeholders (all 1).\n   View directly: montage(results.maps.X). ' ...
+            'Do NOT threshold by p (threshold(map,0.05) returns empty).\n   ' ...
+            'For p-thresholded inference, pass ''permutations'', N (e.g. 500).\n']);
+    end
+end
 
 end
 

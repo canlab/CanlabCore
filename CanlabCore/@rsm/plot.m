@@ -46,6 +46,7 @@ p.addParameter('colormap',          [],        @(x) isempty(x) || (isnumeric(x) 
 p.addParameter('title',             '',        @(x) ischar(x) || isstring(x));
 p.addParameter('label_fontsize',    10,        @isnumeric);
 p.addParameter('rotate_xticks',     true,      @(x) islogical(x) || isnumeric(x));
+p.addParameter('mds_engine',        'builtin', @(x) ischar(x) || isstring(x));
 p.parse(varargin{:});
 
 mode = lower(char(p.Results.mode));
@@ -266,40 +267,59 @@ end
 
 
 % =========================================================================
-function h = plot_mds(obj, opts) %#ok<INUSD>
+function h = plot_mds(obj, opts)
 
 M = collapse_to_2d(obj, []);
 if ~obj.is_dissimilarity, M = 1 - M; end
 
-caps = probe_rsatoolbox();
-if caps.fig_MDSConditions
-    try
-        if ~isempty(which('rsa.fig.MDSConditions'))
+% Engine: 'builtin' (default) gives a clean labeled cmdscale scatter that
+% reads well at any condition count. 'rsatoolbox' routes through
+% rsa.fig.MDSConditions when available (its multi-panel display is busier,
+% especially for few conditions).
+engine = 'builtin';
+if isfield(opts, 'mds_engine') && ~isempty(opts.mds_engine)
+    engine = lower(char(opts.mds_engine));
+end
+
+if strcmp(engine, 'rsatoolbox')
+    caps = probe_rsatoolbox();
+    if caps.fig_MDSConditions && ~isempty(which('rsa.fig.MDSConditions'))
+        try
             rsa.fig.MDSConditions(struct('RDM', M, 'name', 'rsm'), struct('saveFiguresFig', false));
             h.fig = gcf;
             return
+        catch
+            % fall through to builtin
         end
-    catch
-        % fall through to stock cmdscale
     end
 end
 
-% Stock fallback: classical MDS via cmdscale
-[Y, ~] = cmdscale(M);
+% Built-in classical MDS via cmdscale (default)
+M = (M + M') / 2;
+M(1:size(M,1)+1:end) = 0;
+[Y, e] = cmdscale(M);
+if size(Y, 2) < 2, Y = [Y, zeros(size(Y,1), 2 - size(Y,2))]; end
 Y = Y(:, 1:2);
 
 h.fig = gcf;
 h.ax  = gca;
-h.scatter = scatter(Y(:,1), Y(:,2), 64, 'filled');
+h.scatter = scatter(Y(:,1), Y(:,2), 90, 'filled');
 hold(h.ax, 'on');
 if ~isempty(obj.labels)
+    pretty = prettify_labels(obj.labels);
     for i = 1:size(Y, 1)
-        text(Y(i,1), Y(i,2), [' ' obj.labels{i}], 'FontSize', 9, 'Interpreter', 'none');
+        text(Y(i,1), Y(i,2), ['  ' pretty{i}], 'FontSize', 10, 'Interpreter', 'none');
     end
 end
 hold(h.ax, 'off');
 axis equal; grid on;
-title(h.ax, sprintf('MDS (%s)', obj.metric), 'Interpreter', 'none');
+xlabel(h.ax, 'MDS dim 1'); ylabel(h.ax, 'MDS dim 2');
+if numel(e) >= 2 && sum(abs(e)) > 0
+    var2d = 100 * sum(e(1:2)) / sum(abs(e));
+    title(h.ax, sprintf('MDS (%s, %.0f%% in 2D)', obj.metric, var2d), 'Interpreter', 'none');
+else
+    title(h.ax, sprintf('MDS (%s)', obj.metric), 'Interpreter', 'none');
+end
 
 end
 

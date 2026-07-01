@@ -40,8 +40,10 @@ results = dat.rsa_parcelwise('atlas', atlas, ...
 
 disp(results.contrast_table)
 
-% The within_hot map is a statistic_image -- threshold and montage it
-% results.maps.within_hot.threshold(0.05, 'unc').montage;
+% The within_hot map is a statistic_image -- threshold and montage it.
+% Use FUNCTION syntax: statistic_image has a `threshold` property AND method,
+% so the dot form map.threshold(...) indexes the property (badsubscript error).
+% montage(threshold(results.maps.within_hot, 0.05, 'unc'));
 fprintf('within_hot map: %d sig voxels at FDR\n', ...
     sum(results.maps.within_hot.sig));
 

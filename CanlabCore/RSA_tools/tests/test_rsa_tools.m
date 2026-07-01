@@ -20,6 +20,8 @@ state = struct('n_pass', 0, 'n_fail', 0, 'failures', {{}});
 state = run_test(@test_construction,        'rsm construction',        state);
 state = run_test(@test_metrics,             'compute_rsm metrics',     state);
 state = run_test(@test_crossnobis,          'crossnobis distance',     state);
+state = run_test(@test_crossnobis_occurrence, 'crossnobis occurrence folds', state);
+state = run_test(@test_recode_reference,    'rsa_recode_reference',    state);
 state = run_test(@test_cells_contrasts,     'cells + ttest_contrasts', state);
 state = run_test(@test_reliability,         'reliability ICC',         state);
 state = run_test(@test_drift,               'drift',                   state);
@@ -113,6 +115,36 @@ m = mean(R.dat, 3);
 within = mean([m(1,2) m(1,3) m(2,3)]);
 between = mean([m(1,5) m(1,9)]);
 assert(within < between, 'crossnobis within < between');
+end
+
+
+% =========================================================================
+function test_crossnobis_occurrence()
+% Folds defined by occurrence rank should match an explicit fold column.
+dat = synth();
+mt = dat.metadata_table;
+% Build an explicit occurrence-rank fold column over (sub, condition, bodysite)
+key = strcat(string(mt.sub), '|', string(mt.condition), '|', string(mt.bodysite));
+[~,~,cid] = unique(key); mt.fold = zeros(height(mt),1);
+for c = unique(cid)', idx = find(cid==c); mt.fold(idx) = 1:numel(idx); end
+dat.metadata_table = mt;
+R_manual = compute_rsm(dat, 'group_by', {'condition','bodysite'}, 'subject_var','sub', ...
+    'metric','crossnobis', 'fold_var','fold', 'verbose', false);
+R_auto = compute_rsm(dat, 'group_by', {'condition','bodysite'}, 'subject_var','sub', ...
+    'metric','crossnobis', 'fold_var','occurrence', 'verbose', false);
+d = max(abs(R_manual.dat(:) - R_auto.dat(:)));
+assert(d < 1e-9, sprintf('occurrence vs manual fold diff = %g', d));
+end
+
+
+% =========================================================================
+function test_recode_reference()
+v = {'Left Face','Right Arm','Left Face','Chest','Abdomen'};
+out = rsa_recode_reference(v, 'Left Face', 'other_label', 'Other');
+assert(isequal(out(:)', {'Left Face','Other','Left Face','Other','Other'}), 'recode mismatch');
+% numeric + multi-reference
+out2 = rsa_recode_reference([0 1 2 0 1], {'0','1'});
+assert(isequal(out2(:)', {'0','1','Other','0','1'}), 'numeric recode mismatch');
 end
 
 

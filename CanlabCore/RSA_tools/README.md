@@ -91,7 +91,10 @@ result = R.compare({'condition','bodysite'}, 'correlation_type','kendall_taua');
 atlas = load_atlas('canlab2024');
 res = dat.rsa_parcelwise('atlas', atlas, 'group_by', {'condition','bodysite'}, ...
                          'subject_var', 'sub', 'contrasts', spec);
-res.maps.hot_vs_warm.threshold(0.05, 'unc').montage;
+% Call threshold() with FUNCTION syntax: statistic_image has both a
+% `threshold` property and a `threshold` method, so `map.threshold(...)`
+% indexes the property instead of thresholding (a CanlabCore-wide quirk).
+montage(threshold(res.maps.hot_vs_warm, 0.05, 'unc'));
 ```
 
 ---
@@ -106,7 +109,7 @@ res.maps.hot_vs_warm.threshold(0.05, 'unc').montage;
 | `rsm.from_categorical(meta, cols)` | Same-vs-different model RDM(s) from metadata columns. |
 | `rsm.from_metadata_distance(meta, col)` | Continuous-distance model RDM (e.g. session distance). |
 | `rsm.from_design(X, ...)` | Model RDM(s) from a design matrix. |
-| `R.plot(...)` | Heatmap (raw/rank), MDS, dendrogram, grid; block borders, matched-pair overlays. |
+| `R.plot(...)` | Heatmap (raw/rank), MDS, dendrogram, grid; block borders, matched-pair overlays. MDS defaults to a clean built-in cmdscale scatter (`'mds_engine','rsatoolbox'` to use rsa.fig.MDSConditions). |
 | `R.mean / fisher_z / to_rdm / to_rsm / subset / reorder` | Transforms. |
 | `R.get_by_label(name)` | Look up a parcel in an rsm array by name. |
 
@@ -197,5 +200,68 @@ formulas; a clear error lists available columns on a typo.
 
 - `RSA_Pipeline_Phased_Plan.md` — the design document.
 - `RSA_Phase3_LME_Design.md` — LME table contract and API spec.
-- `examples/` — runnable example scripts.
-- `tests/` — unit tests.
+- `examples/` — runnable example scripts:
+    - `rsa_quickstart.m`, `rsa_reliability_icc.m`, `rsa_multilevel_lme.m`,
+      `rsa_parcelwise_maps.m` — synthetic-data tutorials.
+    - `rsa_distractmap_pipeline.m` — full pipeline on the WASABI DistractMap
+      dataset (multi-session reliability + contrasts + LME + parcelwise maps
+      + searchlight).
+    - `rsa_acceptmap_pipeline.m` — full pipeline on the WASABI AcceptMap
+      dataset (crossnobis RDM + model comparison + parcelwise maps +
+      searchlight; shows how to handle a factor confounded with session).
+    - `rsa_bodymap_pipeline.m` — full pipeline on the WASABI BodyMap dataset
+      (Sun et al. 2026; 8 bodysites x 3 conditions). Reproduces Figs 7A–G /
+      S8 / S9 and removes the SHARED-RUN confound (Hot/Warm/Imagine co-occur
+      in one run, so their similarity is run-inflated ~8x) two ways: crossnobis
+      with session(=run) folds, and a whole-brain LME with a same-run nuisance.
+      Mirrors the published cross-session masking, but as one unbiased step.
+- `tests/` — unit tests (`test_rsa_tools.m`, 12 tests).
+
+## Removing a shared-run (or shared-session) confound
+
+When several conditions are estimated from the **same run** (e.g. BodyMap's
+Hot/Warm/Imagine always co-occur in one run), they share that run's noise and
+mean response. This inflates their cross-condition similarity — often
+dramatically (~8x in BodyMap S1) — and biases specificity. The rule is to
+never compare two patterns from the same run; only across runs/sessions.
+If the repeated factor is **fully crossed** with run/session (every condition
+appears in every session, as in BodyMap), the effect is removable two ways:
+
+```matlab
+% (1) crossnobis with CV folds = sessions (== runs here). The within-fold
+%     condition difference cancels the run-common component; unbiased by design.
+R = compute_rsm(dat, 'group_by', {'condition','bodysite'}, 'subject_var','sub', ...
+                'metric','crossnobis', 'fold_var','sesno');
+
+% (2) keep correlations; add a SAME-RUN nuisance to the mixed model.
+%     runid uniquely identifies a run (here: session x bodysite).
+dat.metadata_table.runid = categorical(strcat(string(dat.metadata_table.ses), ...
+                                              '_', string(dat.metadata_table.bodysite)));
+mdl = dat.rsa_lme('predictors', {'bodysite','condition','runid'}, 'subject_var','sub');
+% SameRunid absorbs the within-run inflation; read SameBodysite / SameCondition
+% (the ACROSS-run effects) controlling for it.
+```
+
+This reproduces the published BodyMap approach (build per-run RSMs, exclude
+within-run correlations) in one step. If the factor is instead **confounded**
+with session (each session has only one level), session-to-session
+reliability is undefined — see the AcceptMap note above. See
+`examples/rsa_bodymap_pipeline.m` for the full treatment.
+
+## Shared-anchor / idiosyncratic-condition designs
+
+Some studies give every subject a shared reference condition plus an
+idiosyncratic one that differs per subject (e.g. all subjects have "Left
+Face" plus one other bodysite each). Naive `group_by` then explodes k and
+drops every replicate. Recode the factor to two levels with
+`rsa_recode_reference`:
+
+```matlab
+T.bodysite_type = rsa_recode_reference(T.bodySite, 'Left Face', ...
+                                       'other_label', 'Other Body Site');
+```
+
+If the experimental factor is **confounded with session** (each session has
+only one level), session-to-session reliability is undefined — analyze it as
+a crossnobis RDM instead, with `'fold_var','occurrence'` to build folds from
+within-condition image repeats. See `examples/rsa_acceptmap_pipeline.m`.

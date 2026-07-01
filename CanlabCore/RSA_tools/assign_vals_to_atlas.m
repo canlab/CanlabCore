@@ -19,7 +19,8 @@ function [map, info] = assign_vals_to_atlas(atlas_obj, roi_names, vals, varargin
 %   % Full statistic_image with p-values for thresholding
 %   map = assign_vals_to_atlas(atlas, [], t_vals, ...
 %       'p_vals', p_vals, 'output_type', 'statistic_image');
-%   map.threshold(0.05, 'fdr').montage;
+%   montage(threshold(map, 0.05, 'fdr'));   % function syntax: statistic_image
+%                                           % has a `threshold` property AND method
 %
 % Inputs
 % ------

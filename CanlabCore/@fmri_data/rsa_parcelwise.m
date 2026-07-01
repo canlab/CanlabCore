@@ -166,7 +166,24 @@ spec = opt.contrasts;
 n_con = size(spec, 1);
 con_names = spec(:, 1);
 
+% Validate the contrast spec against the groupings of the first usable parcel
+% BEFORE looping, so a bad grouping name errors clearly instead of silently
+% producing an empty result.
+ref = [];
+for i = 1:n_parcels
+    if ~isempty(R_pp(i)) && size(R_pp(i), 3) >= 2 && ~isempty(fieldnames(R_pp(i).groupings))
+        ref = R_pp(i); break
+    end
+end
+if isempty(ref)
+    error('rsa_parcelwise:noUsableParcels', ...
+        ['No parcel has >= 2 replicates with groupings. Check that group_by, ', ...
+         'subject_var, and the atlas cover your data.']);
+end
+validate_contrast_groupings(spec, ref);
+
 rows = cell(n_parcels, 1);
+n_failed = 0; first_err = '';
 for i = 1:n_parcels
     R = R_pp(i);
     if isempty(R) || size(R, 3) < 2 || isempty(fieldnames(R.groupings))
@@ -175,18 +192,58 @@ for i = 1:n_parcels
     try
         Tc = R.ttest_contrasts(spec, 'tail', opt.tail, 'correction', 'none', ...
                                'transform', opt.transform);
-    catch
+    catch ME
+        n_failed = n_failed + 1;
+        if isempty(first_err), first_err = ME.message; end
         continue
     end
     parcel_col = repmat(labels(i), height(Tc), 1);
     rows{i} = table(parcel_col, string(Tc.Contrast), Tc.Mean_Diff, Tc.t, Tc.P, ...
         'VariableNames', {'Parcel', 'Contrast', 'effect', 't', 'p'});
 end
+if n_failed > 0
+    warning('rsa_parcelwise:someParcelsFailed', ...
+        '%d/%d parcels failed the contrast (first error: %s).', n_failed, n_parcels, first_err);
+end
 T = vertcat(rows{:});
-if isempty(T), return; end
+if isempty(T)
+    warning('rsa_parcelwise:noResults', ...
+        'Contrast path produced no results; no maps will be emitted.');
+    return
+end
 
 % FDR across parcels (per contrast or all)
 T = apply_parcel_correction(T, 'Contrast', con_names, opt);
+end
+
+
+% =========================================================================
+function validate_contrast_groupings(spec, ref)
+% Check that every grouping name referenced in the contrast spec exists in
+% the reference parcel's groupings. Errors with the available names if not.
+avail = fieldnames(ref.groupings);
+referenced = {};
+for i = 1:size(spec, 1)
+    for col = 2:3
+        a = spec{i, col};
+        if ischar(a) || isstring(a)
+            referenced{end+1} = char(a); %#ok<AGROW>
+        elseif iscell(a)
+            for j = 1:numel(a)
+                if ischar(a{j}) || isstring(a{j}), referenced{end+1} = char(a{j}); end %#ok<AGROW>
+            end
+        end
+    end
+end
+referenced = unique(referenced);
+missing = referenced(~ismember(referenced, avail));
+if ~isempty(missing)
+    error('rsa_parcelwise:unknownGrouping', ...
+        ['Contrast grouping(s) not found: %s\nAvailable groupings: %s\n', ...
+         '(compute_rsm auto-builds one grouping per unique value of each ', ...
+         'group_by column; reference those names, not the composite labels.)'], ...
+        strjoin(missing, ', '), strjoin(avail, ', '));
+end
 end
 
 

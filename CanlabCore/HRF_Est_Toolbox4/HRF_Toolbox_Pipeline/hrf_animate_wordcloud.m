@@ -133,14 +133,20 @@ end
 keepN = min(opts.TopN, sum(passed));
 keep = ord(1:keepN);
 terms = terms(keep); scores = scores(:, keep); mag = mag(:, keep); sig = sig(:, keep);
-pos = local_spiral_positions(numel(terms));      % fixed layout, importance-ordered
 
 gmax = max(mag(:)); if gmax == 0 || ~isfinite(gmax), gmax = 1; end
 clim = max(abs(scores(:))); if clim == 0 || ~isfinite(clim), clim = 1; end
 fr = opts.FontRange;
 
-fig = figure('Color', 'w', 'Position', [80 80 900 700], 'Name', char(opts.Title));
-ax = axes(fig, 'Position', [0.02 0.05 0.96 0.88]); axis(ax, [0 1 0 1]); axis(ax, 'off'); hold(ax, 'on');
+fig = figure('Color', 'w', 'Position', [80 80 1000 760], 'Name', char(opts.Title));
+ax = axes(fig, 'Position', [0.02 0.04 0.96 0.90]); axis(ax, [0 1 0 1]); axis(ax, 'off'); hold(ax, 'on');
+
+% Non-overlapping wordcloud packing computed ONCE at each word's MAXIMUM font
+% size (its peak over lags). Every later frame only shrinks a word, so the
+% packing stays overlap-free and positions are stable across the movie -- the
+% tight look of a static wordcloud, but animated.
+peakmag = max(mag, [], 1, 'omitnan');
+pos = local_wordcloud_layout(ax, terms, peakmag, gmax, fr);
 
 vw = local_open_video(opts.OutputFile, opts.FrameRate);
 persist = logical(opts.Persist);
@@ -398,15 +404,71 @@ end
 end
 
 
-function pos = local_spiral_positions(k)
-% Archimedean spiral in [0,1]^2, densest (most important) near centre.
-pos = zeros(k, 2);
-golden = pi * (3 - sqrt(5));
+function pos = local_wordcloud_layout(ax, terms, weight, gmax, fr)
+% Greedy collision-avoidance packing (largest word first; spiral outward to the
+% first slot whose bounding box overlaps nothing already placed), with each
+% word measured at its MAXIMUM font size. Produces a tight, non-overlapping
+% layout like a static wordcloud; positions are then held fixed for the movie.
+k = numel(terms);
+weight = weight(:);
+maxfs = fr(1) + (fr(2) - fr(1)) * (max(weight, 0) / gmax);
+maxfs = max(maxfs, fr(1));
+
+% measure each word's bounding box (data units) at its max font
+ht = gobjects(k, 1);
 for i = 1:k
-    r = 0.46 * sqrt(i / max(k, 1));
-    th = (i - 1) * golden;
-    pos(i, :) = [0.5 + r * cos(th), 0.5 + r * sin(th)];
+    ht(i) = text(ax, 0.5, 0.5, char(terms{i}), 'FontSize', maxfs(i), ...
+        'FontWeight', 'bold', 'Interpreter', 'none', 'Visible', 'off');
 end
+drawnow;
+bw = zeros(k, 1); bh = zeros(k, 1);
+for i = 1:k
+    e = get(ht(i), 'Extent'); bw(i) = e(3); bh(i) = e(4);
+end
+delete(ht);
+
+pad = 0.010;
+[~, ord] = sort(weight, 'descend');       % place biggest first (centre-out)
+pos = repmat([0.5 0.5], k, 1);
+placed = zeros(0, 4);                       % [cx cy w h]
+for oi = 1:k
+    i = ord(oi);
+    c = local_place_box(placed, bw(i) + pad, bh(i) + pad);
+    pos(i, :) = c;
+    placed(end + 1, :) = [c, bw(i) + pad, bh(i) + pad]; %#ok<AGROW>
+end
+end
+
+
+function c = local_place_box(placed, bw, bh)
+% First non-overlapping centre on an outward spiral (inside the canvas if
+% possible; relax the canvas bound only if nothing fits inside).
+if isempty(placed), c = [0.5 0.5]; return; end
+for r = 0:0.006:0.8
+    npt = max(12, round(2 * pi * r / 0.008));
+    for a = linspace(0, 2 * pi, npt)
+        c = [0.5 + r * cos(a), 0.5 + r * sin(a)];
+        if c(1) - bw / 2 < 0.02 || c(1) + bw / 2 > 0.98 || ...
+                c(2) - bh / 2 < 0.02 || c(2) + bh / 2 > 0.98
+            continue
+        end
+        if ~local_box_overlaps(c, bw, bh, placed), return; end
+    end
+end
+for r = 0:0.01:1.6
+    npt = max(12, round(2 * pi * r / 0.01));
+    for a = linspace(0, 2 * pi, npt)
+        c = [0.5 + r * cos(a), 0.5 + r * sin(a)];
+        if ~local_box_overlaps(c, bw, bh, placed), return; end
+    end
+end
+c = [0.5 0.5];
+end
+
+
+function tf = local_box_overlaps(c, bw, bh, placed)
+tf = any(abs(placed(:, 1) - c(1)) < (placed(:, 3) + bw) / 2 & ...
+         abs(placed(:, 2) - c(2)) < (placed(:, 4) + bh) / 2);
 end
 
 

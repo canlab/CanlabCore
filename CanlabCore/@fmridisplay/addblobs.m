@@ -176,6 +176,15 @@ if nargin < 2
          '   o2 = addblobs(o2, region(t)); %% add the blobs from t']);
 end
 
+% Multi-image objects: a single blob layer shows one image, so if an
+% image_vector with more than one image (column) is passed, use only the FIRST
+% image (with a note). This keeps addblobs(o2, multi_image_obj) from erroring or
+% silently combining images; use image_vector.montage for a per-image display.
+if isa(cl, 'image_vector') && size(cl.dat, 2) > 1
+    fprintf('addblobs: object has %d images; showing the first only. (For a per-image display use montage(obj).)\n', size(cl.dat, 2));
+    cl = get_wh_image(cl, 1);
+end
+
 % Retain the ORIGINAL input as the layer source, before any conversion.
 % A statistic_image/fmri_data source enables re-thresholding downward
 % (rethreshold); a region source supports re-render at the same or higher
@@ -505,6 +514,18 @@ for i = wh_montage
     end
 end
 
+
+% Ensure a colour range exists even when there is NO montage (e.g. a
+% surface-only object), so render_layer_surfaces and the controller's numeric
+% legend both have one. With a montage the loop above already stored the
+% render_blobs-computed range; here we fill the surface-only gap using the same
+% shared, uniform default (split-aware) on the layer's mapped values.
+if isempty(obj.activation_maps{wh_to_display}.cmaprange)
+    split_flag = {};
+    if any(strcmp(varargin, 'splitcolor')), split_flag = {'splitcolor'}; end
+    obj.activation_maps{wh_to_display}.cmaprange = ...
+        canlab_default_cmaprange(currentmap.mapdata(:), split_flag{:});
+end
 
 % Surfaces
 % -------------------------------------------------------------------------

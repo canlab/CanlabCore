@@ -69,6 +69,24 @@ if isfield(layer, 'cmaprange'), cmaprange = layer.cmaprange; end
 
 img = region2imagevec(layer.source_region);
 
+% Default colour limits via the shared, uniform policy (canlab_default_cmaprange:
+% robust per-arm percentile range, NOT [min max]), so a SURFACE-ONLY layer scales
+% exactly like the montage and render_on_surface defaults. Without this, such a
+% layer (no montage to supply a cmaprange) falls back to canlab_colormap's fixed
+% [-1 1], washing out maps whose values are far from unit scale (e.g. SVM weights
+% ~1e-4). When a montage IS present its render_blobs-computed cmaprange is already
+% stored on the layer, so this only fills the surface-only gap and never overrides
+% an explicit or montage-derived range. 'splitcolor' -> 4-element per-arm range.
+if isempty(cmaprange)
+    v = double(img.dat(:));
+    v = v(v ~= 0 & isfinite(v));
+    if ~isempty(v)
+        split_flag = {};
+        if any(strcmp(args, 'splitcolor')), split_flag = {'splitcolor'}; end
+        cmaprange = canlab_default_cmaprange(v, split_flag{:});
+    end
+end
+
 % Translate the layer's colour spec (in render_args) into colormaps that
 % render_on_surface understands. It knows pos_colormap / neg_colormap / colormap /
 % color / splitcolor but NOT maxcolor / mincolor, so we build pos/neg ramps here.

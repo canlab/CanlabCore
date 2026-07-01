@@ -493,9 +493,35 @@ if ~exist('o2', 'var')
         % complete path specified
         o2 = fmridisplay('overlay',overlay);
     end
-    
-    % You can customize these and run them from the command line
-    
+
+    do_setup_display = true;   % freshly constructed object: compose the layout
+
+else
+    % An existing fmridisplay object was passed in (e.g.
+    % o2 = canlab_results_fmridisplay(cl, o2, ...)): REUSE it instead of building
+    % a new one. Compose the requested montage/surface layout onto it when it has
+    % NO montages yet (so fmridisplay.multiview can compose even onto an object
+    % that already has surfaces); if montages already exist, skip composition and
+    % just add blobs to it (the long-standing reuse behaviour). This lets
+    % fmridisplay.multiview delegate the figure/axes compositions here.
+    do_setup_display = isempty(o2.montage);
+
+end
+
+% You can customize these and run them from the command line
+
+if do_setup_display
+
+    % Never draw into the interactive controller (a uifigure): several montage
+    % layouts (e.g. the default 'compact') draw into the current figure via
+    % axes(), which errors on a uifigure ('AutoResizeChildren' is 'on'). If the
+    % current figure is a uifigure, open a fresh traditional figure so behaviour
+    % is consistent with fmridisplay.montage / .surface. (Layouts that create
+    % their own figure below are unaffected.)
+    if dofigure && canlab_is_uifigure(get(groot, 'CurrentFigure'))
+        figure;
+    end
+
     switch montagetype
         
         case {'blobcenters', 'regioncenters'}
@@ -2204,6 +2230,24 @@ end
 
 if dooutline
     o2 = addblobs(o2, cl, 'color', outlinecolor, 'outline', 'wh_montages', wh_montages, 'no_surface');
+end
+
+% Hide the "..." per-axes interaction toolbar on every panel of the composed
+% figures (montage slices AND rendered surfaces, incl. layouts like 'full' /
+% 'compact2' that build extra axes). Sweep the figures that hold this object's
+% montage / surface axes.
+try
+    composed_figs = gobjects(0);
+    for mi = 1:numel(o2.montage)
+        ah = o2.montage{mi}.axis_handles; ah = ah(ishandle(ah));
+        if ~isempty(ah), composed_figs(end+1) = ancestor(ah(1), 'figure'); end %#ok<AGROW>
+    end
+    for si = 1:numel(o2.surface)
+        oh = o2.surface{si}.object_handle; oh = oh(ishandle(oh));
+        if ~isempty(oh), composed_figs(end+1) = ancestor(oh(1), 'figure'); end %#ok<AGROW>
+    end
+    canlab_hide_axes_toolbar(composed_figs);
+catch
 end
 
 

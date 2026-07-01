@@ -140,7 +140,56 @@ end
 
 if isempty(obj.SPACE) || ~isstruct(obj.SPACE.V)
     error('fmridisplay is not initialized correctly. run obj = fmridisplay; first and then pass in to this method.')
-    
+
+end
+
+% Multi-panel routing
+% -------------------------------------------------------------------------
+% The default montage(obj) (and montage(obj, <montagetype>) for any
+% canlab_results_fmridisplay layout keyword) composes a MULTI-PANEL display via
+% multiview() — the sagittal+axial 'compact' combo by default, matching
+% fmri_data.montage. Explicit single-orientation calls ('axial'/'sagittal'/
+% 'coronal', slice options, 'existing_axes' — including the per-orientation
+% calls multiview/canlab_results_fmridisplay make internally) fall through to the
+% single-orientation montage below. The orientation words are deliberately kept
+% OUT of the routed set, so montage(obj,'sagittal') stays a single sagittal row.
+mv_types = {'compact', 'compact2', 'compact3', 'full', 'full2', 'multirow', ...
+    'allslices', 'blobcenters', 'regioncenters', 'full hcp', 'full hcp inflated', ...
+    'full no surfaces', 'hcp grayordinates', 'hcp grayordinates subcortex', ...
+    'hcp grayordinates compact', 'subcortex compact', 'subcortex full', ...
+    'subcortex slices', 'subcortex 3d', 'leftright inout', 'leftright inout subcortex', ...
+    'hcp inflated', 'hcp', 'hcp sphere', 'freesurfer inflated', 'freesurfer white', ...
+    'freesurfer sphere', 'MNI152NLin2009cAsym white', 'MNI152NLin2009cAsym midthickness', ...
+    'MNI152NLin2009cAsym pial', 'MNI152NLin6Asym white', 'MNI152NLin6Asym midthickness', ...
+    'MNI152NLin6Asym pial', 'MNI152NLin6Asym sphere'};
+
+% Keywords that request a SINGLE-orientation montage (existing behaviour) and so
+% are NOT routed to multiview: the orientation words, the per-slice options, and
+% the existing-axes/figure paths (which the multi-panel layouts use internally,
+% preventing recursion). Anything else -> multi-panel multiview (default compact).
+single_kw = {'axial', 'coronal', 'sag', 'sagg', 'saggital', 'sagittal', ...
+    'wh_slice', 'slice_range', 'spacing', 'onerow', 'existing_axes', ...
+    'volume_data', 'nofigure', 'nofig', 'existing_figure'};
+is_single = false;
+for i = 1:numel(varargin)
+    if ischar(varargin{i}) && any(strcmpi(varargin{i}, single_kw)), is_single = true; break; end
+end
+
+if ~is_single
+    mv_type = 'compact'; mv_extra = varargin;              % default multi-panel layout
+    for i = 1:numel(varargin)                              % use an explicit montagetype if given
+        if ischar(varargin{i}) && any(strcmpi(varargin{i}, mv_types))
+            mv_type = varargin{i}; mv_extra(i) = []; break;
+        end
+    end
+    if ~any(strcmpi(varargin, 'noverbose'))
+        vname = inputname(1); if isempty(vname), vname = 'o2'; end
+        fprintf('Composing multi-panel display. Equivalent call:  %s = multiview(%s, ''%s'');\n', ...
+            vname, vname, mv_type);
+    end
+    obj = multiview(obj, mv_type, mv_extra{:});
+    dat = [];   %#ok<NASGU>  % keep the 2nd output defined if requested
+    return
 end
 
 donewfigure = true; % default - new figure and axes. even if donewaxes is on, this can be turned off to use existing figure
@@ -274,15 +323,20 @@ figure(slices_fig_h) % note: this is slow for repeated calls...
 
 for i = 1:length(slice_vox_coords)
     axes(newax(i));
-    
+
     wh_slice = slice_vox_coords(i);
     Z = display_slice(dat, wh_slice, obj.SPACE, myview, lightenstr);
-    
+
     % ✅ Store the actual mm coordinate for this axis
     setappdata(newax(i), 'mm_coord', slice_mm_coords(i));
-    
+
     hold on
     axis off
+
+    % Hide the per-axes interaction toolbar (the "..." overflow button that
+    % appears in the corner of every slice in recent MATLAB releases) and disable
+    % the default pan/zoom/rotate interactions, which are meaningless for a slice.
+    hide_axes_toolbar(newax(i));
 end
 
 
@@ -290,6 +344,25 @@ end
 % register info in fmridisplay object
 
 obj.montage{end + 1} = struct('axis_handles', newax, 'orientation', myview, 'slice_mm_coords', slice_mm_coords);
+
+% Pull existing blob layers onto this newly added montage, so blobs that were
+% added BEFORE this montage (e.g. drawn onto surfaces first) also appear here.
+% Mirrors the surface() pull-in. For the usual montage-then-addblobs order there
+% are no layers yet, so this is a no-op. See VISUALIZATION_OVERHAUL_NOTES.md.
+new_montage_idx = numel(obj.montage);
+for k = 1:numel(obj.activation_maps)
+    layer = obj.activation_maps{k};
+    if ~isfield(layer, 'mapdata') || isempty(layer.mapdata), continue, end
+    render_args = {};
+    if isfield(layer, 'render_args') && ~isempty(layer.render_args), render_args = layer.render_args; end
+    [blobhan, this_cmaprange] = render_blobs(layer, obj.montage{new_montage_idx}, obj.SPACE, render_args{:});
+    if ~isempty(blobhan)
+        obj.activation_maps{k}.blobhandles = [obj.activation_maps{k}.blobhandles; blobhan];
+        if ~isfield(obj.activation_maps{k}, 'cmaprange') || isempty(obj.activation_maps{k}.cmaprange)
+            obj.activation_maps{k}.cmaprange = this_cmaprange;
+        end
+    end
+end
 
 if brighten_factor  % if we are brightening - this is a bit slower...
     % set color map to enhance contrast
@@ -372,37 +445,49 @@ end
         end
 
         if ~donewaxes
-            % Break and return here if we are using existing axes.
-            % was apparently not implemented. now checking for axis
-            % handles. SG 2016/10/26
+            % Using existing axes. Ensure we end up with exactly num_axes valid
+            % axes: use the provided ones if enough were passed, otherwise EXPAND
+            % from the first provided axis into a row of num_axes axes. The expand
+            % path is what canlab_results_fmridisplay 'multirow' relies on — it
+            % passes a single placeholder axis and lets montage lay out the slices
+            % (previously this was gated on there being >1 axis in the figure, so
+            % a lone axis with many slices errored: "Index exceeds ... must not
+            % exceed 1"). SG 2016/10/26; fixed 2026.
+            valid = false(1, numel(newax));
             for k = 1:numel(newax)
-                axcheck(k) = isscalar(newax(k)) && ishandle(newax(k)) && strcmp(get(newax(k), 'type'), 'axes');
+                valid(k) = isscalar(newax(k)) && ishandle(newax(k)) && strcmp(get(newax(k), 'type'), 'axes');
             end
-            if numel(newax)>1 && sum(axcheck)==numel(newax)
-                axis(newax,'off');
+            newax = newax(valid);
+            if isempty(newax)
+                error('fmridisplay:montage:badExistingAxes', ...
+                    '''existing_axes'' did not contain any valid axes handles.');
+            end
+
+            if numel(newax) >= num_axes
+                newax = newax(1:num_axes);
+                axis(newax, 'off');
             else
-                axis(newax,'off');
-                allaxh = findobj(gcf, 'Type', 'axes');
-                if length(allaxh) > 1
-                    init_pos = get(newax, 'Position');
-                    if num_axes > 1
-                        for i = 1:num_axes
-                            x_pos = init_pos(1) + (i * (0.85 / num_axes));
-                            newax(i) = axes('Position', [x_pos,init_pos(2),init_pos(3),init_pos(4)]);
-                            axis(newax(i), 'image');
-                        end
-                    end
+                % Fewer axes than slices: expand from the first provided axis.
+                init_pos = get(newax(1), 'Position');
+                axis(newax(1), 'off');
+                for i = 1:num_axes
+                    x_pos = init_pos(1) + (i * (0.85 / num_axes));
+                    newax(i) = axes('Position', [x_pos, init_pos(2), init_pos(3), init_pos(4)]);
+                    axis(newax(i), 'image');
                 end
             end
-            slices_fig_h = get(newax(1), 'Parent');
-            while ~isa(slices_fig_h,'matlab.ui.Figure')
-                slices_fig_h = get(slices_fig_h, 'Parent');
-            end
+
+            slices_fig_h = ancestor(newax(1), 'figure');
             return
         end
         
         if donewfigure
             slices_fig_h = figure; %create_figure(myview);
+        elseif canlab_is_uifigure(gcf)
+            % 'nofigure' asked to reuse the current figure, but it is a uifigure
+            % (the controller): subplot/axes cannot draw into it, so open a fresh
+            % traditional figure instead (consistent with the other methods).
+            slices_fig_h = figure;
         else
             slices_fig_h = gcf;
         end
@@ -429,3 +514,10 @@ end
     end % setup axes
 
 end % main function
+
+
+function hide_axes_toolbar(ax)
+% Hide the per-axes "..." interaction toolbar on the slice axes. Delegates to the
+% shared canlab_hide_axes_toolbar so montages and surfaces behave identically.
+canlab_hide_axes_toolbar(ax);
+end

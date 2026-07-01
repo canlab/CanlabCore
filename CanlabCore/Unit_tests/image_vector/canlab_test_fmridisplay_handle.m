@@ -624,24 +624,30 @@ end
 
 
 function test_controller_shows_legend_labels(tc)
-% The controller HOSTS the legend: numeric end labels under each layer's colour
-% stripe (extremes; 0 in the centre for split maps), read from cmaprange.
+% The controller HOSTS the legend: numeric labels under each layer's colour
+% stripe, read from cmaprange. A split map shows FOUR values aligned to the bar
+% (neg extreme / neg near-0 [gap] pos near-0 / pos extreme) in columns 1,2,4,5
+% with column 3 the blank gap; a single ramp shows the two ends in cols 1 and 5.
 tc.assumeTrue(usejava('desktop') || (usejava('jvm') && feature('ShowFigureWindows')), ...
     'controller widget requires an interactive figure window');
 t   = canlab_get_sample_thresholded_t(0.01);
 o2  = montage(t);
 fig = controller(o2);
 tc.addTeardown(@() delete(fig(isvalid(fig))));
-cr  = o2.activation_maps{1}.cmaprange;
-lo  = findobj(fig, 'Tag', 'leglo_1');
-mid = findobj(fig, 'Tag', 'legmid_1');
-hi  = findobj(fig, 'Tag', 'leghi_1');
-tc.verifyNotEmpty(lo, 'low-end legend label exists');
-tc.verifyNotEmpty(hi, 'high-end legend label exists');
-tc.verifyEqual(lo.Text, num2str(round(min(cr), 1, 'significant')), 'low end labelled from cmaprange');
-tc.verifyEqual(hi.Text, num2str(round(max(cr), 1, 'significant')), 'high end labelled from cmaprange');
+cr  = sort(double(o2.activation_maps{1}.cmaprange));
+f   = @(x) num2str(round(x, 2, 'significant'));
+L   = @(c) findobj(fig, 'Tag', sprintf('leg%d_1', c));
+tc.verifyNotEmpty(L(1), 'first legend label exists');
+tc.verifyNotEmpty(L(5), 'last legend label exists');
 if numel(cr) >= 4
-    tc.verifyEqual(mid.Text, '0', 'split map labels 0 in the centre');
+    tc.verifyEqual(L(1).Text, f(cr(1)), 'neg extreme labelled from cmaprange');
+    tc.verifyEqual(L(2).Text, f(cr(2)), 'neg near-0 labelled from cmaprange');
+    tc.verifyEqual(L(4).Text, f(cr(3)), 'pos near-0 labelled from cmaprange');
+    tc.verifyEqual(L(5).Text, f(cr(4)), 'pos extreme labelled from cmaprange');
+    tc.verifyEmpty(L(3).Text, 'centre column is the blank gap');
+else
+    tc.verifyEqual(L(1).Text, f(cr(1)),   'low end labelled from cmaprange');
+    tc.verifyEqual(L(5).Text, f(cr(end)), 'high end labelled from cmaprange');
 end
 end
 
@@ -741,4 +747,63 @@ tc.verifyNotEmpty(o2.surface, 'surface views themselves are kept');
 if ~isempty(leg)
     tc.verifyFalse(any(ishandle(leg)), 'surface colorbar(s) removed by removeblobs');
 end
+end
+
+
+function test_montage_existing_axes_expands_to_num_slices(tc)
+% Regression: montage() into a SINGLE existing axis with many slices must expand
+% into one axis per slice, not error ("Index exceeds ... must not exceed 1").
+% This is the root cause of the multi-image (multirow) montage failure.
+tc.assumeTrue(usejava('jvm'), 'montage rendering requires Java');
+o2 = fmridisplay('nocontroller');
+f  = figure; tc.addTeardown(@() close(f(isvalid(f))));
+axh = axes('Position', [.1 .5 .3 .2]);
+o2 = montage(o2, 'axial', 'slice_range', [-32 50], 'onerow', 'spacing', 8, ...
+    'noverbose', 'existing_axes', axh);
+tc.verifyGreaterThan(numel(o2.montage{end}.axis_handles), 1, ...
+    'existing_axes expanded from one placeholder axis into one axis per slice');
+end
+
+
+function test_montage_multiimage_no_error(tc)
+% Regression: montage() of a multi-image image_vector composes a per-image
+% (multirow) display without erroring.
+tc.assumeTrue(usejava('jvm'), 'montage rendering requires Java');
+obj = canlab_get_sample_fmri_data();
+tc.assumeTrue(size(obj.dat, 2) > 1, 'need a multi-image sample object');
+imgs = get_wh_image(obj, 1:3);
+f = figure; tc.addTeardown(@() close(f(isvalid(f))));
+o = montage(imgs, 'noverbose');
+tc.verifyClass(o, 'fmridisplay');
+tc.verifyGreaterThan(numel(o.montage), 0, 'per-image montages were composed');
+end
+
+
+function test_addblobs_multiimage_uses_first_image(tc)
+% Regression: addblobs() of a multi-image object uses only the FIRST image as the
+% layer source (one layer, single-image source), instead of erroring or combining.
+tc.assumeTrue(usejava('jvm'), 'rendering requires Java');
+obj = canlab_get_sample_fmri_data();
+tc.assumeTrue(size(obj.dat, 2) > 1, 'need a multi-image sample object');
+o2 = fmridisplay('nocontroller'); o2 = montage(o2, 'axial', 'noverbose');
+o2 = addblobs(o2, obj, 'noverbose');
+tc.verifyEqual(numel(o2.activation_maps), 1, 'exactly one blob layer added');
+tc.verifyEqual(size(o2.activation_maps{1}.source_object.dat, 2), 1, ...
+    'layer source is a single image (first image only)');
+end
+
+
+function test_multiview_composes_and_pulls_existing_blobs(tc)
+% multiview() composes a montage layout onto an EXISTING object (that already has
+% surfaces + blobs) and pulls the existing blob layer onto the new montages.
+tc.assumeTrue(usejava('jvm'), 'rendering requires Java');
+t  = canlab_get_sample_thresholded_t(0.01);
+o2 = fmridisplay('nocontroller');
+try, o2 = surface(o2); catch ME, tc.assumeFail(ME.message); end
+o2 = addblobs(o2, region(t), 'source_object', t, 'noverbose');
+nb0 = numel(o2.activation_maps{1}.blobhandles);
+o2 = multiview(o2, 'compact');
+tc.verifyGreaterThan(numel(o2.montage), 0, 'multiview composed montages onto the object');
+tc.verifyGreaterThan(numel(o2.activation_maps{1}.blobhandles), nb0, ...
+    'existing blobs were pulled onto the new montages');
 end

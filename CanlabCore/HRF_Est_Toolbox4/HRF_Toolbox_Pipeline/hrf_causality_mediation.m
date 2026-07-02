@@ -93,7 +93,16 @@ end
 if isstruct(source) && isfield(source, 'tsRuns')
     prep = source;
 else
-    prep = hrf_causality(source, 'ReturnData', true, 'Unit', opts.Unit, 'Nodes', opts.Nodes, ...
+    % Restrict extraction to only the node-valued X/M/Y specs (events columns
+    % like temp/rating and 'condition:' specs are resolved later, not extracted)
+    % so the BOLD apply is done for just those maps -- a large speedup.
+    ext_nodes = {};
+    for spc = {char(opts.X), char(opts.M), char(opts.Y)}
+        if ~startsWith(spc{1}, 'condition:'), ext_nodes{end + 1} = spc{1}; end %#ok<AGROW>
+    end
+    if ~isempty(opts.Nodes), ext_nodes = [cellstr(string(opts.Nodes)); ext_nodes(:)]; end
+    ext_nodes = unique(ext_nodes, 'stable');
+    prep = hrf_causality(source, 'ReturnData', true, 'Unit', opts.Unit, 'Nodes', ext_nodes, ...
         'Atlas', opts.Atlas, 'KernelModel', opts.KernelModel, 'KernelObject', opts.KernelObject, ...
         'KernelCondition', opts.KernelCondition, 'MaxRuns', opts.MaxRuns, 'doverbose', verbose);
 end

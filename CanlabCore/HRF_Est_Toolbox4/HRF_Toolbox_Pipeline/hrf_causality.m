@@ -106,6 +106,22 @@ if verbose
         numel(nodes), unit, numel(od_list), char(opts.KernelModel), char(opts.KernelObject), numel(lags), TR, cond_txt);
 end
 
+% Fast path: build ONE image_vector holding only the requested node maps, so
+% each run applies just those instead of the whole signature+imageset set (44+
+% maps). Huge win when few nodes are needed (e.g. mediation M='NPS' -> 1 map).
+% Built once; falls back to the full apply if it can't be assembled.
+sig_subset = [];
+if strcmp(unit, 'signature')
+    try
+        sig_subset = local_node_map_subset(cfgs{1}.signature_sets, cfgs{1}.image_sets, nodes);
+    catch
+        sig_subset = [];
+    end
+    if verbose && ~isempty(sig_subset)
+        fprintf('  fast extract: applying %d requested map(s)/run instead of the full set\n', size(sig_subset.dat, 2));
+    end
+end
+
 % ---- 2. per-run node timeseries from the 4-D BOLD (across all dirs) ------
 tsRuns = {}; confRuns = {}; segRuns = {}; subjUsed = {}; usedFiles = {}; usedEvents = {};
 total = 0;
@@ -124,7 +140,7 @@ for di = 1:numel(od_list)
         end
         if verbose, fprintf('  [dir %d run %d] %s\n', di, r, local_short(f)); end
         bold = fmri_data(f, 'noverbose');
-        ts = local_extract_timeseries(bold, unit, nodes, cfg, atlas_obj);
+        ts = local_extract_timeseries(bold, unit, nodes, cfg, atlas_obj, sig_subset);
         if isempty(ts), warning('hrf_causality:NoTS', 'No timeseries for %s; skipping.', local_short(f)); continue; end
         T = size(ts, 1);
         ef = ''; if r <= numel(events_files), ef = events_files{r}; end
@@ -296,16 +312,23 @@ curve(tf) = m(loc(tf));
 end
 
 
-function ts = local_extract_timeseries(bold, unit, nodes, cfg, atlas_obj)
+function ts = local_extract_timeseries(bold, unit, nodes, cfg, atlas_obj, sig_subset)
 % Return [T x numel(nodes)] timeseries in `nodes` order (NaN column if a node
 % is unavailable in this run). Columns stay aligned with the kernels; the
 % driver prunes any node that is invalid across runs after the loop.
 T = size(bold.dat, 2);
 ts = nan(T, numel(nodes));
 if strcmp(unit, 'signature')
-    sc = hrf_apply_maps_to_wholebrain(bold, ...
-        'SignatureSets', cfg.signature_sets, 'ImageSets', cfg.image_sets, ...
-        'SimilarityMetric', local_field_or(cfg, 'similarity_metric', 'dotproduct'));
+    metric = local_field_or(cfg, 'similarity_metric', 'dotproduct');
+    if ~isempty(sig_subset)
+        % fast path: apply ONLY the requested node maps (named by node)
+        sc = hrf_apply_maps_to_wholebrain(bold, 'SignatureSets', {}, ...
+            'ImageSets', sig_subset, 'SimilarityMetric', metric);
+    else
+        sc = hrf_apply_maps_to_wholebrain(bold, ...
+            'SignatureSets', cfg.signature_sets, 'ImageSets', cfg.image_sets, ...
+            'SimilarityMetric', metric);
+    end
     v = sc.Properties.VariableNames;
     for n = 1:numel(nodes)
         col = local_match_score_col(v, nodes{n});
@@ -321,6 +344,43 @@ else
         if ~isempty(li) && li <= size(P, 2), ts(:, n) = P(:, li); end
     end
 end
+end
+
+
+function obj = local_node_map_subset(sig_sets, image_sets, want)
+% Build one image_vector holding just the requested node maps -- searched
+% across the signature sets AND imagesets and named by node -- so the extractor
+% applies ONLY those maps per run instead of the whole set. Returns [] if none
+% of the wanted nodes is a map (caller falls back to the full apply).
+obj = []; got = {};
+want = cellstr(string(want));
+setspecs = [cellstr(string(sig_sets)); cellstr(string(image_sets))];
+setspecs = setspecs(~cellfun(@(s) isempty(strtrim(s)), setspecs));
+for s = 1:numel(setspecs)
+    if all(ismember(lower(want), lower(got))), break; end     % already have all
+    try
+        [o, nm] = load_image_set(setspecs{s}, 'noverbose');
+    catch
+        continue
+    end
+    nm = cellstr(string(nm));
+    for w = 1:numel(want)
+        if any(strcmpi(got, want{w})), continue; end
+        hit = find(strcmpi(nm, want{w}), 1);
+        if isempty(hit), continue; end
+        sub = get_wh_image(o, hit);
+        if isempty(obj)
+            obj = sub;
+        else
+            try, sub = resample_space(sub, obj); catch, end
+            obj.dat = [obj.dat, sub.dat];
+        end
+        got{end + 1} = want{w}; %#ok<AGROW>
+    end
+end
+if isempty(obj), return; end
+try, obj.metadata_table = table(); catch, end
+obj.image_names = char(cellstr(string(got)));
 end
 
 

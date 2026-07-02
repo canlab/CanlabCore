@@ -101,6 +101,7 @@ p.addRequired('source');
 p.addParameter('Unit', 'imageset', @(x) ischar(x) || isstring(x));
 p.addParameter('Set', 'neurosynth', @(x) ischar(x) || isstring(x));
 p.addParameter('Suffix', 'mean', @(x) ischar(x) || isstring(x));
+p.addParameter('PrettyLabels', true, @(x) islogical(x) || isnumeric(x));
 p.addParameter('Condition', '', @(x) ischar(x) || isstring(x) || iscell(x));
 p.addParameter('Model', 'sfir', @(x) ischar(x) || isstring(x));
 p.addParameter('Object', 'beta', @(x) ischar(x) || isstring(x));
@@ -113,6 +114,7 @@ p.addParameter('TopN', 60, @(x) isscalar(x) && x >= 1);
 p.addParameter('SizeBy', 'abs', @(x) ischar(x) || isstring(x));
 p.addParameter('FrameRate', 4, @(x) isscalar(x) && x > 0);
 p.addParameter('OutputFile', '', @(x) ischar(x) || isstring(x));
+p.addParameter('ReturnFrames', false, @(x) islogical(x) || isnumeric(x));
 p.addParameter('FontRange', [9 46], @(x) isnumeric(x) && numel(x) == 2);
 p.addParameter('Title', '', @(x) ischar(x) || isstring(x));
 p.addParameter('Verbose', true, @(x) islogical(x) || isnumeric(x));
@@ -172,6 +174,7 @@ end
 keepN = min(opts.TopN, sum(passed));
 keep = ord(1:keepN);
 terms = terms(keep); scores = scores(:, keep); mag = mag(:, keep); sig = sig(:, keep); pcorr = pcorr(:, keep);
+labels = local_labels(terms, opts.PrettyLabels);   % display names (raw kept in out.terms)
 
 gmax = max(mag(:)); if gmax == 0 || ~isfinite(gmax), gmax = 1; end
 clim = max(abs(scores(:))); if clim == 0 || ~isfinite(clim), clim = 1; end
@@ -185,10 +188,12 @@ ax = axes(fig, 'Position', [0.02 0.04 0.96 0.90]); axis(ax, [0 1 0 1]); axis(ax,
 % packing stays overlap-free and positions are stable across the movie -- the
 % tight look of a static wordcloud, but animated.
 peakmag = max(mag, [], 1, 'omitnan');
-pos = local_wordcloud_layout(ax, terms, peakmag, gmax, fr);
+pos = local_wordcloud_layout(ax, labels, peakmag, gmax, fr);
 
 vw = local_open_video(opts.OutputFile, opts.FrameRate);
 persist = logical(opts.Persist);
+returnframes = logical(opts.ReturnFrames);
+frames = cell(1, nLag);
 for li = 1:nLag
     cla(ax); axis(ax, [0 1 0 1]); axis(ax, 'off');
     for ti = 1:numel(terms)
@@ -203,20 +208,22 @@ for li = 1:nLag
         else
             col = local_sign_color(s, clim);
         end
-        text(ax, pos(ti, 1), pos(ti, 2), char(terms{ti}), 'FontSize', fs, ...
+        text(ax, pos(ti, 1), pos(ti, 2), char(labels{ti}), 'FontSize', fs, ...
             'Color', col, 'HorizontalAlignment', 'center', ...
             'FontWeight', 'bold', 'Interpreter', 'none', 'Clipping', 'on');
     end
     title(ax, sprintf('%s   —   %s   t = %.1f s   [%s]', char(opts.Title), condlabel, lags(li), sel_note), ...
         'Interpreter', 'none', 'FontSize', 11);
     drawnow;
+    if returnframes, frames{li} = frame2im(getframe(fig)); end %#ok<AGROW>
     vw = local_write_frame(vw, fig);
 end
 vw = local_close_video(vw);
 
-out = struct('scores', scores, 'terms', {terms}, 'lags', lags(:)', 'pos', pos, ...
+out = struct('scores', scores, 'terms', {terms}, 'labels', {labels}, 'lags', lags(:)', 'pos', pos, ...
     't', S.t(:, keep), 'p', S.p(:, keep), 'p_corr', pcorr, 'sig', sig, ...
-    'correction', char(opts.Correction), 'nsubj', S.nsubj, ...
+    'correction', char(opts.Correction), 'nsubj', S.nsubj, 'frames', {frames}, ...
+    'title', char(opts.Title), 'condition', condlabel, ...
     'selection', sel_note, 'file', local_video_path(vw, opts.OutputFile));
 if verbose
     fprintf('hrf_animate_wordcloud: %d terms shown (%s) x %d lags, condition %s%s\n', ...
@@ -575,6 +582,25 @@ for i = 1:numel(v)
 end
 end
 
+
+function labels = local_labels(terms, pretty)
+% Human-readable display names from the sanitized column tokens.
+if ~logical(pretty), labels = terms; return; end
+labels = cellfun(@local_prettify, terms, 'uni', 0);
+end
+
+function s = local_prettify(term)
+% 'SensoryStimulation' -> 'Sensory Stimulation'; 'Ctx_V1_L' -> 'Ctx V1 L';
+% 'nback-stimblock' -> 'nback stimblock'. Undoes matlab.lang.makeValidName-style
+% sanitization for display (the raw token is kept for matching / out.terms).
+s = char(term);
+s = strrep(s, '_', ' ');
+s = strrep(s, '-', ' ');
+s = regexprep(s, '([a-z0-9])([A-Z])', '$1 $2');    % camelCase boundary
+s = regexprep(s, '([A-Za-z])([0-9])', '$1 $2');     % letter->digit boundary
+s = regexprep(s, '\s+', ' ');
+s = strtrim(s);
+end
 
 function s = local_unit_noun(unit)
 switch lower(char(unit))

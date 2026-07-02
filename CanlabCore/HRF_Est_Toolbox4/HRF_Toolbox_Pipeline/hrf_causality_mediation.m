@@ -34,10 +34,17 @@ function R = hrf_causality_mediation(source, varargin)
 %   **'X','M','Y':** the three mediation variables (specs as above).
 %
 % :Optional Inputs:
-%   **'TrialType':** glob on trial_type selecting which events are trials.
-%             Default '' => event rows with a finite 'rating'.
+%   **'TrialType':** glob on trial_type selecting which events are the trials
+%             (the M / amplitude anchor). Use the stimulus BLOCK, e.g.
+%             'nback-stimblock' or 'rest_stim' (NOT '*stimblock*', which also
+%             grabs the zero-duration *_ttl_* markers). Default '' => rows with
+%             a finite 'rating'.
 %   **'TrialWindow':** seconds post-onset to average the proxy over for a
 %             trial's amplitude. Default [] => the event's own duration.
+%   **'PairWindow':** seconds. When an events column used for X/Y is NaN on the
+%             trial row (e.g. 'rating', which lives on a separate rating event),
+%             its value is paired from the nearest event that has it -- the next
+%             one within PairWindow, else the nearest overall. Default 90.
 %   **'Amplitude':** 'mean' (default) or 'peak' of the proxy over the window.
 %   **'DeconvMethod','Lambda':** passed to hrf_deconv_timeseries.
 %   **'Standardize','Nboot':** passed to hrf_mediation_analyze.
@@ -58,6 +65,7 @@ p.addParameter('M', '', @(x) ischar(x) || isstring(x));
 p.addParameter('Y', '', @(x) ischar(x) || isstring(x));
 p.addParameter('TrialType', '', @(x) ischar(x) || isstring(x) || iscell(x));
 p.addParameter('TrialWindow', [], @(x) isempty(x) || (isscalar(x) && x > 0));
+p.addParameter('PairWindow', 90, @(x) isscalar(x) && x > 0);
 p.addParameter('Amplitude', 'mean', @(x) ischar(x) || isstring(x));
 p.addParameter('DeconvMethod', 'ridge', @(x) ischar(x) || isstring(x));
 p.addParameter('Lambda', [], @(x) isempty(x) || isscalar(x));
@@ -166,15 +174,40 @@ end
 b.amp = amp;
 b.trial_type = tt(rows);
 b.cols = struct();
-for c = {'temp', 'rating'}
-    if any(strcmp(c{1}, v)), b.cols.(c{1}) = double(E.(c{1})(rows)); end
-end
-% any other numeric events column the user might reference
+% Per-trial value of every numeric events column, PAIRED: use the trial row's
+% own value if finite; otherwise take the nearest event (preferring the next
+% one within PairWindow s) that has a finite value. This is what links a heat
+% trial to its rating, which is recorded on a separate 'rating' event.
 for k = 1:numel(v)
     nm = v{k};
-    if ismember(nm, {'onset', 'duration', 'trial_type', 'temp', 'rating'}), continue; end
+    if ismember(nm, {'onset', 'duration', 'trial_type'}), continue; end
     col = E.(nm);
-    if isnumeric(col), b.cols.(matlab.lang.makeValidName(nm)) = double(col(rows)); end
+    if ~isnumeric(col), continue; end
+    b.cols.(matlab.lang.makeValidName(nm)) = local_paired_col(double(col), onset, rows, opts.PairWindow);
+end
+end
+
+
+function vals = local_paired_col(colall, onset_all, rows, pairwin)
+% For each anchor trial: its own value if finite, else the value of the
+% nearest event with a finite value -- preferring the next event within
+% pairwin seconds (e.g. the rating that follows the stimulus), else the
+% nearest one overall.
+fin = find(isfinite(colall));
+vals = nan(numel(rows), 1);
+for i = 1:numel(rows)
+    j = rows(i);
+    if isfinite(colall(j)), vals(i) = colall(j); continue; end
+    if isempty(fin), continue; end
+    d = onset_all(fin) - onset_all(j);
+    foll = fin(d >= -1e-6 & d <= pairwin);
+    if ~isempty(foll)
+        [~, mi] = min(onset_all(foll) - onset_all(j));
+        vals(i) = colall(foll(mi));
+    else
+        [~, mi] = min(abs(onset_all(fin) - onset_all(j)));
+        vals(i) = colall(fin(mi));
+    end
 end
 end
 

@@ -28,8 +28,17 @@ function out = hrf_animate_wordcloud(source, varargin)
 %             .terms (1 x nTerm), .lags (1 x nLag).
 %
 % :Optional Inputs:
-%   **'Set':**        map set token (default 'neurosynth'); selects
-%                     map_<set>_<term> columns.
+%   **'Unit':**       which score family to word-cloud: 'imageset' (default;
+%                     Neurosynth terms/topics, hansen22, bucknerlab networks,
+%                     ... = map_<Set>_* columns), 'signature' (sig_<Set>_*), or
+%                     'atlas' (atlas_<Set>_<region>_<Suffix> columns; the words
+%                     are the region names).
+%   **'Set':**        the set / atlas token, interpreted per Unit -- an imageset
+%                     name ('neurosynth','neurosynth_topics_fi','hansen22',
+%                     'bucknerlab_wholebrain'), a signature set ('all'), or an
+%                     atlas token ('canlab2024','ppat'). Default 'neurosynth'.
+%   **'Suffix':**     for Unit='atlas', which region summary to use --
+%                     'mean' (default), 'meanL1', or 'sum'.
 %   **'Condition':**  condition (glob ok) whose curve to animate. Default '' =
 %                     first condition present (errors if several and ambiguous).
 %   **'Model'/'Object':** for input_table iteration. Default 'sfir'/'beta'.
@@ -89,7 +98,9 @@ function out = hrf_animate_wordcloud(source, varargin)
 
 p = inputParser;
 p.addRequired('source');
+p.addParameter('Unit', 'imageset', @(x) ischar(x) || isstring(x));
 p.addParameter('Set', 'neurosynth', @(x) ischar(x) || isstring(x));
+p.addParameter('Suffix', 'mean', @(x) ischar(x) || isstring(x));
 p.addParameter('Condition', '', @(x) ischar(x) || isstring(x) || iscell(x));
 p.addParameter('Model', 'sfir', @(x) ischar(x) || isstring(x));
 p.addParameter('Object', 'beta', @(x) ischar(x) || isstring(x));
@@ -103,16 +114,21 @@ p.addParameter('SizeBy', 'abs', @(x) ischar(x) || isstring(x));
 p.addParameter('FrameRate', 4, @(x) isscalar(x) && x > 0);
 p.addParameter('OutputFile', '', @(x) ischar(x) || isstring(x));
 p.addParameter('FontRange', [9 46], @(x) isnumeric(x) && numel(x) == 2);
-p.addParameter('Title', 'Neurosynth terms over the HRF', @(x) ischar(x) || isstring(x));
+p.addParameter('Title', '', @(x) ischar(x) || isstring(x));
 p.addParameter('Verbose', true, @(x) islogical(x) || isnumeric(x));
 p.addParameter('doverbose', [], @(x) isempty(x) || islogical(x) || isnumeric(x));
 p.parse(source, varargin{:});
 opts = p.Results;
 verbose = logical(opts.Verbose);
 if ~isempty(opts.doverbose), verbose = logical(opts.doverbose); end
+if isempty(char(opts.Title))
+    opts.Title = sprintf('%s %s over the HRF', char(opts.Set), local_unit_noun(opts.Unit));
+end
 
 S = local_get_term_stats(source, opts);          % .scores/.t/.p [nLag x nTerm], .nsubj
-if isempty(S.scores), error('hrf_animate_wordcloud:NoData', 'No map_%s_* scores found for the requested condition.', char(opts.Set)); end
+if isempty(S.scores)
+    error('hrf_animate_wordcloud:NoData', 'No %s* scores found for the requested condition.', local_col_prefix(opts));
+end
 scores = S.scores; terms = S.terms; lags = S.lags; condlabel = S.condlabel;
 [nLag, nT] = size(scores);
 mag = local_size_metric(scores, opts.SizeBy);
@@ -215,7 +231,7 @@ function S = local_get_term_stats(source, opts)
 % Group statistics (across-subject one-sample t) are produced for the
 % input_table / dir / cell sources; single CSV and struct sources have no
 % group (t/p NaN -> caller falls back to top-N by |score|).
-prefix = ['map_', char(opts.Set), '_'];
+prefix = local_col_prefix(opts);
 S = struct('scores', [], 't', [], 'p', [], 'terms', {{}}, 'lags', [], 'condlabel', '', 'nsubj', 0);
 if isstruct(source) && isfield(source, 'scores')
     S.scores = source.scores; S.terms = cellstr(string(source.terms));
@@ -509,7 +525,7 @@ end
 function [M, terms, lags, condlabel] = local_matrix_from_table(T, prefix, opts)
 M = []; terms = {}; lags = []; condlabel = '';
 v = T.Properties.VariableNames;
-cols = v(startsWith(v, prefix) & ~endsWith(v, '_se'));
+[cols, terms] = local_select_cols(v, prefix, opts);
 if isempty(cols), return; end
 if any(strcmp('lag_seconds', v)), lagcol = 'lag_seconds'; else, lagcol = 'lag_index'; end
 if ~any(strcmp('condition', v)) || ~any(strcmp(lagcol, v)), return; end
@@ -519,7 +535,6 @@ condlabel = char(local_cond_label(cond, cmask));
 lg = double(T.(lagcol));
 [ul, ~, gi] = unique(lg(cmask), 'stable');
 [lags, so] = sort(ul);
-terms = cellfun(@(c) local_term_name(c, prefix), cols, 'uni', 0);
 M = zeros(numel(lags), numel(cols));
 for j = 1:numel(cols)
     y = double(T.(cols{j})(cmask));
@@ -529,8 +544,44 @@ end
 end
 
 
-function name = local_term_name(col, prefix)
-name = col(numel(prefix) + 1:end);
+function prefix = local_col_prefix(opts)
+% Score-CSV column prefix for the requested unit + set/atlas token.
+switch lower(char(opts.Unit))
+    case 'signature', prefix = ['sig_', char(opts.Set), '_'];    % sig_<set>_<name>
+    case 'atlas',     prefix = ['atlas_', char(opts.Set), '_'];  % atlas_<token>_<region>_<suffix>
+    otherwise,        prefix = ['map_', char(opts.Set), '_'];    % imageset / network maps
+end
+end
+
+
+function [cols, terms] = local_select_cols(v, prefix, opts)
+% Columns of the requested family + their display names. For atlas, keep only
+% the chosen Normalize suffix (mean/meanL1/sum) and strip it from the region
+% name; signatures/imagesets drop the trailing _se columns.
+cols = {}; terms = {};
+isatlas = strcmpi(char(opts.Unit), 'atlas');
+suf = ['_', char(opts.Suffix)];
+for i = 1:numel(v)
+    nm = v{i};
+    if ~startsWith(nm, prefix) || endsWith(nm, '_se'), continue; end
+    if isatlas
+        if ~endsWith(nm, suf), continue; end
+        term = nm(numel(prefix) + 1:end - numel(suf));
+    else
+        term = nm(numel(prefix) + 1:end);
+    end
+    if isempty(term), continue; end
+    cols{end + 1} = nm; terms{end + 1} = term; %#ok<AGROW>
+end
+end
+
+
+function s = local_unit_noun(unit)
+switch lower(char(unit))
+    case 'signature', s = 'signatures';
+    case 'atlas',     s = 'regions';
+    otherwise,        s = 'maps';
+end
 end
 
 

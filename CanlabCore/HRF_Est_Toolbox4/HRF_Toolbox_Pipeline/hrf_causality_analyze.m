@@ -80,6 +80,11 @@ p.addParameter('Conditional', false, @(x) islogical(x) || isnumeric(x));
 p.addParameter('Order', 'bic', @(x) (ischar(x) || isstring(x)) || isscalar(x));
 p.addParameter('MaxOrder', 10, @(x) isscalar(x) && x >= 1);
 p.addParameter('Nperm', 0, @(x) isscalar(x) && x >= 0);
+% group-level multiple-comparison correction over the directed net-flow edges
+% (via hrf_group_stats). 'fdr' (default, BH over off-diagonal) | 'permutation'
+% (sign-flip max-t FWER, recommended at small n) | 'cluster' | 'none'.
+p.addParameter('Correction', 'fdr', @(x) ischar(x) || isstring(x));
+p.addParameter('GroupNperm', 5000, @(x) isscalar(x) && x >= 100);
 p.addParameter('Verbose', true, @(x) islogical(x) || isnumeric(x));
 p.addParameter('doverbose', [], @(x) isempty(x) || islogical(x) || isnumeric(x));
 p.parse(tsRuns, kernels, varargin{:});
@@ -143,7 +148,7 @@ for mi = 1:numel(modes)
                 'Subject %s GC failed (%s); skipping.', usubj{s}, ge.message);
         end
     end
-    R.(mode) = local_group_stats(net_subj, nodes);
+    R.(mode) = local_group_stats(net_subj, nodes, opts.Correction, opts.GroupNperm);
     R.(mode).net_subj = net_subj;
     if mi == 1, R.order = round(median(order_used, 'omitnan')); end
 end
@@ -167,19 +172,19 @@ end
 
 
 % =========================================================================
-function S = local_group_stats(net_subj, nodes)
-[N, ~, nSubj] = size(net_subj);
-mu = mean(net_subj, 3, 'omitnan');
-t = nan(N); pv = nan(N);
+function S = local_group_stats(net_subj, nodes, correction, nperm)
+% Group inference on the directed net-flow edges via the shared engine
+% (permutation FWER / cluster / FDR / none), off-diagonal family.
+N = size(net_subj, 1); nSubj = size(net_subj, 3);
 if nSubj >= 2
-    sd = std(net_subj, 0, 3, 'omitnan');
-    se = sd / sqrt(nSubj);
-    t = mu ./ se;
-    t(se == 0) = 0;
-    pv = 2 * (1 - local_tcdf(abs(t), nSubj - 1));
+    G = hrf_group_stats(net_subj, 'Mask', ~eye(N), 'Correction', correction, 'Nperm', nperm);
+    S = struct('net_group', G.est, 't', G.t, 'p', G.p, 'p_fdr', G.p_corr, 'sig', G.sig, ...
+        'correction', G.correction, 'nodes', {nodes});
+else
+    mu = mean(net_subj, 3, 'omitnan');
+    S = struct('net_group', mu, 't', nan(N), 'p', nan(N), 'p_fdr', nan(N), ...
+        'sig', false(N), 'correction', 'none', 'nodes', {nodes});
 end
-pv(logical(eye(N))) = NaN;
-S = struct('net_group', mu, 't', t, 'p', pv, 'p_fdr', local_fdr(pv), 'nodes', {nodes});
 end
 
 

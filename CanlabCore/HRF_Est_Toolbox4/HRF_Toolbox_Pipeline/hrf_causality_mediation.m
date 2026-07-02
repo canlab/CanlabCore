@@ -71,6 +71,7 @@ p.addParameter('DeconvMethod', 'ridge', @(x) ischar(x) || isstring(x));
 p.addParameter('Lambda', [], @(x) isempty(x) || isscalar(x));
 p.addParameter('Standardize', true, @(x) islogical(x) || isnumeric(x));
 p.addParameter('Nboot', 5000, @(x) isscalar(x) && x >= 100);
+p.addParameter('Correction', 'none', @(x) ischar(x) || isstring(x));
 % extraction passthrough
 p.addParameter('Unit', 'signature', @(x) ischar(x) || isstring(x));
 p.addParameter('Nodes', {}, @(x) iscell(x) || isstring(x) || ischar(x));
@@ -136,7 +137,8 @@ end
 
 % ---- 4. mediation -------------------------------------------------------
 R = hrf_mediation_analyze(Xc, Mc, Yc, 'Names', {char(opts.X), char(opts.M), char(opts.Y)}, ...
-    'Standardize', opts.Standardize, 'Nboot', opts.Nboot, 'doverbose', verbose);
+    'Standardize', opts.Standardize, 'Nboot', opts.Nboot, 'Correction', opts.Correction, ...
+    'doverbose', verbose);
 R.x = char(opts.X); R.m = char(opts.M); R.y = char(opts.Y);
 R.trialtype = char(string(opts.TrialType));
 if isfield(prep, 'dirs'), R.dirs = prep.dirs; end

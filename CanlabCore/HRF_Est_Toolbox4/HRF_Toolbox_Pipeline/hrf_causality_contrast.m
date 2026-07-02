@@ -47,6 +47,8 @@ p.addParameter('Mode', '', @(x) ischar(x) || isstring(x));
 p.addParameter('Paired', [], @(x) isempty(x) || islogical(x) || isnumeric(x));
 p.addParameter('Label1', 'cond1', @(x) ischar(x) || isstring(x));
 p.addParameter('Label2', 'cond2', @(x) ischar(x) || isstring(x));
+p.addParameter('Correction', 'fdr', @(x) ischar(x) || isstring(x));
+p.addParameter('GroupNperm', 5000, @(x) isscalar(x) && x >= 100);
 p.parse(R1, R2, varargin{:});
 opts = p.Results;
 
@@ -64,13 +66,16 @@ if paired
     [~, i1] = ismember(shared, s1);
     [~, i2] = ismember(shared, s2);
     D = A(:, :, i1) - B(:, :, i2);
-    stats = local_onesample(D, nodes);
-    stats.net_subj = D;
+    G = hrf_group_stats(D, 'Mask', ~eye(N), 'Correction', opts.Correction, 'Nperm', opts.GroupNperm);
+    stats = local_from_G(G, nodes); stats.net_subj = D;
     C = local_pack(mode, nodes, stats, true, numel(shared), opts);
     C.subjects = shared(:)';
 else
-    stats = local_twosample(A, B, nodes);
-    stats.net_subj = [];
+    AB = cat(3, A, B);
+    grp = [ones(1, size(A, 3)), 2 * ones(1, size(B, 3))];
+    G = hrf_group_stats(AB, 'Mask', ~eye(N), 'Design', 'twosample', 'Group', grp, ...
+        'Correction', opts.Correction, 'Nperm', opts.GroupNperm);
+    stats = local_from_G(G, nodes); stats.net_subj = [];
     C = local_pack(mode, nodes, stats, false, [size(A, 3) size(B, 3)], opts);
 end
 fprintf('hrf_causality_contrast: %s - %s | %s | %s test | %s\n', ...
@@ -146,6 +151,11 @@ df(~isfinite(df) | df < 1) = 1;
 pv = 2 * (1 - local_tcdf(abs(t), df));
 pv(logical(eye(N))) = NaN;
 stats = struct('net_group', mA - mB, 't', t, 'p', pv, 'p_fdr', local_fdr(pv), 'nodes', {nodes});
+end
+
+function stats = local_from_G(G, nodes)
+stats = struct('net_group', G.est, 't', G.t, 'p', G.p, 'p_fdr', G.p_corr, ...
+    'sig', G.sig, 'nodes', {nodes});
 end
 
 function C = local_pack(mode, nodes, stats, paired, n, opts)

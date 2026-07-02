@@ -64,6 +64,10 @@ p.addParameter('Names', {}, @(x) iscell(x) || isstring(x));
 p.addParameter('Covariates', {}, @(x) iscell(x) || isnumeric(x));
 p.addParameter('Standardize', true, @(x) islogical(x) || isnumeric(x));
 p.addParameter('Nboot', 5000, @(x) isscalar(x) && x >= 100);
+% path significance at the group (multilevel) level: 'none' (default,
+% parametric one-sample t) or 'permutation' (per-path sign-flip; exact at
+% n<=13, robust at small n).
+p.addParameter('Correction', 'none', @(x) ischar(x) || isstring(x));
 p.addParameter('Verbose', true, @(x) islogical(x) || isnumeric(x));
 p.addParameter('doverbose', [], @(x) isempty(x) || islogical(x) || isnumeric(x));
 p.parse(X, M, Y, varargin{:});
@@ -94,7 +98,7 @@ if nValid == 0, error('hrf_mediation_analyze:NoData', 'No subject had usable tri
 
 if nValid >= 2
     level = 'multilevel';
-    R = local_group_struct(paths, names, nValid);
+    R = local_group_struct(paths, names, nValid, opts.Correction, opts.Nboot);
 else
     level = 'single';
     [x, m, y, cv] = local_prep(Xc{1}, Mc{1}, Yc{1}, Cov{1}, logical(opts.Standardize));
@@ -129,16 +133,25 @@ ab_paths = [a, b, cp, c, a * b];
 end
 
 
-function R = local_group_struct(paths, names, n)
-% One-sample t across subjects for each path.
+function R = local_group_struct(paths, names, n, correction, nperm)
+% Group stats for each path across subjects. Default parametric one-sample t;
+% Correction='permutation' uses a sign-flip test PER PATH (exact at n<=13,
+% robust at small n) -- no cross-path correction (the 5 paths are distinct
+% questions, not one family).
 lab = {'a', 'b', 'cp', 'c', 'ab'};
+useperm = any(strcmpi(char(correction), {'permutation', 'perm', 'maxt'}));
 R = struct();
 for k = 1:5
     v = paths(:, k);
     mu = mean(v, 'omitnan');
     se = std(v, 0, 'omitnan') / sqrt(n);
     t = mu / se; if se == 0, t = 0; end
-    pv = 2 * (1 - local_tcdf(abs(t), n - 1));
+    if useperm
+        G = hrf_group_stats(reshape(v, 1, n), 'Correction', 'permutation', 'Nperm', nperm);
+        pv = G.p_corr;                    % single cell -> the sign-flip p
+    else
+        pv = 2 * (1 - local_tcdf(abs(t), n - 1));
+    end
     R.(lab{k}) = struct('est', mu, 'se', se, 't', t, 'p', pv, 'persubj', v);
 end
 R.prop_mediated = R.ab.est / R.c.est;

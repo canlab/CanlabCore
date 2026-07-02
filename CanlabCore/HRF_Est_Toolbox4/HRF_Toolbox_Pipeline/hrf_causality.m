@@ -77,6 +77,8 @@ p.addParameter('Conditional', false, @(x) islogical(x) || isnumeric(x));
 p.addParameter('Order', 'bic', @(x) (ischar(x) || isstring(x)) || isscalar(x));
 p.addParameter('MaxOrder', 10, @(x) isscalar(x) && x >= 1);
 p.addParameter('Nperm', 0, @(x) isscalar(x) && x >= 0);
+p.addParameter('Correction', 'fdr', @(x) ischar(x) || isstring(x));
+p.addParameter('GroupNperm', 5000, @(x) isscalar(x) && x >= 100);
 p.addParameter('DeconvMethod', 'ridge', @(x) ischar(x) || isstring(x));
 p.addParameter('Condition', '', @(x) ischar(x) || isstring(x) || iscell(x));
 p.addParameter('MinSegLen', 20, @(x) isscalar(x) && x >= 4);
@@ -185,7 +187,8 @@ R = hrf_causality_analyze(tsRuns, kernels, ...
     'Subjects', subjUsed, 'Nodes', nodes, 'EvokedMode', opts.EvokedMode, ...
     'Confounds', confRuns, 'Segments', segRuns, 'MinSegLen', opts.MinSegLen, ...
     'Conditional', opts.Conditional, 'Order', opts.Order, 'MaxOrder', opts.MaxOrder, ...
-    'Nperm', opts.Nperm, 'DeconvMethod', opts.DeconvMethod, 'doverbose', verbose);
+    'Nperm', opts.Nperm, 'DeconvMethod', opts.DeconvMethod, ...
+    'Correction', opts.Correction, 'GroupNperm', opts.GroupNperm, 'doverbose', verbose);
 R.unit = unit; R.kernel_lags = lags; R.run_files = usedFiles(:);
 R.dirs = od_list(:)'; R.condition = cond_txt;
 end

@@ -67,6 +67,8 @@ p.addParameter('B', 'none', @(x) (ischar(x) || isstring(x)) || isnumeric(x));
 p.addParameter('TE', 0.04, @(x) isscalar(x) && x > 0);
 p.addParameter('Bins', 16, @(x) isscalar(x) && x >= 1);
 p.addParameter('MaxNodes', 8, @(x) isscalar(x) && x >= 2);
+p.addParameter('Correction', 'fdr', @(x) ischar(x) || isstring(x));
+p.addParameter('GroupNperm', 5000, @(x) isscalar(x) && x >= 100);
 p.addParameter('MaxRuns', Inf, @(x) isscalar(x) && x >= 1);
 p.addParameter('Unit', 'atlas', @(x) ischar(x) || isstring(x));
 p.addParameter('Atlas', '', @(x) ischar(x) || isstring(x));
@@ -142,7 +144,7 @@ end
 
 R = struct('modes', {{'dcm'}}, 'nodes', string(nodes), 'subjects', {usubj(:)'}, ...
     'nsubj', nSubj, 'ndcm', numel(gcm), 'A_group', mean(A_subj, 3, 'omitnan'), 'gcm', {gcm(:)'});
-R.dcm = local_group_stats(net_subj, nodes);
+R.dcm = local_group_stats(net_subj, nodes, opts.Correction, opts.GroupNperm);
 R.dcm.net_subj = net_subj;
 if isfield(prep, 'dirs'), R.dirs = prep.dirs; end
 
@@ -255,17 +257,17 @@ end
 end
 
 
-function S = local_group_stats(net_subj, nodes)
-[N, ~, nSubj] = size(net_subj);
-mu = mean(net_subj, 3, 'omitnan');
-t = nan(N); pv = nan(N);
+function S = local_group_stats(net_subj, nodes, correction, nperm)
+N = size(net_subj, 1); nSubj = size(net_subj, 3);
 if nSubj >= 2
-    se = std(net_subj, 0, 3, 'omitnan') / sqrt(nSubj);
-    t = mu ./ se; t(se == 0) = 0;
-    pv = 2 * (1 - local_tcdf(abs(t), nSubj - 1));
+    G = hrf_group_stats(net_subj, 'Mask', ~eye(N), 'Correction', correction, 'Nperm', nperm);
+    S = struct('net_group', G.est, 't', G.t, 'p', G.p, 'p_fdr', G.p_corr, 'sig', G.sig, ...
+        'correction', G.correction, 'nodes', {nodes});
+else
+    mu = mean(net_subj, 3, 'omitnan');
+    S = struct('net_group', mu, 't', nan(N), 'p', nan(N), 'p_fdr', nan(N), ...
+        'sig', false(N), 'correction', 'none', 'nodes', {nodes});
 end
-pv(logical(eye(N))) = NaN;
-S = struct('net_group', mu, 't', t, 'p', pv, 'p_fdr', local_fdr(pv), 'nodes', {nodes});
 end
 
 

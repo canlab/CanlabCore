@@ -40,8 +40,24 @@ function out = hrf_animate_wordcloud(source, varargin)
 %                     selected only if significant at >=1 lag. Needs a group
 %                     (>=2 subjects); with a single CSV/struct there is no group
 %                     so it falls back to top-N by |score|.
-%   **'Correction':** 'fdr' (default, BH across terms within each lag) or
-%                     'none'.
+%   **'Correction':** multiple-comparison correction over the term x lag
+%                     surface. 'permutation' (DEFAULT) = sign-flip max-t,
+%                     FWER-controlled across all terms x lags (Nichols & Holmes
+%                     2002); exact when 2^n is enumerated (n<=13) and the right
+%                     choice at small n. 'cluster' = temporal cluster-mass
+%                     sign-flip (Maris & Oostenveld 2007), more sensitive to
+%                     sustained effects. 'fdr' = BH across terms WITHIN each lag
+%                     (does NOT correct across lags). 'fdr_all' = BH across the
+%                     whole surface. 'none' = uncorrected. Permutation/cluster
+%                     need a group (>=2 subjects); else falls back to per-lag
+%                     FDR, then to top-N by |score|.
+%                     NOTE: with 525 terms this is heavily multiple-comparison
+%                     burdened at n~7-11 -- score against the 54 Ke-Bo-2024
+%                     topic maps ('Set','neurosynth_topics_fi') to shrink the
+%                     family and regain power.
+%   **'Nperm':**      permutations when 2^n is too large to enumerate (n>13).
+%                     Default 5000.
+%   **'ClusterFormP':** cluster-forming p for Correction='cluster'. Default 0.05.
 %   **'Persist':**    false (default) -- a selected term is drawn only at lags
 %                     where it is significant. true -- always draw selected
 %                     terms, greyed at sub-threshold lags.
@@ -78,7 +94,9 @@ p.addParameter('Condition', '', @(x) ischar(x) || isstring(x) || iscell(x));
 p.addParameter('Model', 'sfir', @(x) ischar(x) || isstring(x));
 p.addParameter('Object', 'beta', @(x) ischar(x) || isstring(x));
 p.addParameter('Threshold', 0.05, @(x) isscalar(x) && x > 0 && x <= 1);
-p.addParameter('Correction', 'fdr', @(x) ischar(x) || isstring(x));
+p.addParameter('Correction', 'permutation', @(x) ischar(x) || isstring(x));
+p.addParameter('Nperm', 5000, @(x) isscalar(x) && x >= 100);
+p.addParameter('ClusterFormP', 0.05, @(x) isscalar(x) && x > 0 && x < 1);
 p.addParameter('Persist', false, @(x) islogical(x) || isnumeric(x));
 p.addParameter('TopN', 60, @(x) isscalar(x) && x >= 1);
 p.addParameter('SizeBy', 'abs', @(x) ischar(x) || isstring(x));
@@ -99,12 +117,17 @@ scores = S.scores; terms = S.terms; lags = S.lags; condlabel = S.condlabel;
 [nLag, nT] = size(scores);
 mag = local_size_metric(scores, opts.SizeBy);
 
-% ---- significance: which (term,lag) associations are non-zero across subjects
-have_stats = isfield(S, 'p') && S.nsubj >= 2 && any(isfinite(S.p(:)));
+% ---- significance: which (term,lag) associations survive correction ------
+% Group inference across subjects; for the recommended small-n handling this
+% is a sign-flip permutation (max-t = FWE across the whole term x lag surface,
+% or temporal-cluster), which is exact-ish at n~7-11 and respects the strong
+% lag/term correlations. Per-lag FDR is available but under-corrects the lags.
+have_stats = S.nsubj >= 2 && ((isfield(S, 'stack') && ~isempty(S.stack)) || any(isfinite(S.p(:))));
 thr = opts.Threshold; corr = lower(char(opts.Correction));
+pcorr = nan(nLag, nT);
 if have_stats
-    sig = local_sig_mask(S.p, thr, corr);        % [nLag x nT] logical
-    sel_note = sprintf('p<%.3g %s, group n=%d', thr, upper(corr), S.nsubj);
+    [sig, pcorr, corr_used] = local_sig_mask(S, thr, corr, opts, verbose);
+    sel_note = sprintf('%s, n=%d', local_corr_note(corr_used, thr), S.nsubj);
 else
     sig = true(nLag, nT);
     if verbose
@@ -119,12 +142,12 @@ passed = any(sig, 1);
 gate = have_stats;                                % per-frame significance gating
 if ~any(passed)
     warning('hrf_animate_wordcloud:NoneSignificant', ...
-        'No term significant at p<%.3g (%s); showing top %d by |score| instead.', thr, upper(corr), opts.TopN);
+        'No term survives %s correction at %.3g; showing top %d by |score| instead.', corr, thr, opts.TopN);
     passed = true(1, nT); sig = true(nLag, nT); gate = false;
-    sel_note = sprintf('top %d by |score| (none reached p<%.3g)', opts.TopN, thr);
+    sel_note = sprintf('top %d by |score| (none survived %s)', opts.TopN, corr);
 end
-if have_stats && any(any(sig))
-    rankval = min(S.p, [], 1, 'omitnan'); rankval(~passed) = Inf;
+if have_stats && any(passed)
+    rankval = min(pcorr, [], 1, 'omitnan'); rankval(~passed | ~isfinite(rankval)) = Inf;
     [~, ord] = sort(rankval, 'ascend');
 else
     imp = max(mag, [], 1, 'omitnan'); imp(~passed) = -Inf;
@@ -132,7 +155,7 @@ else
 end
 keepN = min(opts.TopN, sum(passed));
 keep = ord(1:keepN);
-terms = terms(keep); scores = scores(:, keep); mag = mag(:, keep); sig = sig(:, keep);
+terms = terms(keep); scores = scores(:, keep); mag = mag(:, keep); sig = sig(:, keep); pcorr = pcorr(:, keep);
 
 gmax = max(mag(:)); if gmax == 0 || ~isfinite(gmax), gmax = 1; end
 clim = max(abs(scores(:))); if clim == 0 || ~isfinite(clim), clim = 1; end
@@ -176,7 +199,8 @@ end
 vw = local_close_video(vw);
 
 out = struct('scores', scores, 'terms', {terms}, 'lags', lags(:)', 'pos', pos, ...
-    't', S.t(:, keep), 'p', S.p(:, keep), 'sig', sig, 'nsubj', S.nsubj, ...
+    't', S.t(:, keep), 'p', S.p(:, keep), 'p_corr', pcorr, 'sig', sig, ...
+    'correction', char(opts.Correction), 'nsubj', S.nsubj, ...
     'selection', sel_note, 'file', local_video_path(vw, opts.OutputFile));
 if verbose
     fprintf('hrf_animate_wordcloud: %d terms shown (%s) x %d lags, condition %s%s\n', ...
@@ -297,6 +321,7 @@ stack = cat(3, parts{:});
 n = size(stack, 3);
 m = mean(stack, 3, 'omitnan');
 S.scores = m; S.terms = ref_terms; S.lags = ref_lags; S.condlabel = condlabel; S.nsubj = n;
+S.stack = stack;   % [nLag x nTerm x nSubj], for the permutation correction
 if n >= 2
     se = std(stack, 0, 3, 'omitnan') / sqrt(n);
     t = m ./ se; t(se == 0) = 0;
@@ -307,21 +332,162 @@ end
 end
 
 
-function sig = local_sig_mask(p, thr, corr)
-% Per-lag significance: at each lag, test terms; FDR-correct across terms
-% within that lag (so each frame's "significant terms" is FDR-controlled).
-[L, T] = size(p);
-sig = false(L, T);
-for li = 1:L
-    pl = p(li, :);
-    valid = isfinite(pl);
-    if ~any(valid), continue; end
-    if strcmp(corr, 'fdr')
-        padj = local_fdr_row(pl(valid));
-        row = false(1, T); row(valid) = padj <= thr; sig(li, :) = row;
-    else
-        sig(li, valid) = pl(valid) < thr;
+function [sig, pcorr, used] = local_sig_mask(S, thr, corr, opts, verbose)
+% Corrected significance over the whole term x lag surface. Dispatches by
+% Correction; permutation/cluster need the per-subject stack.
+have_stack = isfield(S, 'stack') && ~isempty(S.stack);
+used = corr;
+switch corr
+    case {'permutation', 'perm', 'maxt'}
+        if have_stack
+            [sig, pcorr] = local_perm_maxt(S.stack, thr, opts.Nperm); return
+        end
+        if verbose, warning('hrf_animate_wordcloud:NoStack', 'No per-subject stack; falling back to per-lag FDR.'); end
+        used = 'fdr';
+    case {'cluster', 'tcluster'}
+        if have_stack
+            [sig, pcorr] = local_perm_cluster(S.stack, thr, opts.Nperm, opts.ClusterFormP); return
+        end
+        if verbose, warning('hrf_animate_wordcloud:NoStack', 'No per-subject stack; falling back to per-lag FDR.'); end
+        used = 'fdr';
+end
+% parametric fallbacks (use S.p)
+switch used
+    case 'none'
+        pcorr = S.p; sig = pcorr < thr;
+    case {'fdr_all', 'fdrall'}
+        pcorr = local_fdr_all(S.p); sig = pcorr <= thr;
+    otherwise                                   % 'fdr' = per-lag across terms
+        [sig, pcorr] = local_fdr_perlag(S.p, thr);
+end
+sig(~isfinite(S.p)) = false;
+end
+
+
+function [sig, pcorr] = local_perm_maxt(stack, thr, nperm)
+% Sign-flip permutation, FWER-controlled over the whole term x lag surface via
+% the maximum |t| statistic (Nichols & Holmes 2002). Exact when 2^n is
+% enumerated (n<=13). The whole matrix is flipped per subject, so the
+% lag/term correlation structure is preserved under the null.
+tobs = abs(local_group_t(stack));
+n = size(stack, 3);
+flips = local_sign_flips(n, nperm);
+nf = size(flips, 1);
+ge = zeros(size(tobs));
+for f = 1:nf
+    tp = abs(local_group_t(stack .* reshape(flips(f, :), 1, 1, n)));
+    ge = ge + (max(tp(:)) >= tobs);
+end
+pcorr = ge / nf;
+pcorr(~isfinite(local_group_t(stack))) = NaN;
+sig = pcorr <= thr;
+end
+
+
+function [sig, pcorr] = local_perm_cluster(stack, thr, nperm, formp)
+% Temporal cluster-mass permutation (Maris & Oostenveld 2007): form contiguous
+% same-sign supra-threshold lag clusters per term, mass = sum|t|; null = max
+% cluster mass over sign-flips.
+[L, T, n] = size(stack);
+tobs = local_group_t(stack);
+tcrit = local_tinv(1 - formp / 2, n - 1);
+oc = local_clusters(tobs, tcrit);
+flips = local_sign_flips(n, nperm);
+nf = size(flips, 1);
+maxmass = zeros(nf, 1);
+for f = 1:nf
+    cl = local_clusters(local_group_t(stack .* reshape(flips(f, :), 1, 1, n)), tcrit);
+    if ~isempty(cl), maxmass(f) = max([cl.mass]); end
+end
+sig = false(L, T); pcorr = nan(L, T);
+for c = 1:numel(oc)
+    pc = mean(maxmass >= oc(c).mass);
+    sig(oc(c).cells) = pc <= thr;
+    pcorr(oc(c).cells) = pc;
+end
+end
+
+
+function cl = local_clusters(tmat, tcrit)
+[L, T] = size(tmat);
+cl = struct('cells', {}, 'mass', {});
+for j = 1:T
+    col = tmat(:, j);
+    for s = [1 -1]
+        supra = (s * col > tcrit) & isfinite(col);
+        d = diff([false; supra; false]);
+        starts = find(d == 1); stops = find(d == -1) - 1;
+        for b = 1:numel(starts)
+            idx = (starts(b):stops(b))';
+            cl(end + 1) = struct('cells', sub2ind([L T], idx, repmat(j, numel(idx), 1)), ...
+                'mass', sum(abs(col(idx)))); %#ok<AGROW>
+        end
     end
+end
+end
+
+
+function t = local_group_t(stack)
+n = size(stack, 3);
+m = mean(stack, 3, 'omitnan');
+se = std(stack, 0, 3, 'omitnan') / sqrt(n);
+t = m ./ se; t(se == 0) = 0;
+end
+
+
+function F = local_sign_flips(n, nperm)
+% Rows of +/-1. Enumerate all 2^n exactly for small n; else random with the
+% identity (all +1, = observed) included as row 1.
+if n <= 13
+    m = 2 ^ n;
+    F = ones(m, n);
+    for i = 1:n, F(:, i) = 1 - 2 * bitget((0:m - 1)', i); end
+else
+    F = ones(nperm, n);
+    F(2:end, :) = 2 * (rand(nperm - 1, n) > 0.5) - 1;
+end
+end
+
+
+function [sig, pcorr] = local_fdr_perlag(p, thr)
+[L, T] = size(p); sig = false(L, T); pcorr = nan(L, T);
+for li = 1:L
+    pl = p(li, :); valid = isfinite(pl);
+    if ~any(valid), continue; end
+    padj = local_fdr_row(pl(valid));
+    row = nan(1, T); row(valid) = padj; pcorr(li, :) = row;
+    sig(li, valid) = padj <= thr;
+end
+end
+
+
+function padj = local_fdr_all(p)
+padj = nan(size(p)); mask = isfinite(p); pv = p(mask); m = numel(pv);
+if m == 0, return; end
+[sp, ord] = sort(pv(:));
+adj = min(1, flipud(cummin(flipud(sp .* m ./ (1:m)'))));
+out = nan(m, 1); out(ord) = adj; padj(mask) = out;
+end
+
+
+function t = local_tinv(pp, df)
+% Inverse Student-t via bisection on local_tcdf (no Stats toolbox).
+lo = 0; hi = 100;
+for it = 1:60
+    mid = (lo + hi) / 2;
+    if local_tcdf(mid, df) < pp, lo = mid; else, hi = mid; end
+end
+t = (lo + hi) / 2;
+end
+
+
+function s = local_corr_note(corr, thr)
+switch lower(char(corr))
+    case {'permutation', 'perm', 'maxt'}, s = sprintf('p_FWE<%.3g (sign-flip max-t)', thr);
+    case {'cluster', 'tcluster'},         s = sprintf('cluster p<%.3g (sign-flip)', thr);
+    case {'fdr_all', 'fdrall'},           s = sprintf('q_FDR<%.3g (whole surface)', thr);
+    case 'none',                          s = sprintf('p<%.3g uncorrected', thr);
+    otherwise,                            s = sprintf('q_FDR<%.3g (per-lag)', thr);
 end
 end
 

@@ -105,7 +105,7 @@ montage(threshold(res.maps.hot_vs_warm, 0.05, 'unc'));
 
 | Call | Purpose |
 |---|---|
-| `compute_rsm(dat, ...)` | Omnibus RSM builder. Metrics: `correlation, spearman, cosine, euclidean, mahalanobis, crossnobis`. Levels: `subject, session, run, collapsed`. Options: `whiten, diagonal_correction, parcellation, mask, nan_policy`. |
+| `compute_rsm(dat, ...)` | Omnibus RSM builder. Metrics: `correlation, spearman, cosine, euclidean, mahalanobis, crossnobis, cvcorr, cvspearman`. `cvcorr`/`cvspearman` are **cross-validated (cross-session) correlations** (require `fold_var`): each cell is the mean correlation of the two conditions taken from *different* folds, so within-fold/within-run shared structure never inflates it — the correlation-space analogue of crossnobis. Levels: `subject, session, run, collapsed`. Options: `whiten, diagonal_correction, parcellation, mask, nan_policy`. |
 | `rsm.from_categorical(meta, cols)` | Same-vs-different model RDM(s) from metadata columns. |
 | `rsm.from_metadata_distance(meta, col)` | Continuous-distance model RDM (e.g. session distance). |
 | `rsm.from_design(X, ...)` | Model RDM(s) from a design matrix. |
@@ -240,10 +240,25 @@ dat.metadata_table.runid = categorical(strcat(string(dat.metadata_table.ses), ..
 mdl = dat.rsa_lme('predictors', {'bodysite','condition','runid'}, 'subject_var','sub');
 % SameRunid absorbs the within-run inflation; read SameBodysite / SameCondition
 % (the ACROSS-run effects) controlling for it.
+
+% (3) cross-session CORRELATION RSM (paper's metric family, run-clean):
+R = compute_rsm(dat, 'group_by', {'condition','bodysite'}, 'subject_var','sub', ...
+                'metric','cvspearman', 'fold_var','sesno');   % or 'cvcorr' (Pearson, faster)
+% each cell correlates the two conditions from DIFFERENT sessions only.
+% 'cv_scheme','loo' (leave-one-fold-out vs mean-of-rest) is a higher-SNR
+% variant; 'allpairs' (default) is most conservative. On BodyMap the two are
+% nearly identical (limit is between-subject n, not the CV scheme).
 ```
 
-This reproduces the published BodyMap approach (build per-run RSMs, exclude
-within-run correlations) in one step. If the factor is instead **confounded**
+Options (1) and (3) reproduce the published BodyMap approach (build per-run
+RSMs, exclude within-run correlations) in one step. **Caveat on power:** a
+fully cross-validated cell is estimated from single-run patterns, so it is
+much noisier than a session-pooled (within-sample) correlation. On BodyMap the
+run-clean HI>HW map is the SAME effect/direction as the session-pooled one
+(t-map r~0.6) but far fewer regions survive FDR at n=9 -- the loss is mostly
+statistical power, not confound-in-the-contrast (the run inflation cancels in
+HI-HW). Prefer the run-clean version and interpret pooled results as
+power-inflated. If the factor is instead **confounded**
 with session (each session has only one level), session-to-session
 reliability is undefined — see the AcceptMap note above. See
 `examples/rsa_bodymap_pipeline.m` for the full treatment.

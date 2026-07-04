@@ -100,7 +100,7 @@ end
 % Decide transform
 transform = lower(char(opt.transform));
 if strcmp(transform, 'auto')
-    if obj.is_dissimilarity || ~ismember(lower(obj.metric), {'correlation','spearman','cosine'})
+    if obj.is_dissimilarity || ~ismember(lower(obj.metric), {'correlation','spearman','cosine','cvcorr','cvspearman'})
         transform = 'none';
     else
         transform = 'fisherz';

@@ -81,11 +81,22 @@ function R = compute_rsm(dat, varargin)
 %   Metric:
 %     'metric'               'correlation' (default) | 'spearman' | 'cosine' |
 %                            'euclidean' | 'seuclidean' | 'mahalanobis' |
-%                            'crossnobis'
+%                            'crossnobis' | 'cvcorr' | 'cvspearman'
+%                            'cvcorr'/'cvspearman' are CROSS-VALIDATED
+%                            correlation similarities: each cell (i,j) is the
+%                            mean correlation between condition i and condition
+%                            j taken from DIFFERENT folds (never the same fold).
+%                            This removes within-fold shared structure (e.g.
+%                            shared-run noise when several conditions co-occur
+%                            in one run) while staying in correlation space --
+%                            the diagonal is the cross-fold reliability, not 1.
+%                            Requires 'fold_var'. Reproduces the Sun et al.
+%                            (2026) BodyMap "exclude within-run correlations"
+%                            RSM as a one-liner.
 %
-%   Crossnobis:
+%   Cross-validated metrics (crossnobis / cvcorr / cvspearman):
 %     'fold_var'             Metadata column defining cross-validation folds
-%                            (required for metric='crossnobis'). Default
+%                            (required for these metrics). Default
 %                            'session_number'. Special value 'occurrence'
 %                            auto-builds folds by within-condition occurrence
 %                            rank (each condition's 1st image -> fold 1, 2nd ->
@@ -93,6 +104,13 @@ function R = compute_rsm(dat, varargin)
 %                            Use 'occurrence' when no metadata column lines the
 %                            conditions up into shared folds (e.g. when run
 %                            numbers differ across conditions).
+%     'cv_scheme'            (cvcorr/cvspearman only) 'allpairs' (default) |
+%                            'loo'. 'allpairs' correlates single-fold patterns
+%                            for every ordered fold pair (most conservative,
+%                            lowest power). 'loo' correlates each held-out fold
+%                            against the mean of the other folds (higher SNR /
+%                            MORE POWER, still never sharing a fold). Ignored by
+%                            crossnobis (always all-pairs).
 %
 %   Whitening:
 %     'whiten'               'none' (default) | 'within_subject' |
@@ -139,6 +157,7 @@ p.addParameter('session_var',         'session_number',  @(x) ischar(x) || isstr
 p.addParameter('run_var',             'run_number',      @(x) ischar(x) || isstring(x));
 p.addParameter('metric',              'correlation',     @(x) ischar(x) || isstring(x));
 p.addParameter('fold_var',            'session_number',  @(x) ischar(x) || isstring(x));
+p.addParameter('cv_scheme',           'allpairs',        @(x) (ischar(x)||isstring(x)) && ismember(lower(char(x)),{'allpairs','loo'}));
 p.addParameter('whiten',              'none',            @(x) ischar(x) || isstring(x));
 p.addParameter('whiten_method',       'covdiag',         @(x) ischar(x) || isstring(x));
 p.addParameter('diagonal_correction', 'none',            @(x) ischar(x) || isstring(x));
@@ -170,11 +189,12 @@ if isempty(opt.group_by), opt.group_by = {}; end
 % =========================================================================
 % Validate combinations
 % =========================================================================
+% Fold-based (cross-validated) metrics require a fold column.
+if ismember(lower(opt.metric), {'crossnobis','cvcorr','cvspearman'}) && isempty(opt.fold_var)
+    error('compute_rsm:noFoldVar', ...
+        'metric=''%s'' requires ''fold_var'' to identify the cross-validation fold column.', opt.metric);
+end
 if strcmpi(opt.metric, 'crossnobis')
-    if isempty(opt.fold_var)
-        error('compute_rsm:noFoldVar', ...
-            'metric=''crossnobis'' requires ''fold_var'' to identify the fold column.');
-    end
     if strcmpi(opt.whiten, 'within_subject')
         warning('compute_rsm:doubleWhitening', ...
             ['Both crossnobis and within_subject whitening requested; crossnobis already ', ...
@@ -331,9 +351,10 @@ for n = 1:N
     rep_rows = replicate_groups{n};   % image indices belonging to this replicate
     if isempty(rep_rows), continue; end
 
-    % Thread crossnobis fold_idx through opt (per-replicate)
+    % Thread cross-validation fold_idx through opt (per-replicate).
+    % Applies to all fold-based metrics: crossnobis + cvcorr/cvspearman.
     opt_n = opt;
-    if strcmpi(opt.metric, 'crossnobis')
+    if ismember(lower(opt.metric), {'crossnobis','cvcorr','cvspearman'})
         if strcmpi(opt.fold_var, 'occurrence')
             % Auto-build folds by within-condition occurrence rank. Each
             % condition's 1st image -> fold 1, 2nd -> fold 2, etc. This aligns
@@ -365,8 +386,8 @@ for n = 1:N
         end
         if numel(unique(opt_n.fold_idx)) < 2
             warning('compute_rsm:tooFewFolds', ...
-                'Replicate %d has only %d unique fold(s); crossnobis returns NaN slice.', ...
-                n, numel(unique(opt_n.fold_idx)));
+                'Replicate %d has only %d unique fold(s); %s returns NaN slice.', ...
+                n, numel(unique(opt_n.fold_idx)), lower(opt.metric));
             out_3d(:, :, n) = NaN;
             continue
         end
@@ -682,6 +703,12 @@ if strcmpi(opt.metric, 'crossnobis')
     return
 end
 
+% --- Cross-validated (cross-fold) correlation path ---
+if ismember(lower(opt.metric), {'cvcorr','cvspearman'})
+    M = compute_cvcorr(X, group_idx, opt);
+    return
+end
+
 % --- All other metrics path ---
 % Collapse to one pattern per condition
 [P, n_per_condition] = aggregate_patterns(X, group_idx, k, opt.condition_collapse);   % [k x voxels]
@@ -802,6 +829,103 @@ for a = 1:k
         end
     end
 end
+
+end
+
+
+% =========================================================================
+function M = compute_cvcorr(X, group_idx, opt)
+% Cross-validated (cross-fold) correlation SIMILARITY matrix.
+%
+% The two condition patterns being correlated ALWAYS come from different
+% folds, so any within-fold shared structure (e.g. the shared-run noise +
+% run/bodysite mean when Hot/Warm/Imagine co-occur in one run) does NOT
+% contribute to the correlation. This reproduces the Sun et al. (2026)
+% BodyMap RSM construction (per-run RSMs, exclude within-session/run
+% correlations, average the rest) as a single metric. Unlike crossnobis it
+% stays in correlation (similarity) space; the diagonal M(i,i) is the
+% cross-fold reliability of condition i (NOT 1).
+%
+% cv_scheme:
+%   'allpairs' (default) -- M(i,j) = mean over ordered fold pairs (a,b), a~=b,
+%       of corr(Xfolds{a}(i,:), Xfolds{b}(j,:)). Most conservative: every
+%       correlation is between two SINGLE-fold patterns (noisiest, lowest
+%       power, fully symmetric use of the data).
+%   'loo' -- leave-one-fold-out. For each held-out fold f,
+%       M(i,j) += corr(Xfolds{f}(i,:), meanOfRest_f(j,:)), where meanOfRest_f
+%       is the mean over the OTHER folds. The training side is averaged over
+%       n_folds-1 folds => higher SNR, less attenuation, MORE POWER, while
+%       still never sharing a fold. Closer to the paper's whole-brain
+%       leave-session-out masking. Result symmetrized over held-out/train roles.
+%
+% metric='cvcorr' -> Pearson; metric='cvspearman' -> Spearman.
+
+if ~isfield(opt, 'fold_idx') || isempty(opt.fold_idx)
+    error('compute_rsm:cvcorrNoFold', ...
+        'Internal error: cvcorr path requires opt.fold_idx to be set by compute_rsm.');
+end
+
+Xfolds  = build_fold_pattern_matrices(X, group_idx, opt.fold_idx);
+n_folds = numel(Xfolds);
+k       = size(Xfolds{1}, 1);
+
+if strcmpi(opt.metric, 'cvspearman'), ctype = 'Spearman'; else, ctype = 'Pearson'; end
+scheme = 'allpairs';
+if isfield(opt, 'cv_scheme') && ~isempty(opt.cv_scheme), scheme = lower(char(opt.cv_scheme)); end
+
+M_accum = zeros(k, k);
+M_count = zeros(k, k);
+
+switch scheme
+    case 'allpairs'
+        for a = 1:n_folds
+            for b = 1:n_folds
+                if a == b, continue; end
+                % Rab(i,j) = corr(condition i in fold a, condition j in fold b)
+                Rab = corr(Xfolds{a}', Xfolds{b}', 'type', ctype, 'rows', 'pairwise');
+                good = isfinite(Rab);
+                M_accum(good) = M_accum(good) + Rab(good);
+                M_count(good) = M_count(good) + 1;
+            end
+        end
+
+    case 'loo'
+        % Per-condition running sum + present-count across folds so the
+        % mean-of-rest can be formed by subtracting the held-out fold. Handles
+        % conditions missing from some folds (partial sessions).
+        n_vox = size(Xfolds{1}, 2);
+        Xsum  = zeros(k, n_vox);
+        pres  = zeros(k, 1);
+        for f = 1:n_folds
+            Xf = Xfolds{f};
+            pf = all(isfinite(Xf), 2);   % [k x 1] conditions present in fold f
+            Xf0 = Xf; Xf0(~pf, :) = 0;
+            Xsum = Xsum + Xf0;
+            pres = pres + pf;
+        end
+        for f = 1:n_folds
+            Xf = Xfolds{f};
+            pf = all(isfinite(Xf), 2);
+            Xf0 = Xf; Xf0(~pf, :) = 0;
+            rest_cnt = pres - double(pf);          % folds contributing to rest, per condition
+            Rest = nan(k, n_vox);
+            v = rest_cnt > 0;
+            Rest(v, :) = (Xsum(v, :) - Xf0(v, :)) ./ rest_cnt(v);
+            % Rf(i,j) = corr(held-out fold cond i, mean-of-rest cond j)
+            Rf = corr(Xf', Rest', 'type', ctype, 'rows', 'pairwise');
+            good = isfinite(Rf);
+            M_accum(good) = M_accum(good) + Rf(good);
+            M_count(good) = M_count(good) + 1;
+        end
+
+    otherwise
+        error('compute_rsm:badCvScheme', ...
+            'cv_scheme must be ''allpairs'' or ''loo''; got %s.', scheme);
+end
+
+M = M_accum ./ max(M_count, 1);
+M(M_count == 0) = NaN;
+M = (M + M') / 2;         % symmetric in expectation / over held-out roles
 
 end
 

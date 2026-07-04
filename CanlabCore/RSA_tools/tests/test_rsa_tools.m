@@ -21,6 +21,7 @@ state = run_test(@test_construction,        'rsm construction',        state);
 state = run_test(@test_metrics,             'compute_rsm metrics',     state);
 state = run_test(@test_crossnobis,          'crossnobis distance',     state);
 state = run_test(@test_crossnobis_occurrence, 'crossnobis occurrence folds', state);
+state = run_test(@test_cvcorr,              'cross-session cvcorr',    state);
 state = run_test(@test_recode_reference,    'rsa_recode_reference',    state);
 state = run_test(@test_cells_contrasts,     'cells + ttest_contrasts', state);
 state = run_test(@test_reliability,         'reliability ICC',         state);
@@ -134,6 +135,37 @@ R_auto = compute_rsm(dat, 'group_by', {'condition','bodysite'}, 'subject_var','s
     'metric','crossnobis', 'fold_var','occurrence', 'verbose', false);
 d = max(abs(R_manual.dat(:) - R_auto.dat(:)));
 assert(d < 1e-9, sprintf('occurrence vs manual fold diff = %g', d));
+end
+
+
+% =========================================================================
+function test_cvcorr()
+% Cross-validated (cross-session) correlation: a SIMILARITY whose diagonal is
+% the cross-fold reliability (not 1), and which requires a fold_var.
+dat = synth();
+R = compute_rsm(dat, 'group_by', {'condition','bodysite'}, 'subject_var','sub', ...
+    'metric','cvcorr', 'fold_var','sesno', 'verbose', false);
+assert(~R.is_dissimilarity, 'cvcorr is a similarity, not a dissimilarity');
+m = mean(R.dat, 3, 'omitnan');
+dg = diag(m);
+assert(~all(abs(dg(~isnan(dg)) - 1) < 1e-6), 'cvcorr diagonal must be cross-fold reliability, not all 1');
+% fold_var is required
+threw = false;
+try
+    compute_rsm(dat, 'group_by', {'condition','bodysite'}, 'subject_var','sub', ...
+        'metric','cvcorr', 'verbose', false);
+catch
+    threw = true;
+end
+assert(threw, 'cvcorr without fold_var should error');
+
+% leave-one-fold-out scheme: runs, symmetric, similar structure to allpairs
+Rlo = compute_rsm(dat, 'group_by', {'condition','bodysite'}, 'subject_var','sub', ...
+    'metric','cvcorr', 'fold_var','sesno', 'cv_scheme','loo', 'verbose', false);
+mlo = mean(Rlo.dat, 3, 'omitnan');
+assert(max(abs(mlo - mlo'), [], 'all', 'omitnan') < 1e-9, 'cvcorr loo must be symmetric');
+assert(corr(m(~isnan(m(:))), mlo(~isnan(mlo(:))), 'rows','pairwise') > 0.5, ...
+    'cvcorr loo and allpairs should be broadly consistent');
 end
 
 

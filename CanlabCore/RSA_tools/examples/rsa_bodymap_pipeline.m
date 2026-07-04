@@ -220,38 +220,55 @@ disp(T_models);
 fprintf('Best model by AIC: %s\n', seq.formulas{best});
 
 %% 9. Parcelwise brain maps (Fig 7G / S8 / S9) ---------------------------
-% Per-parcel RSA, FDR/Bonferroni-corrected across parcels, projected to the
-% brain. Crossnobis per parcel is fast (small voxel counts) and keeps the
-% session cross-validation. Reference groupings by their auto-built names.
-atlas = load_atlas('canlab2024');
+% Per-region RSA over the 131-region pain-pathways atlas (canlab2024_2),
+% FDR-corrected across regions, projected to the brain. Reproduces the
+% Sun et al. HI>HW map using the paper's metric family (cross-session
+% correlation) -- and quantifies the run-confound's effect on it.
+atlasfile = "\\dartfs-hpc\rc\lab\C\CANlab\labdata\projects\WASABI\WASABI_N_of_Few\analysis\WASABI-NofFew_BodyMap\masks\canlab2024_pain_pathways.mat";
+load(atlasfile, 'canlab2024_2');                 % 131-region atlas object
+atl = resample_space(canlab2024_2, run_maps);    % match run_maps space ONCE (else resampled per call)
 
-% (a) Contrast map: where is Hot MORE similar to Imagine than to Warm?
-%     In distance space that is (HI - HW) < 0, so use tail='left'.
-results = run_maps.rsa_parcelwise('atlas', atlas, ...
+% (a) RUN-CLEAN HI>HW: cross-session (cross-validated) correlation. cvspearman
+%     never correlates two patterns from the same run, so the shared-run
+%     structure (Hot/Warm/Imagine co-occur in a run) cannot inflate it. This
+%     is the apples-to-apples, run-clean version of the paper's Fig 7G.
+%     HI>HW = Hot more similar to Imagine than to Warm -> tail='right'.
+%     (cvspearman is slower; cvcorr = Pearson is much faster with r~0.9 maps.)
+%     'cv_scheme','loo' (leave-one-session-out vs mean-of-rest) is a
+%     higher-SNR option, but on BodyMap it is ~identical to the default
+%     'allpairs' (t-map r=0.99): the limit is between-subject variance at
+%     n=9, not the CV scheme.
+results = run_maps.rsa_parcelwise('atlas', atl, ...
     'group_by', {'condition','bodysite'}, 'subject_var', 'sub', ...
-    'metric', 'crossnobis', 'fold_var', 'sesno', ...
+    'metric', 'cvcorr', 'fold_var', 'sesno', ...
     'contrasts', {'HI_vs_HW', {'hot','imagine'}, {'hot','warm'}}, ...
-    'correction', 'fdr', 'tail', 'left');
+    'correction', 'fdr', 'tail', 'right');
 % statistic_image has a `threshold` PROPERTY and METHOD -- call threshold()
 % with FUNCTION syntax (map.threshold(...) indexes the property -> error).
 montage(threshold(results.maps.HI_vs_HW, 0.05, 'unc'));
 
-% (b) Second condition-contrast map: Hot-Warm vs Imagine-Warm (run-clean via
-%     crossnobis fold=sesno). Use crossnobis here -- it removes the shared-run
-%     confound by construction. (The whole-brain correlation-based run-clean
-%     decomposition with a SameRunid nuisance is in section 8; the parcelwise
-%     LME path is not used for BodyMap -- see note below.)
-results_b = run_maps.rsa_parcelwise('atlas', atlas, ...
+% (b) The RUN-CONFOUNDED version for comparison: within-sample (session-pooled)
+%     correlation. This is effectively what the published region-level analysis
+%     used, and it reproduces the widespread HI>HW result (~91/131 regions FDR).
+%     The run-clean map (a) is the SAME effect/direction (t-maps r~0.6, ~116/131
+%     regions same sign) but far fewer survive FDR -- see the note below.
+results_conf = run_maps.rsa_parcelwise('atlas', atl, ...
     'group_by', {'condition','bodysite'}, 'subject_var', 'sub', ...
-    'metric', 'crossnobis', 'fold_var', 'sesno', ...
-    'contrasts', {'HW_vs_IW', {'hot','warm'}, {'imagine','warm'}}, ...
-    'correction', 'fdr', 'tail', 'both');
-montage(threshold(results_b.maps.HW_vs_IW, 0.05, 'unc'));
-% NOTE: bodysite-specificity brain maps are covered by the bodysite-model
-% searchlight (section 10) and the model comparison (section 7). The
-% rsa_parcelwise LME path currently returns empty maps on this 8-level
-% bodysite design (silent per-parcel failure) -- prefer the crossnobis
-% contrasts above for parcelwise brain maps.
+    'metric', 'correlation', ...           % within-sample = run-confounded
+    'contrasts', {'HI_vs_HW', {'hot','imagine'}, {'hot','warm'}}, ...
+    'correction', 'fdr', 'tail', 'right');
+montage(threshold(results_conf.maps.HI_vs_HW, 0.05, 'unc'));
+
+% WHY THE HI>HW RESULT WEAKENS UNDER RUN-CLEAN ANALYSIS:
+%   It is primarily STATISTICAL POWER, not confound-in-the-contrast. The run
+%   inflation affects HW and HI cells about equally, so it largely cancels in
+%   the HI-HW difference (the run-clean and confounded maps agree in direction,
+%   t-map r~0.6). BUT cross-session correlation estimates each cell from
+%   single-run patterns (noisy), so the cross-validated contrast is much lower
+%   powered than the session-pooled (grand-mean) version -> few regions clear
+%   FDR at n=9. Crossnobis DISTANCE is even less sensitive to this graded
+%   effect than cross-session correlation. Take-home: report the run-clean
+%   version; treat the widespread published HI>HW as power-inflated by pooling.
 
 %% 10. Searchlight RSA ----------------------------------------------------
 % Where does the LOCAL geometry match the bodysite model? With permutations=0

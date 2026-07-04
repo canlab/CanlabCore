@@ -516,10 +516,18 @@ end % end if docontour
 % See canlab_colormap.
 if dosplitcolor
     central_cm = canlab_colormap.split(minnegcolor, maxnegcolor, mincolor, color, cmaprange);
-elseif docolormap && ~customcolormap && isempty(indexmap)
-    central_cm = canlab_colormap.single(mincolor, color, cmaprange);
+elseif ~isempty(indexmap)
+    % Indexed / atlas map: each value is a ROW INDEX into the colormap matrix.
+    central_cm = canlab_colormap.indexed(indexmap);
+elseif customcolormap
+    % Continuous custom / perceptual LUT mapped across the value range.
+    central_cm = canlab_colormap.continuous(cm, cmaprange);
+elseif ~docolormap
+    % Solid single-colour blobs ('color' / 'onecolor').
+    central_cm = canlab_colormap.solid(color);
 else
-    central_cm = [];
+    % Single ramp mincolor -> maxcolor (docolormap, no split/index/custom).
+    central_cm = canlab_colormap.single(mincolor, color, cmaprange);
 end
 
 % -----------------------------------------------------------
@@ -674,51 +682,22 @@ for j = 1:length(wh_slice) % for j = 1:n - modified by Wani 7/28/12
                 % surface map method
                 % -----------------------------------------------------------
                 
-                if ~docolormap
-                    % single-color map
-                    slicecdat = cdat .* repmat(double(abs(Z) > 0), [1 1 3]);
-                    
-                elseif ~dosplitcolor
-                    % color-mapped
-                    if isempty(indexmap) & ~customcolormap
-                        % Single ramp via the central map (shared with surfaces):
-                        % mincolor at min(cmaprange) -> maxcolor at max(cmaprange).
-                        % Equivalent to the previous inline interpolation.
-                        slicecdat = central_map_slice(central_cm, Z);
-
-                    elseif customcolormap
-                        %w = repmat(Z, [1 1 3]);
-
-                        w = map_function(Z,cmaprange(1),cmaprange(2),1,size(cm,1));
-                        w(isnan(w)) = 1; % replace NaN indices (from NaN Z values) with 1 to avoid indexing errors
-                        slicecdat = reshape(cm(round(w),:),[size(Z),3]);
-
-                    else
-                        w = repmat(Z, [1 1 3]);
-                        [Zi, Zj] = find(w > 0);
-                        slicecdat = nan(size(Z,1), size(Z,2) ,3);
-                        slicecdat(sub2ind(size(w),Zi,Zj)) = indexmap(Z(Z> 0),:); 
-% I'm pretty sure this is a bug since
-%                         indexmap is not selecting rows.... 2/11/2023 MS
-%                         slicecdat(sub2ind(size(w),Zi,Zj)) = indexmap(find(Z(Z > 0)),:);
-                    end
-                    
-                elseif dosplitcolor
-                    % split colormap around zero
-                    
-                    %                     if max(cmaprange) < 0, [dummy, wh] = max(cmaprange); cmaprange(wh) = abs(min(cmaprange)); end
-                    %                     if min(cmaprange) > 0, [dummy, wh] = min(cmaprange); cmaprange(wh) = -(max(cmaprange)); end
-                    
-                    % make into 4-element: min neg, max neg, min pos, max pos
-                    if length(cmaprange) == 2
-                        cmaprange = [min(cmaprange) 0 0 max(cmaprange)]; % just like before = all the way to 0
-                    end
-                    
-                    % Split +/- ramp via the central map (shared with surfaces):
-                    % positive interpolates minpos (near 0) -> maxpos (extreme),
-                    % negative interpolates maxneg (near 0) -> minneg (extreme).
+                % Single source of truth: EVERY value-mapped mode (split, single
+                % ramp, solid, continuous LUT, indexed/atlas) is coloured by the
+                % central canlab_colormap, the SAME object surfaces use, so montage
+                % and surface agree exactly. central_cm is built once above from the
+                % parsed colours + cmaprange. Non-blob voxels come back NaN (or are
+                % alpha-masked below), so no explicit in-blob masking is needed here.
+                if ~isempty(central_cm)
                     slicecdat = central_map_slice(central_cm, Z);
 
+                elseif ~docolormap
+                    % Fallback solid fill (central_cm somehow unavailable).
+                    slicecdat = cdat .* repmat(double(abs(Z) > 0), [1 1 3]);
+
+                else
+                    error('render_blobs:noCentralColormap', ...
+                        'No central colormap was built for this colour mode.');
                 end
                 
                 if ~isa(slicecdat, 'double')

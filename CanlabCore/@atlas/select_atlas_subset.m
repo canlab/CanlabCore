@@ -344,7 +344,7 @@ if doflatten
     end
 
     if any(sum(obj_subset.probability_maps(hasdata,:), 2) - 1 > tol)
-        warning('Max subset cumulative probability = %0.2f. Conditional independence assumption was probably violated.', max(sum(obj_subset.probability_maps(hasdata,:), 2)));
+        warning('Max subset cumulative probability = %0.2f. Conditional independence assumption was probably violated.', full(max(sum(obj_subset.probability_maps(hasdata,:), 2))));
     end
     
     % Add labels for combined mask

@@ -210,7 +210,10 @@ classdef canlab_colormap
             hask = @(k) any(strcmp(args, k));
             valk = @(k) args{find(strcmp(args, k), 1) + 1};
 
-            if hask('splitcolor')
+            if hask('indexmap') && isnumeric(valk('indexmap'))
+                % Indexed / atlas map: value is a ROW INDEX into this colormap.
+                obj = canlab_colormap.indexed(valk('indexmap'));
+            elseif hask('splitcolor')
                 sc = valk('splitcolor');                  % {minneg maxneg minpos maxpos}
                 obj = canlab_colormap.split(sc{1}, sc{2}, sc{3}, sc{4}, default_clim(clim, [-1 1]));
             elseif hask('color')

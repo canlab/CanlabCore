@@ -102,7 +102,7 @@ function opts = colormap_options()
 opts = {'split (hot/cool)', 'split (mango)', 'seafire', 'warm (red-yellow)', ...
         'cool (blue-cyan)', 'winter (blue-green)', ...
         'viridis', 'inferno', 'magma', 'plasma', 'turbo', 'parula', ...
-        'solid colour…'};
+        'indexed (atlas)', 'solid colour…'};
 end
 
 function names = perceptual_names()
@@ -149,7 +149,7 @@ g.Padding       = [8 4 8 2];
 % For a split map this has a grey GAP in the middle (the un-thresholded near-zero
 % band that is NOT coloured on the brain), so it reads: extreme-neg .. near-0-neg
 % [gap] near-0-pos .. extreme-pos.
-stripe = make_colormap_strip(g, stripe_colormap(args));
+stripe = make_colormap_strip(g, stripe_colormap(args, layer));
 stripe.Layout.Row = 1; stripe.Layout.Column = [1 2];
 stripe.Tag = sprintf('stripe_%d', k);
 
@@ -183,7 +183,7 @@ dd = uidropdown(cgrid, 'Items', cmap_options, 'Value', current_colormap_label(ar
     'FontSize', fs, 'Tag', sprintf('colormap_%d', k), ...
     'ValueChangedFcn', @(d, ~) on_colormap(obj, k, d.Value, vname));
 dd.Layout.Column = 1;
-sw = make_colormap_strip(cgrid, swatch_colormap(args));
+sw = make_colormap_strip(cgrid, swatch_colormap(args, layer));
 sw.Layout.Column = 2; sw.Tag = sprintf('swatch_%d', k);
 % Clicking the colour swatch opens the colour picker (also re-picks a solid colour)
 sw.ImageClickedFcn = @(~, ~) pick_solid_colour(obj, k, vname);
@@ -366,17 +366,35 @@ img = repmat(reshape(cm, [1 n 3]), [16 1 1]);     % a few rows tall; 'fill' stre
 h.ImageSource = uint8(round(min(max(img, 0), 1) * 255));
 end
 
-function cm = swatch_colormap(args)
+function cm = swatch_colormap(args, layer)
 % Continuous colour ramp (no gap) for the small preview swatch, taken from the
 % central canlab_colormap so the swatch, the stripe, and the rendered blobs agree.
-cm = canlab_colormap.from_render_args(args, []).colorbar_ramp(64);
+if nargin < 2, layer = []; end
+cm = display_colormap(args, layer).colorbar_ramp(64);
 end
 
-function cm = stripe_colormap(args)
+function c = display_colormap(args, layer)
+% The canlab_colormap the controller should PREVIEW for a layer. Usually just
+% from_render_args, but a single-region indexed/atlas layer (one index value)
+% previews as that region's SOLID colour rather than the whole atlas palette.
+c = canlab_colormap.from_render_args(args, []);
+if strcmp(c.type, 'indexed') && ~isempty(layer) && isfield(layer, 'cmaprange') ...
+        && ~isempty(layer.cmaprange)
+    cr = double(layer.cmaprange);
+    idx = round(mean(cr));
+    n = size(c.colors, 1);
+    if (max(cr) - min(cr)) < 1 && idx >= 1 && idx <= n
+        c = canlab_colormap.solid(c.colors(idx, :));
+    end
+end
+end
+
+function cm = stripe_colormap(args, layer)
 % Colour bar for the legend stripe. Split maps get a grey GAP in the middle (the
 % un-thresholded near-zero band that shows as gray on the brain), matching the
 % 5-column label layout below: neg ramp (2 units) | gap (1) | pos ramp (2).
-c = canlab_colormap.from_render_args(args, []);
+if nargin < 2, layer = []; end
+c = display_colormap(args, layer);
 if strcmp(c.type, 'split')
     nramp = 32; ngap = 8;                         % 32 | 8 | 32  ==  2 : 0.5 : 2 units
     full  = c.colorbar_ramp(2 * nramp);           % [neg(nramp); pos(nramp)]
@@ -414,6 +432,11 @@ function strs = legend_label_set(layer)
 % posNear0 posExtreme] -> those four values in cols 1,2,4,5. A 2-element single
 % ramp -> ends in cols 1 and 5. Rounded to 2 significant figures.
 strs = {'', '', '', '', ''};
+% Indexed / atlas layers colour by category, not by a continuous value range,
+% so numeric end-labels (e.g. a single index +-0.1) are meaningless -> leave blank.
+if isfield(layer, 'render_args') && any(strcmp(layer.render_args, 'indexmap'))
+    return
+end
 cr = [];
 if isfield(layer, 'cmaprange'), cr = layer.cmaprange; end
 cr = double(cr(~isnan(cr) & ~isinf(cr)));
@@ -475,9 +498,9 @@ for k = 1:numel(obj.activation_maps)
     end
 
     a = findobj(fig, 'Tag', sprintf('stripe_%d', k));
-    if ~isempty(a), draw_colormap_strip(a, stripe_colormap(args)); end   % gapped bar for split
+    if ~isempty(a), draw_colormap_strip(a, stripe_colormap(args, layer)); end   % gapped bar for split
     a = findobj(fig, 'Tag', sprintf('swatch_%d', k));
-    if ~isempty(a), draw_colormap_strip(a, swatch_colormap(args)); end
+    if ~isempty(a), draw_colormap_strip(a, swatch_colormap(args, layer)); end
 
     % Refresh the numeric legend labels from the current cmaprange (which
     % rethreshold/refresh may have changed), so labels always match the colours.
@@ -608,7 +631,9 @@ if ~isempty(wh) && isnumeric(args{wh + 1}), v = max(0, min(1, args{wh + 1})); en
 end
 
 function lbl = current_colormap_label(args, opts) %#ok<INUSD>
-if any(strcmp(args, 'splitcolor'))
+if any(strcmp(args, 'indexmap'))
+    lbl = 'indexed (atlas)';
+elseif any(strcmp(args, 'splitcolor'))
     sc = args{find(strcmp(args, 'splitcolor'), 1) + 1};
     if iscell(sc) && numel(sc) == 4 && isequal(sc, {[.5 0 1] [0 .8 .3] [1 .2 1] [1 1 .3]})
         lbl = 'split (mango)';

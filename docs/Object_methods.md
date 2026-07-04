@@ -44,6 +44,7 @@ image_vector  (abstract base; rarely used directly)
 ├── fmri_data           generic image data + .X, .Y, covariates
 ├── statistic_image     stat maps with t / p / sig
 ├── atlas               labeled parcellation with probability maps
+├── fmri_surface_data   cortical-surface / grayordinate (HCP CIFTI) data
 └── fmri_mask_image     binary mask (legacy)
 
 region                  list of contiguous clusters
@@ -67,6 +68,7 @@ Listed in roughly the order most users encounter them. Click a class name for th
 | **[`image_vector`](image_vector_methods.md)** | Abstract superclass. You rarely create one directly, but most of the methods you call on an `fmri_data`, `statistic_image`, or `atlas` are inherited from here (`apply_mask`, `resample_space`, `montage`, `surface`, `extract_roi_averages`, etc.). |
 | **[`statistic_image`](statistic_image_methods.md)** | Stat maps (t / p / effect-size) with thresholding state. Produced by `ttest`, `regress`, etc. The `threshold` method re-thresholds without losing the underlying values. |
 | **[`atlas`](atlas_methods.md)** | Brain atlases / parcellations. Includes both winner-take-all labels for each parcel and probabilistic maps, region labels ( `.labels`), `.references`, and other metadata. Makes it easy to extract or analyze data within named atlas regions or on region/parcel averages. Methods include `select_atlas_subset`, `merge_atlases`, `downsample_parcellation`, `atlas2region`. Use `load_atlas` to load by keyword. |
+| **[`fmri_surface_data`](fmri_surface_data_methods.md)** | Cortical-surface and grayordinate (HCP CIFTI) data — the surface analogue of `fmri_data`. Reads/writes CIFTI-2 and GIFTI **natively** (no gifti/FieldTrip/Workbench toolbox), stores data as `[grayordinates × maps]`, and supports the familiar methods (`surface`, `threshold`, `mean`, `apply_parcellation`, `predict`, `ttest`, `write`) plus `vol2surf` / `surf2vol` to map between volumes and the cortical surface. See the [surface data how-to](workflows/fmri_surface_data_howto.md). |
 | **[`region`](region_methods.md)** | Vector storing information about a set of contiguous clusters / ROIs as a unit of analysis, with one element per region. Designed to hold a compact representation of thresholded maps, including data, voxel coordinates and locations, and facilitate rendering on brains and tables. Produced by `region(t)` from a thresholded `statistic_image`. Consumed by `montage`, `table`, `surface`, `extract_data`. |
 | **[`fmridisplay`](fmridisplay_methods.md)** | Container holding figure handles for slice montages and surfaces. Built by invoking methods like `montage` or with preconfigured sets in `canlab_results_fmridisplay`; lets you swap blob layers in / out without re-rendering the anatomy underneath. |
 | **[`brainpathway`](brainpathway_methods.md)** | Connectivity / pathway-modeling object for one subject. The `brainpathway_multisubject` extension is documented on the same page. |

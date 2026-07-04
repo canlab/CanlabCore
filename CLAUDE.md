@@ -14,7 +14,7 @@ CanlabCore is a MATLAB toolbox for MRI/fMRI/PET analysis from the Cognitive and 
 
 ## Tests
 
-There is a real `matlab.unittest` harness under `CanlabCore/Unit_tests/`. Prerequisite: CanlabCore **and** `Neuroimaging_Pattern_Masks` **and** SPM (SPM12 or SPM25) must be on the path — most tests load atlases/sample images and will error otherwise.
+There is a real `matlab.unittest` harness under `CanlabCore/Unit_tests/`. Prerequisite: CanlabCore **and** `Neuroimaging_Pattern_Masks` **and** SPM (SPM12 or SPM25) must be on the path — most tests load atlases/sample images and will error otherwise. The walkthrough tier additionally needs `RobustToolbox` on the path (it supplies `weighted_corrcoef`, used by `plot_correlation_samefig`'s robust branch).
 
 **Runner.** `canlab_run_all_tests.m` is the entry point (returns a `matlab.unittest.TestResult` array):
 ```matlab
@@ -35,7 +35,7 @@ It globs `canlab_test_*.m` recursively (excluding `old_to_integrate/`) and runs 
 
 **Walkthrough tier is fault-tolerant by design.** `canlab_run_walkthrough_snapshot` runs *vendored snapshot copies* of the CANlab_help_examples scripts (`walkthroughs/private/canlab_help_*.m`) section by section, so the tier does not depend on the external help repo. `canlab_classify_environment_error` downgrades environment-limited sections (missing toolbox, no graphics/display, invalid surface handles) to logged **skips** rather than failures — so a headless or partially-provisioned machine still passes. Don't "fix" a skipped graphics section by forcing it to run.
 
-**CI.** `.github/workflows/test.yml` runs the unit tier (R2024b + Statistics + Signal Processing, clones SPM25, checks out `Neuroimaging_Pattern_Masks`, uploads JUnit XML). `tests-walkthroughs.yml` runs the walkthrough tier. `codespell.yml` is a spell-check action over comments/docs.
+**CI.** `.github/workflows/test.yml` runs the unit tier (R2024b + Statistics + Signal Processing, clones SPM25, checks out `Neuroimaging_Pattern_Masks`, uploads JUnit XML). `tests-walkthroughs.yml` runs the walkthrough tier nightly (cron) and additionally checks out `CANlab_help_examples` and `RobustToolbox` — the latter supplies `weighted_corrcoef`, needed by the regression walkthrough; without it the nightly fails with an `UndefinedFunction` error. `codespell.yml` is a spell-check action over comments/docs.
 
 For quick ad-hoc verification (not a formal test), the canonical pattern is still to load a sample dataset (`load_image_set('emotionreg')` or files under `CanlabCore/Sample_datasets/`) and run the method end-to-end.
 

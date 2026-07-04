@@ -214,8 +214,8 @@ r = extract_roi_averages(image_obj, thal);
 %
 % With the pain dataset, for a real analysis we might worry that multiple
 % images come from the same subject. We can't do stats across all the
-% iamges without accounting for the correlations among images belonging to
-% the same subject. But first, let's plot the averages and see waht we get:
+% images without accounting for the correlations among images belonging to
+% the same subject. But first, let's plot the averages and see what we get:
 
 % Concatenate the region averages into a matrix:
 roi_averages = cat(2, r.dat);
@@ -306,7 +306,7 @@ drawnow, snapnow
 % NAc = select_atlas_subset(atlas_obj, {'V_Str'});
 %
 % 2. try the t-test on 48 degree only images above. What do you see? Which
-% regions show sigificant activation?
+% regions show significant activation?
 %
 % 3. Try to identify which prefrontal regions show the greatest emotion
 % regulation effect, and which show the greatest response during pain.

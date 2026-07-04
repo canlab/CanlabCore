@@ -93,8 +93,8 @@ function similarity_output = canlab_pattern_similarity(dat, pattern_weights, var
 % By default, data images with values of zero or NaN are considered out-of-mask, as they
 % are not valid values. That is, 0 is typically treated as a missing data value in images
 % This can be changed by setting ['treat_zero_as_data', true].  
-% This function does not exlude 0 voxels from the pattern_mask input, where it is assumed 
-% that 0 is a meaninful value (for a neuromarker or binary mask). 
+% This function does not exclude 0 voxels from the pattern_mask input, where it is assumed 
+% that 0 is a meaningful value (for a neuromarker or binary mask). 
 % Thus, this function treats values of 0 in DATA images, not pattern masks,
 % as missing values, and excludes these voxels from both image and
 % mask when calculating similarity.

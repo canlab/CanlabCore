@@ -80,6 +80,18 @@ if isempty(obj.SPACE) || ~isstruct(obj.SPACE.V)
 
 end
 
+% Surfaces cannot be drawn into a uifigure (e.g. the auto-opened controller
+% window): addbrain's subplot/gca then errors ("Adding subplots to a container
+% with 'AutoResizeChildren' set to 'on' is not supported"). If the active figure
+% is a uifigure and the caller did not target an explicit axes, open a dedicated
+% traditional figure so gca/subplot land there. (The multi-surface path below
+% manages its own figure; this covers the single-surface path and pre-empties the
+% current figure so the multi path opens a clean one.)
+if ~any(strcmp(varargin, 'axes'))
+    cf = get(groot, 'CurrentFigure');
+    if ~isempty(cf) && is_uifigure(cf), figure; end
+end
+
 % Multi-surface keywords (e.g. 'foursurfaces', 'foursurfaces_hcp') add a SET
 % of surface views to THIS SAME object, laid out in the current figure. Each
 % becomes its own registered view, so blobs/refresh act on all of them
@@ -195,11 +207,16 @@ for ii = 1:numel(h)
     set(hh, 'FaceAlpha', 1);
 end
 %[
-lightRestoreSingle; 
+lightRestoreSingle;
 axis image;
-axis off; 
+axis off;
 lighting gouraud;
 material dull;
+
+% Hide the "..." interaction toolbar. Sweep the whole figure, not just axh, since
+% some keywords (cutaways, coronal_slabs_*) draw their patches into extra axes
+% they create themselves rather than into axh.
+canlab_hide_axes_toolbar(ancestor(axh, 'figure'));
 
 
 % register info in fmridisplay object
@@ -219,16 +236,23 @@ end % main function
 
 function obj = add_multiple_surfaces(obj, multi, varargin)
 % Add a canonical set of four surface views (L/R lateral + L/R medial) to the
-% same fmridisplay object, arranged 2x2 in a dedicated figure. Each is added
-% via a normal single-surface surface() call (handle semantics keep obj the
-% same), which also triggers blob pull-in per surface.
+% same fmridisplay object, laid out 2x2 in a dedicated figure.
+%
+% For the keywords addbrain builds directly ('foursurfaces' and
+% 'foursurfaces_hcp'), the geometry is routed THROUGH addbrain so the surfaces
+% are identical to what fmri_data.surface / region.surface produce (same
+% meshes, subplot layout, camera views, lighting, and the added thalamus).
+% Each addbrain subplot is then registered as its own fmridisplay view, so
+% blobs added with addblobs (and refresh / removeblobs) act on all four panels.
+% 'foursurfaces_freesurfer' is NOT an addbrain keyword, so it is still built
+% here from individual inflated surfaces via single-surface surface() calls.
 
 % Ensure a dedicated figure for the 2x2 layout. If the current figure already
-% has content (e.g. a montage), the four surfaces would otherwise be drawn over
-% it (and appear to render nothing). Reuse an empty current figure (e.g. the
-% user typed `figure;` first); otherwise open a new one.
+% has content (a montage's axes, OR a uifigure like the controller with uipanel
+% children), the four surfaces would draw over it or error, so open a fresh one.
+% Reuse only a genuinely empty traditional figure (e.g. the user typed `figure;`).
 curfig = get(groot, 'CurrentFigure');
-if isempty(curfig) || ~isempty(findobj(curfig, 'Type', 'axes'))
+if isempty(curfig) || is_uifigure(curfig) || ~isempty(allchild(curfig))
     figure;
 end
 layout_fig = gcf;
@@ -241,34 +265,72 @@ for kw = {'direction', 'orientation', 'axes'}         % drop any single-view con
     for j = sort(wh, 'descend'), rest(j:j+1) = []; end
 end
 
-switch multi
-    case 'foursurfaces_hcp'
-        Lsurf = 'hcp inflated left';        Rsurf = 'hcp inflated right';
-    case 'foursurfaces_freesurfer'
-        Lsurf = 'freesurfer inflated left'; Rsurf = 'freesurfer inflated right';
-    otherwise % 'foursurfaces'
-        Lsurf = 'hires left';               Rsurf = 'hires right';
+if any(strcmp(multi, {'foursurfaces', 'foursurfaces_hcp'}))
+
+    % Build the canonical layout through addbrain (drawn into layout_fig via
+    % subplots), so the surfaces match fmri_data.surface exactly.
+    h = addbrain(multi, rest{:});
+    h = h(ishandle(h));
+
+    % Register one fmridisplay view per axes addbrain populated. Group the
+    % returned patch handles by their parent axes, preserving creation order,
+    % so each panel (including its thalamus) becomes a view that addblobs and
+    % refresh render onto.
+    ax_list = gobjects(0);
+    grp = zeros(numel(h), 1);
+    for ii = 1:numel(h)
+        a = ancestor(h(ii), 'axes');
+        idx = find(ax_list == a, 1);
+        if isempty(idx), ax_list(end + 1) = a; idx = numel(ax_list); end %#ok<AGROW>
+        grp(ii) = idx;
+    end
+
+    for a = 1:numel(ax_list)
+        these = h(grp == a);
+        obj.surface{end + 1} = struct('axis_handles', ax_list(a), ...
+            'direction', multi, 'orientation', '', 'object_handle', these(:)');
+
+        % Pull any existing blob layers onto the newly registered surface, so
+        % a surface added after addblobs still shows the blobs (design notes 4.2).
+        new_surf_idx = numel(obj.surface);
+        for k = 1:numel(obj.activation_maps)
+            obj = render_layer_surfaces(obj, k, new_surf_idx);
+        end
+    end
+
+else
+
+    % 'foursurfaces_freesurfer' is not an addbrain keyword, so build the 2x2
+    % from individual inflated surfaces. {direction, orientation, axes-position}:
+    % top row = lateral views, bottom row = medial views; left col = left hemi.
+    Lsurf = 'freesurfer inflated left'; Rsurf = 'freesurfer inflated right';
+    configs = { ...
+        {Lsurf, 'lateral', [0.03 0.50 0.45 0.45]}, ...
+        {Rsurf, 'lateral', [0.52 0.50 0.45 0.45]}, ...
+        {Lsurf, 'medial',  [0.03 0.03 0.45 0.45]}, ...
+        {Rsurf, 'medial',  [0.52 0.03 0.45 0.45]} };
+
+    for c = 1:numel(configs)
+        cfg = configs{c};
+        obj = surface(obj, 'direction', cfg{1}, 'orientation', cfg{2}, 'axes', cfg{3}, rest{:});
+    end
+
 end
 
-% {direction, orientation, axes-position} for a 2x2 layout:
-% top row = lateral views, bottom row = medial views; left col = left hemi.
-configs = { ...
-    {Lsurf, 'lateral', [0.03 0.50 0.45 0.45]}, ...
-    {Rsurf, 'lateral', [0.52 0.50 0.45 0.45]}, ...
-    {Lsurf, 'medial',  [0.03 0.03 0.45 0.45]}, ...
-    {Rsurf, 'medial',  [0.52 0.03 0.45 0.45]} };
-
-for c = 1:numel(configs)
-    cfg = configs{c};
-    obj = surface(obj, 'direction', cfg{1}, 'orientation', cfg{2}, 'axes', cfg{3}, rest{:});
-end
-
-% Turn off the axis box/background for EVERY axes in the layout figure — the four
+% Turn off the axis box/background for EVERY axes in the layout figure — the
 % surface axes, the hidden colorbar axes, and any stray default axes created
 % during rendering (which otherwise shows a frame behind the surfaces). The
 % surface patches are children of the axes and stay visible; colorbars are
 % separate objects and are unaffected.
 set(findobj(layout_fig, 'Type', 'axes'), 'Visible', 'off');
+canlab_hide_axes_toolbar(layout_fig);   % hide the "..." toolbar on all surface panels
 
+end
+
+
+function tf = is_uifigure(f)
+% Thin wrapper on the shared canlab_is_uifigure (keeps figure-creation behaviour
+% consistent with image_vector.montage / canlab_results_fmridisplay).
+tf = canlab_is_uifigure(f);
 end
 

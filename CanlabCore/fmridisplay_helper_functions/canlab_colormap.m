@@ -89,18 +89,24 @@ classdef canlab_colormap
 
                 case 'indexed'
                     cmap = obj.colors;
-                    idx = round(v); idx = min(max(idx, 1), size(cmap, 1));
+                    bad = ~isfinite(v);                 % NaN/Inf voxels (e.g. outside-blob) -> uncoloured
+                    idx = round(v); idx(bad) = 1;
+                    idx = min(max(idx, 1), size(cmap, 1));
                     rgb = cmap(idx, :);
+                    rgb(bad, :) = NaN;
 
                 case 'continuous'
                     % Perceptual / arbitrary LUT mapped CONTINUOUSLY over the value
                     % range (unlike 'indexed', which uses the value AS the row index).
                     lut = obj.colors;
                     lo = obj.range(1); hi = obj.range(2);
+                    bad = ~isfinite(v);                 % NaN/Inf voxels -> uncoloured
                     w = clamp01((v - lo) ./ nonzero(hi - lo));
+                    w(bad) = 0;
                     idx = 1 + round(w .* (size(lut, 1) - 1));
                     idx = min(max(idx, 1), size(lut, 1));
                     rgb = lut(idx, :);
+                    rgb(bad, :) = NaN;
             end
 
             % Clamp to [0 1] but preserve NaN (uncoloured) entries — note MATLAB's
@@ -204,7 +210,10 @@ classdef canlab_colormap
             hask = @(k) any(strcmp(args, k));
             valk = @(k) args{find(strcmp(args, k), 1) + 1};
 
-            if hask('splitcolor')
+            if hask('indexmap') && isnumeric(valk('indexmap'))
+                % Indexed / atlas map: value is a ROW INDEX into this colormap.
+                obj = canlab_colormap.indexed(valk('indexmap'));
+            elseif hask('splitcolor')
                 sc = valk('splitcolor');                  % {minneg maxneg minpos maxpos}
                 obj = canlab_colormap.split(sc{1}, sc{2}, sc{3}, sc{4}, default_clim(clim, [-1 1]));
             elseif hask('color')

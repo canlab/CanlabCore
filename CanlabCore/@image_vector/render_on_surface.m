@@ -341,7 +341,23 @@ end
 if ~isempty(clim)
     [datvec, clim] = get_data_range(obj, clim);
 else
-    [datvec, clim] = get_data_range(obj, [min(obj.dat), max(obj.dat)]);
+    % Uniform default colour range via the shared policy (robust per-arm
+    % percentiles, NOT [min max], so a few extreme voxels do not compress the
+    % scale; matches the montage / fmridisplay-surface defaults). This engine
+    % takes a 2-element clim and maps it through zero, so a signed map asks for
+    % the per-arm split range and collapses it to its outer [negsat possat]
+    % saturation bounds.
+    dd = double(obj.dat(:));
+    dd = dd(dd ~= 0 & isfinite(dd));
+    if isempty(dd)
+        clim_default = [min(obj.dat(:)), max(obj.dat(:))];
+    elseif any(dd < 0) && any(dd > 0)
+        clim_default = canlab_default_cmaprange(dd, 'splitcolor');   % 4-element per-arm
+        clim_default = clim_default([1, end]);                       % -> [negsat possat]
+    else
+        clim_default = canlab_default_cmaprange(dd);                 % 2-element
+    end
+    [datvec, clim] = get_data_range(obj, clim_default);
 end
 
 % -------------------------------------------------------------------------

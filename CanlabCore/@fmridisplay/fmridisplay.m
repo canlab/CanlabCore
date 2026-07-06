@@ -213,13 +213,16 @@ classdef fmridisplay < handle
             obj.history_descrip = [];
             obj.additional_info = '';
             
-            if nargin == 0
-                return
-            end
-            
+            % Control-only flag: 'nocontroller' suppresses the auto-launched
+            % controller (below). Stripped here so it is not forwarded to the
+            % input parser. The controller auto-opens by default but never in
+            % -batch (so scripts / unit tests are unaffected).
+            do_controller = ~batchStartupOptionUsed;
+            wh_noctrl = strcmp(varargin, 'nocontroller');
+            if any(wh_noctrl), do_controller = false; varargin(wh_noctrl) = []; end
 
             % Now parse inputs and run methods depending on what is entered
-            
+
             if any(strcmp(varargin, 'montage'))
                 wh = strcmp(varargin, 'montage');
                 varargin(wh) = [];
@@ -250,7 +253,32 @@ classdef fmridisplay < handle
                 end
             end
 
-            
+            % Bring up the interactive controller by default (fmridisplay is a
+            % handle class, so it stays bound to this object and updates as layers
+            % are added). Suppressed in -batch and with 'nocontroller'; wrapped so
+            % it can never break construction. Save/restore the current figure so
+            % opening the controller uifigure does NOT hijack gcf — otherwise the
+            % very next montage/surface call (e.g. `figure; montage(dat)`) would
+            % render its slices into the controller window.
+            if do_controller
+                prevfig = get(groot, 'CurrentFigure');
+                try
+                    controller(obj);
+                catch ME
+                    warning('fmridisplay:controllerAutolaunch', ...
+                        'Could not open display controller: %s', ME.message);
+                end
+                % Do not leave the controller uifigure as the current figure:
+                % downstream rendering (montage's bare axes(), addbrain's subplot)
+                % targets gcf and would draw into / error on the controller.
+                if ~isempty(prevfig) && isgraphics(prevfig) && isvalid(prevfig)
+                    set(groot, 'CurrentFigure', prevfig);     % back to the caller's figure
+                elseif isgraphics(obj.controller_handle) && ...
+                        isequal(get(groot, 'CurrentFigure'), obj.controller_handle)
+                    figure;                                    % no prior figure: hand off a fresh one
+                end
+            end
+
         end % constructor function
 
     end % methods

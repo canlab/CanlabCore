@@ -44,6 +44,7 @@ cmap_options = colormap_options();
 if ~isempty(obj.controller_handle) && isgraphics(obj.controller_handle) && isvalid(obj.controller_handle)
     fig   = obj.controller_handle;
     vname = getappdata(fig, 'objname');
+    is_new_fig = false;
     existing = findobj(fig, 'Type', 'uipanel');
     if nlayers > 0 && numel(existing) == nlayers
         update_controls_in_place(fig, obj, cmap_options);
@@ -54,13 +55,27 @@ else
     fig = uifigure('Name', 'CANlab display controller', 'HandleVisibility', 'on', ...
         'Color', FIG_COLOR);
     obj.controller_handle = fig;
+    is_new_fig = true;
     if isempty(vname), vname = 'obj'; end
 end
+
+% Prefer the caller's real workspace variable name over 'obj' (for the title and
+% the echoed code lines).
+vn = obj_varname(obj); if ~isempty(vn), vname = vn; end
 
 setappdata(fig, 'objname', vname);
 setappdata(fig, 'fmridisplay_obj', obj);
 fig.Name = sprintf('CANlab display controller  [ %s ]', vname);
-fig.Position(3:4) = [460, 60 + 230 * max(nlayers, 1)];
+fig.Position(3:4) = [460, 60 + 262 * max(nlayers, 1)];
+
+% Position a NEW controller in the top-right of the screen so it does not overlap
+% the montage / surface figures (which open toward the centre/left). Only on
+% creation, so a controller the user has moved stays put on later refreshes.
+if is_new_fig
+    ss = get(0, 'ScreenSize');
+    fig.Position(1:2) = [max(10, ss(3) - fig.Position(3) - 30), ...
+                         max(60, ss(4) - fig.Position(4) - 90)];
+end
 
 if nlayers == 0
     uilabel(fig, 'Position', [20 fig.Position(4)-70 420 50], 'FontSize', 17, ...
@@ -69,7 +84,7 @@ if nlayers == 0
 end
 
 outer = uigridlayout(fig, [nlayers + 1, 1]);
-outer.RowHeight = [repmat({220}, 1, nlayers), {40}];
+outer.RowHeight = [repmat({250}, 1, nlayers), {40}];
 outer.Scrollable = 'on';
 
 for k = 1:nlayers
@@ -87,7 +102,7 @@ function opts = colormap_options()
 opts = {'split (hot/cool)', 'split (mango)', 'seafire', 'warm (red-yellow)', ...
         'cool (blue-cyan)', 'winter (blue-green)', ...
         'viridis', 'inferno', 'magma', 'plasma', 'turbo', 'parula', ...
-        'solid colour…'};
+        'indexed (atlas)', 'solid colour…'};
 end
 
 function names = perceptual_names()
@@ -123,20 +138,24 @@ panel = uipanel(parent, 'Title', sprintf('Layer %d  (%s)', k, source_kind(src)),
 panel.Layout.Row = k;
 
 g = uigridlayout(panel, [6, 2]);
-% stripe(taller), legend value labels, opacity, threshold(+ticks), colors, visible
-g.RowHeight     = {24, 16, 34, 44, 34, 30};
+% colour bar (~text height), legend value labels, opacity, threshold(+ticks), colors, visible
+g.RowHeight     = {26, 22, 34, 44, 34, 30};
 g.ColumnWidth   = {96, '1x'};
 g.RowSpacing    = 4;
 g.ColumnSpacing = 6;
 g.Padding       = [8 4 8 2];
 
-% Row 1: colormap "title stripe" doubling as the legend colour bar (full width)
-stripe = make_colormap_strip(g, swatch_colormap(args));
+% Row 1: colormap "title stripe" doubling as the legend colour bar (full width).
+% For a split map this has a grey GAP in the middle (the un-thresholded near-zero
+% band that is NOT coloured on the brain), so it reads: extreme-neg .. near-0-neg
+% [gap] near-0-pos .. extreme-pos.
+stripe = make_colormap_strip(g, stripe_colormap(args, layer));
 stripe.Layout.Row = 1; stripe.Layout.Column = [1 2];
 stripe.Tag = sprintf('stripe_%d', k);
 
-% Row 2: numeric legend labels under the stripe (extreme ends; 0 in the centre
-% for split maps). This is the in-controller legend (replaces the figure colorbar).
+% Row 2: numeric legend labels under the stripe. Split maps show FOUR values
+% aligned to the bar (neg extreme / neg near-0 [gap] pos near-0 / pos extreme);
+% single ramps show the two ends. Reflects the layer's current cmaprange.
 lg = make_legend_labels(g, layer, k);
 lg.Layout.Row = 2; lg.Layout.Column = [1 2];
 
@@ -147,11 +166,14 @@ sld = uislider(g, 'Limits', [0 1], 'Value', current_opacity(args), ...
     'ValueChangedFcn', @(s, ~) on_opacity(obj, k, s.Value, vname));
 sld.Layout.Row = 3; sld.Layout.Column = 2;
 
-% Row 4: threshold slider (type-aware; p-values on a log scale)
+% Row 4: threshold control (type-aware; p-values on a log scale). A numeric
+% entry field sits beside the slider so a value can be typed directly — the
+% slider only responds to dragging its thumb, not to clicking the track.
 [thr_label, thr_value, ~, is_pval] = threshold_spec(src, layer);
 uilabel(g, 'Text', thr_label, 'FontSize', fs);
-ts = build_threshold_slider(g, obj, k, src, is_pval, thr_value, vname, fs);
-ts.Layout.Row = 4; ts.Layout.Column = 2;
+tgrid = uigridlayout(g, [1 2]); tgrid.Layout.Row = 4; tgrid.Layout.Column = 2;
+tgrid.ColumnWidth = {'1x', 74}; tgrid.Padding = [0 0 0 0]; tgrid.ColumnSpacing = 6;
+build_threshold_controls(tgrid, obj, k, src, is_pval, thr_value, vname, fs);
 
 % Row 5: Colors dropdown + live preview swatch
 uilabel(g, 'Text', 'Colors', 'FontSize', fs);
@@ -161,10 +183,10 @@ dd = uidropdown(cgrid, 'Items', cmap_options, 'Value', current_colormap_label(ar
     'FontSize', fs, 'Tag', sprintf('colormap_%d', k), ...
     'ValueChangedFcn', @(d, ~) on_colormap(obj, k, d.Value, vname));
 dd.Layout.Column = 1;
-sw = make_colormap_strip(cgrid, swatch_colormap(args));
+sw = make_colormap_strip(cgrid, swatch_colormap(args, layer));
 sw.Layout.Column = 2; sw.Tag = sprintf('swatch_%d', k);
 % Clicking the colour swatch opens the colour picker (also re-picks a solid colour)
-set(findobj(sw, 'Type', 'image'), 'ButtonDownFcn', @(~, ~) pick_solid_colour(obj, k, vname));
+sw.ImageClickedFcn = @(~, ~) pick_solid_colour(obj, k, vname);
 
 % Row 6: Visible + per-layer Remove
 uilabel(g, 'Text', 'Visible', 'FontSize', fs);
@@ -249,6 +271,7 @@ function pick_solid_colour(obj, k, vname)
 % 'solid colour…' dropdown item and by clicking the colour swatch).
 c = uisetcolor([1 0 0], 'Choose a blob colour');
 if numel(c) ~= 3, return, end
+vn = obj_varname(obj); if ~isempty(vn), vname = vn; end   % echo the real variable name
 set_colormap(obj, 'color', c, 'layers', k);
 echo_code(vname, sprintf('set_colormap(%s, ''color'', [%g %g %g], ''layers'', %d)', vname, c(1), c(2), c(3), k));
 end
@@ -256,11 +279,18 @@ end
 
 % ---- threshold slider --------------------------------------------------
 
-function sld = build_threshold_slider(g, obj, k, src, is_pval, v0, vname, fs)
+function build_threshold_controls(g, obj, k, src, is_pval, v0, vname, fs)
+% Threshold slider (col 1) + numeric entry field (col 2), kept in sync.
 % statistic_image -> LOG-scale p-value slider (slider value = log10(p)), ticks at
 % .001/.005/.01/.05/.1 so .05–.1 sit close and .001–.005 spread out.
 % fmri_data/region -> linear raw |x| slider anchored at 0 and the 99.9th pct of |data|.
+% Both controls call on_threshold; update_controller then re-syncs them, so
+% dragging the slider updates the field and typing in the field updates the slider.
 tickfs = max(9, fs - 5);
+sl_tag = sprintf('threshold_%d', k);
+ef_tag = sprintf('threshedit_%d', k);
+v0 = double(v0);   % uislider/uieditfield require double; data-derived thresholds may be single
+
 if is_pval
     pfloor = 1e-6; ptop = 0.1;                    % extends below .001 down to ~0
     ticks  = [pfloor .001 .005 .01 .05 .1];
@@ -268,19 +298,40 @@ if is_pval
     lims   = log10([pfloor ptop]);
     v      = log10(min(max(v0, pfloor), ptop));
     sld = uislider(g, 'Limits', lims, 'Value', v, 'MajorTicks', log10(ticks), ...
-        'MajorTickLabels', labs, 'FontSize', tickfs, ...
-        'Tag', sprintf('threshold_%d', k), ...
-        'ValueChangedFcn', @(s, ~) on_threshold(obj, k, 10 .^ s.Value, true, vname));
+        'MajorTickLabels', labs, 'FontSize', tickfs, 'Tag', sl_tag, ...
+        'ValueChangedFcn',  @(s, ~) on_threshold(obj, k, 10 .^ s.Value, true, vname));
+    sld.Layout.Column = 1;
+    ef = uieditfield(g, 'numeric', 'Value', min(max(v0, pfloor), ptop), ...
+        'Limits', [pfloor ptop], 'ValueDisplayFormat', '%.4g', 'FontSize', fs, ...
+        'Tag', ef_tag, 'ValueChangedFcn', @(e, ~) on_threshold(obj, k, e.Value, true, vname));
+    ef.Layout.Column = 2;
+
 elseif isa(src, 'image_vector') || isa(src, 'region')
-    b = raw_bound(src);
+    % Extend the range to cover the current threshold (out-of-range values still
+    % sit on the slider and show an empty map).
+    b = max(double(raw_bound(src)), v0);
+    if ~(b > 0), b = 1; end
     v = min(max(v0, 0), b);
-    sld = uislider(g, 'Limits', [0 b], 'Value', v, 'MajorTicks', [0 b], ...
-        'MajorTickLabels', {'0', sprintf('%.3g', b)}, 'FontSize', tickfs, ...
-        'Tag', sprintf('threshold_%d', k), ...
-        'ValueChangedFcn', @(s, ~) on_threshold(obj, k, s.Value, false, vname));
+    % NORMALISED [0 1] slider. Raw |x| ranges are tiny (e.g. [0 7e-4]); a uislider
+    % with such a small Limits span does NOT reliably fire its callback on
+    % drag-release (unlike the O(1)-range p-value and opacity sliders, which work).
+    % So the slider runs on [0 1] and maps back to raw |x| via its UserData scale
+    % (raw = position * b). The numeric field stays in raw units.
+    sld = uislider(g, 'Limits', [0 1], 'Value', v / b, 'MajorTicks', [0 1], ...
+        'MajorTickLabels', {'0', sprintf('%.3g', b)}, 'FontSize', tickfs, 'Tag', sl_tag, ...
+        'ValueChangedFcn', @(s, ~) on_threshold(obj, k, s.Value * s.UserData, false, vname));
+    sld.UserData = b;                                  % raw |x| value at slider position = 1
+    sld.Layout.Column = 1;
+    ef = uieditfield(g, 'numeric', 'Value', v, 'Limits', [0 Inf], ...
+        'ValueDisplayFormat', '%.4g', 'FontSize', fs, 'Tag', ef_tag, ...
+        'ValueChangedFcn', @(e, ~) on_threshold(obj, k, e.Value, false, vname));
+    ef.Layout.Column = 2;
+
 else
-    sld = uislider(g, 'Limits', [0 1], 'Value', 0, 'Enable', 'off', 'FontSize', tickfs, ...
-        'Tag', sprintf('threshold_%d', k));
+    sld = uislider(g, 'Limits', [0 1], 'Value', 0, 'Enable', 'off', 'FontSize', tickfs, 'Tag', sl_tag);
+    sld.Layout.Column = 1;
+    ef = uieditfield(g, 'numeric', 'Value', 0, 'Enable', 'off', 'FontSize', fs, 'Tag', ef_tag);
+    ef.Layout.Column = 2;
 end
 end
 
@@ -299,69 +350,118 @@ end
 
 % ---- colormap preview --------------------------------------------------
 
-function ax = make_colormap_strip(parent, cm)
-ax = uiaxes(parent);
-draw_colormap_strip(ax, cm);
+function h = make_colormap_strip(parent, cm)
+% A uiimage (NOT uiaxes) for the colour bar / swatch: it fills its grid cell with
+% no reserved tick/label margins, so the bar shows its full height instead of
+% collapsing to a hairline the way an invisible uiaxes does.
+h = uiimage(parent);
+h.ScaleMethod = 'fill';                   % stretch the ramp to fill the cell
+draw_colormap_strip(h, cm);
 end
 
-function draw_colormap_strip(ax, cm)
+function draw_colormap_strip(h, cm)
 if isempty(cm), cm = repmat([.5 .5 .5], 8, 1); end
-image(ax, reshape(cm, [1 size(cm, 1) 3]));
-ax.XLim = [0.5 size(cm, 1) + 0.5]; ax.YLim = [0.5 1.5];
-ax.XTick = []; ax.YTick = []; ax.Box = 'off'; ax.Visible = 'off';
-try
-    ax.Toolbar.Visible = 'off';
-    disableDefaultInteractivity(ax);
-catch
+n = size(cm, 1);
+img = repmat(reshape(cm, [1 n 3]), [16 1 1]);     % a few rows tall; 'fill' stretches it
+h.ImageSource = uint8(round(min(max(img, 0), 1) * 255));
+end
+
+function cm = swatch_colormap(args, layer)
+% Continuous colour ramp (no gap) for the small preview swatch, taken from the
+% central canlab_colormap so the swatch, the stripe, and the rendered blobs agree.
+if nargin < 2, layer = []; end
+cm = display_colormap(args, layer).colorbar_ramp(64);
+end
+
+function c = display_colormap(args, layer)
+% The canlab_colormap the controller should PREVIEW for a layer. Usually just
+% from_render_args, but a single-region indexed/atlas layer (one index value)
+% previews as that region's SOLID colour rather than the whole atlas palette.
+c = canlab_colormap.from_render_args(args, []);
+if strcmp(c.type, 'indexed') && ~isempty(layer) && isfield(layer, 'cmaprange') ...
+        && ~isempty(layer.cmaprange)
+    cr = double(layer.cmaprange);
+    idx = round(mean(cr));
+    n = size(c.colors, 1);
+    if (max(cr) - min(cr)) < 1 && idx >= 1 && idx <= n
+        c = canlab_colormap.solid(c.colors(idx, :));
+    end
 end
 end
 
-function cm = swatch_colormap(args)
-% Continuous colour ramp for the layer's stripe (= the in-controller legend bar)
-% and the preview swatch, taken from the central canlab_colormap so the stripe,
-% the figure legend, and the rendered blobs all agree. colorbar_ramp gives the
-% no-gap legend ramp (extreme-neg ... 0 ... extreme-pos for split).
-cm = canlab_colormap.from_render_args(args, []).colorbar_ramp(64);
+function cm = stripe_colormap(args, layer)
+% Colour bar for the legend stripe. Split maps get a grey GAP in the middle (the
+% un-thresholded near-zero band that shows as gray on the brain), matching the
+% 5-column label layout below: neg ramp (2 units) | gap (1) | pos ramp (2).
+if nargin < 2, layer = []; end
+c = display_colormap(args, layer);
+if strcmp(c.type, 'split')
+    nramp = 32; ngap = 8;                         % 32 | 8 | 32  ==  2 : 0.5 : 2 units
+    full  = c.colorbar_ramp(2 * nramp);           % [neg(nramp); pos(nramp)]
+    graycol = repmat([0.75 0.75 0.75], ngap, 1);
+    cm = [full(1:nramp, :); graycol; full(nramp+1:end, :)];
+else
+    cm = c.colorbar_ramp(72);
+end
 end
 
 
 % ---- in-controller legend (numeric labels under the colour stripe) -----
 
 function lg = make_legend_labels(parent, layer, k)
-% A 3-cell row of numeric labels aligned to the colour stripe above it:
-% left = low end, right = high end, centre = 0 for split (+/-) maps only.
-lg = uigridlayout(parent, [1 3]);
-lg.ColumnWidth = {'1x', '1x', '1x'};
-lg.Padding = [2 0 2 0]; lg.ColumnSpacing = 2; lg.RowSpacing = 0;
-fs = max(9, base_fontsize() - 5);
-[lo, mid, hi] = legend_label_strings(layer);
-l1 = uilabel(lg, 'Text', lo,  'FontSize', fs, 'HorizontalAlignment', 'left',   'Tag', sprintf('leglo_%d', k));
-l2 = uilabel(lg, 'Text', mid, 'FontSize', fs, 'HorizontalAlignment', 'center', 'Tag', sprintf('legmid_%d', k));
-l3 = uilabel(lg, 'Text', hi,  'FontSize', fs, 'HorizontalAlignment', 'right',  'Tag', sprintf('leghi_%d', k));
-l1.Layout.Column = 1; l2.Layout.Column = 2; l3.Layout.Column = 3;
+% Numeric labels aligned to the colour stripe above. Five columns (2:2:1:2:2)
+% match the split stripe (neg ramp | gap | pos ramp): col1 neg-extreme, col2
+% neg-near-0, col3 the gap (blank), col4 pos-near-0, col5 pos-extreme. A single
+% ramp uses only col1 (low) and col5 (high).
+lg = uigridlayout(parent, [1 5]);
+lg.ColumnWidth = {'2x', '2x', '1x', '2x', '2x'};
+lg.Padding = [2 0 2 0]; lg.ColumnSpacing = 1; lg.RowSpacing = 0;
+fs = max(12, base_fontsize() - 2);             % numeric legend labels (a bit larger)
+aligns = {'left', 'right', 'center', 'left', 'right'};
+strs = legend_label_set(layer);
+for c = 1:5
+    u = uilabel(lg, 'Text', strs{c}, 'FontSize', fs, 'HorizontalAlignment', aligns{c}, ...
+        'Tag', sprintf('leg%d_%d', c, k));
+    u.Layout.Column = c;
+end
 end
 
-function [lo, mid, hi] = legend_label_strings(layer)
-% Numeric end labels from the layer's cmaprange (the mapped value range).
-% cmaprange is [lo hi] for a single ramp, or [negExtreme negNear0 posNear0
-% posExtreme] for a split map. We show the extreme ends; split maps add 0 at
-% the centre. Labels are rounded to 1 significant figure.
-lo = ''; mid = ''; hi = '';
+function strs = legend_label_set(layer)
+% Five label strings (col3 is the gap, always blank) from the layer's current
+% cmaprange (the mapped value range). Split cmaprange = [negExtreme negNear0
+% posNear0 posExtreme] -> those four values in cols 1,2,4,5. A 2-element single
+% ramp -> ends in cols 1 and 5. Rounded to 2 significant figures.
+strs = {'', '', '', '', ''};
+% Indexed / atlas layers colour by category, not by a continuous value range,
+% so numeric end-labels (e.g. a single index +-0.1) are meaningless -> leave blank.
+if isfield(layer, 'render_args') && any(strcmp(layer.render_args, 'indexmap'))
+    return
+end
 cr = [];
 if isfield(layer, 'cmaprange'), cr = layer.cmaprange; end
-cr = cr(~isnan(cr) & ~isinf(cr));
+cr = double(cr(~isnan(cr) & ~isinf(cr)));
 if numel(cr) < 2, return, end
-f = @(x) num2str(round(x, 1, 'significant'));
+f = @(x) num2str(round(x, 2, 'significant'));
 if numel(cr) >= 4
-    lo = f(min(cr)); hi = f(max(cr)); mid = '0';   % split: both extremes + 0
+    cr = sort(cr);                                  % [negExtreme negNear0 posNear0 posExtreme]
+    strs{1} = f(cr(1)); strs{2} = f(cr(2)); strs{4} = f(cr(3)); strs{5} = f(cr(4));
 else
-    lo = f(cr(1)); hi = f(cr(end));                % single ramp: just the ends
+    strs{1} = f(cr(1)); strs{5} = f(cr(end));
 end
 end
 
 
 function update_controls_in_place(fig, obj, cmap_options)
 % Re-sync each control + preview to its layer's current state (no rebuild).
+
+% Keep the title / echoed name in sync with the real workspace variable (it may
+% only become resolvable after the constructor returns and assigns it).
+vn = obj_varname(obj);
+if ~isempty(vn)
+    setappdata(fig, 'objname', vn);
+    fig.Name = sprintf('CANlab display controller  [ %s ]', vn);
+end
+
 for k = 1:numel(obj.activation_maps)
     layer = obj.activation_maps{k};
     args  = render_args_of(layer);
@@ -376,21 +476,36 @@ for k = 1:numel(obj.activation_maps)
     [~, val, ~, is_pval] = threshold_spec(src, layer);
     thr = findobj(fig, 'Tag', sprintf('threshold_%d', k));
     if ~isempty(thr) && isprop(thr, 'Limits')
-        if is_pval, sv = log10(max(val, 1e-6)); else, sv = val; end
-        thr.Value = min(max(sv, thr.Limits(1)), thr.Limits(2));
+        if is_pval
+            sv = log10(max(val, 1e-6));
+            thr.Value = min(max(sv, thr.Limits(1)), thr.Limits(2));
+        else
+            % Normalised [0 1] |x| slider: convert the raw threshold to a slider
+            % position via the stored scale, growing the scale if the threshold
+            % now exceeds it (so the thumb sits at the true value).
+            b = thr.UserData; if isempty(b) || ~(b > 0), b = 1; end
+            if val > b
+                b = val; thr.UserData = b;
+                thr.MajorTickLabels = {'0', sprintf('%.3g', b)};
+            end
+            thr.Value = min(max(val / b, 0), 1);
+        end
+    end
+    ef = findobj(fig, 'Tag', sprintf('threshedit_%d', k));
+    if ~isempty(ef) && isprop(ef, 'Value')
+        lim = [0 Inf]; if isprop(ef, 'Limits'), lim = ef.Limits; end
+        ef.Value = min(max(val, lim(1)), lim(2));
     end
 
-    cm = swatch_colormap(args);
-    for tagn = {sprintf('stripe_%d', k), sprintf('swatch_%d', k)}
-        a = findobj(fig, 'Tag', tagn{1});
-        if ~isempty(a), draw_colormap_strip(a, cm); end
-    end
+    a = findobj(fig, 'Tag', sprintf('stripe_%d', k));
+    if ~isempty(a), draw_colormap_strip(a, stripe_colormap(args, layer)); end   % gapped bar for split
+    a = findobj(fig, 'Tag', sprintf('swatch_%d', k));
+    if ~isempty(a), draw_colormap_strip(a, swatch_colormap(args, layer)); end
 
-    % Refresh the numeric legend labels (cmaprange may have changed).
-    [lo, mid, hi] = legend_label_strings(layer);
-    set_label_text(fig, sprintf('leglo_%d', k),  lo);
-    set_label_text(fig, sprintf('legmid_%d', k), mid);
-    set_label_text(fig, sprintf('leghi_%d', k),  hi);
+    % Refresh the numeric legend labels from the current cmaprange (which
+    % rethreshold/refresh may have changed), so labels always match the colours.
+    strs = legend_label_set(layer);
+    for c = 1:5, set_label_text(fig, sprintf('leg%d_%d', c, k), strs{c}); end
 end
 end
 
@@ -403,11 +518,13 @@ end
 % ---- callbacks (apply + echo the equivalent code line) -----------------
 
 function on_opacity(obj, k, value, vname)
+vn = obj_varname(obj); if ~isempty(vn), vname = vn; end   % echo the real variable name
 set_opacity(obj, value, 'layers', k);
 echo_code(vname, sprintf('set_opacity(%s, %g, ''layers'', %d)', vname, value, k));
 end
 
 function on_colormap(obj, k, choice, vname)
+vn = obj_varname(obj); if ~isempty(vn), vname = vn; end   % echo the real variable name
 switch choice
     case 'split (hot/cool)'
         set_colormap(obj, 'splitcolor', {[0 0 1] [0 1 1] [1 .5 0] [1 1 0]}, 'layers', k);
@@ -437,17 +554,53 @@ end
 end
 
 function on_threshold(obj, k, value, is_pval, vname)
-if is_pval
-    rethreshold(obj, value, 'unc', 'layers', k);
-    echo_code(vname, sprintf('rethreshold(%s, %.4g, ''unc'', ''layers'', %d)', vname, value, k));
-else
-    rethreshold(obj, value, 'layers', k);
-    echo_code(vname, sprintf('rethreshold(%s, %.4g, ''layers'', %d)', vname, value, k));
+% Apply the threshold on slider RELEASE / field entry (the expensive step:
+% rethreshold + refresh). Wrapped so a bad value (e.g. one that leaves no voxels)
+% cannot break the control. The numeric field re-syncs afterwards via
+% update_controls_in_place. (Slider uses ValueChangedFcn only, matching the
+% opacity slider, which fires reliably on first use.)
+vn = obj_varname(obj); if ~isempty(vn), vname = vn; end   % echo the real variable name
+try
+    if is_pval
+        rethreshold(obj, value, 'unc', 'layers', k);
+        echo_code(vname, sprintf('rethreshold(%s, %.4g, ''unc'', ''layers'', %d)', vname, value, k));
+    else
+        rethreshold(obj, value, 'layers', k);
+        echo_code(vname, sprintf('rethreshold(%s, %.4g, ''layers'', %d)', vname, value, k));
+    end
+catch ME
+    warning('fmridisplay:controller:threshold', 'Re-threshold failed: %s', ME.message);
 end
 end
 
+
 function echo_code(vname, callstr)
 fprintf('%s = %s;\n', vname, callstr);
+end
+
+function nm = obj_varname(obj)
+% Best-effort lookup of the base-workspace variable name that currently holds
+% this fmridisplay handle, so echoed code (and the title) use the user's real
+% variable name instead of 'obj'. Returns '' if not found (e.g. the controller
+% was auto-opened from the constructor before the variable was assigned, or the
+% object lives in a function workspace) — callers keep their fallback then.
+nm = '';
+try
+    vars = evalin('base', 'who');
+catch
+    return
+end
+for i = 1:numel(vars)
+    try
+        val = evalin('base', vars{i});
+        if isa(val, 'fmridisplay') && isscalar(val) && val == obj
+            nm = vars{i};
+            return
+        end
+    catch
+        % skip variables that error on evaluation / comparison
+    end
+end
 end
 
 
@@ -478,7 +631,9 @@ if ~isempty(wh) && isnumeric(args{wh + 1}), v = max(0, min(1, args{wh + 1})); en
 end
 
 function lbl = current_colormap_label(args, opts) %#ok<INUSD>
-if any(strcmp(args, 'splitcolor'))
+if any(strcmp(args, 'indexmap'))
+    lbl = 'indexed (atlas)';
+elseif any(strcmp(args, 'splitcolor'))
     sc = args{find(strcmp(args, 'splitcolor'), 1) + 1};
     if iscell(sc) && numel(sc) == 4 && isequal(sc, {[.5 0 1] [0 .8 .3] [1 .2 1] [1 1 .3]})
         lbl = 'split (mango)';
@@ -515,6 +670,7 @@ elseif isa(src, 'image_vector') || isa(src, 'region')
 else
     lbl = 'thresh'; is_pval = false; enable = false; val = 0;
 end
+val = double(val);   % uislider/uieditfield require double; data-derived thresholds may be single
 end
 
 function set_layer_visible(obj, k, tf)

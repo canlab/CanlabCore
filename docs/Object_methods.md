@@ -99,6 +99,8 @@ A small set of stand-alone helpers that are not class methods but are used by `p
 
 ## Visualizing images and results
 
+> **New to CANlab visualization?** Start with the **[Visualization Walkthrough](visualization_walkthrough/index.md)** — a hands-on, multi-page guide (montages, 3-D surfaces, the interactive display controller, colormaps, atlases) that pairs runnable code with the figure it produces. The entry points below are the reference; the walkthrough shows them in context.
+
 Most image objects (`fmri_data`, `statistic_image`, `atlas`) share a common set of visualization
 entry points — pick by output medium:
 

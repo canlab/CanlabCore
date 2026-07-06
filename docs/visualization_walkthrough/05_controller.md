@@ -84,6 +84,28 @@ Layer 1 is now mango; layer 2's blue blobs are translucent, letting layer 1 show
 o = multiview(o, 'full');   % re-compose this object's blobs onto the 'full' layout
 ```
 
+### The full catalog of layouts and surfaces
+
+It's worth having one place that lists everything you can compose. There are three families:
+
+**Montage sets** — pass to `canlab_results_fmridisplay(t, set)`, `montage(t, set)`, or `multiview(o, set)`:
+
+| Set | Layout |
+|-----|--------|
+| `'compact'` | Default: midline sagittal + two axial rows. |
+| `'compact2'` | Single row: sagittal + axials. |
+| `'full'` | All 3 planes + 4 cortical surfaces. |
+| `'full hcp'` | `full` with HCP surfaces and subcortical volumes. |
+| `'multirow'` | Several `compact2` rows stacked, to compare maps. |
+| `'regioncenters'` | One axis per region, centered on each blob. |
+| `'subcortex compact'` / `'subcortex 3d'` | Subcortical-focused layouts. |
+
+You can also build a montage set by hand with `fmridisplay.montage` — choosing orientation, slice range, and spacing yourself (see [§2.6](02_montages.md#26-rolling-your-own-slices-fmridisplaymontage)).
+
+**Whole-brain surface layouts** — pass to `surface(t, layout)`: `'foursurfaces'`, `'foursurfaces_hcp'`, `'inflated surfaces'`, `'flat surfaces'`, `'insula surfaces'`, `'multi_surface'`, plus the cutaways (`'coronal_slabs_4'`, `'left_cutaway'`, …).
+
+**Surfaces and composites** for building custom 3‑D scenes with `addbrain` — the full list of hemispheres, subcortical structures, and composites (`'limbic'`, `'basal ganglia'`, `'thalamus_group'`, …) is catalogued in [§3.6 The surface catalog](03_surfaces.md#36-the-surface-catalog).
+
 ---
 
 [← 4. Colors](04_colormaps.md) · [Back to index](index.md) · Next: [6. Atlases and regions →](06_atlases_and_regions.md)

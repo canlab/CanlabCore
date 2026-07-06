@@ -9,6 +9,24 @@ obj = load_image_set('emotionreg', 'noverbose');
 t   = threshold(ttest(obj), .05, 'unc');
 ```
 
+An `atlas` object is a first-class CANlab class (a labeled `image_vector`): it carries region labels, indices, and often probability maps, and supports `select_atlas_subset`, `num_regions`, `atlas2region`, `split_atlas_into_contiguous_regions`, and more. See `help atlas` and the [atlas object methods](../Object_methods.md).
+
+> **Atlases live in a separate repository.** `load_atlas` reads its parcellations from the **[`Neuroimaging_Pattern_Masks`](https://github.com/canlab/Neuroimaging_Pattern_Masks)** repository, which must be on your MATLAB path (it is a separate download from CanlabCore). If `load_atlas('canlab2018_2mm')` errors, that repo is missing or not on the path.
+
+**Many atlases are available** by keyword — run `load_atlas` with no arguments to list them all. A few in common use:
+
+| Keyword | Atlas |
+|---------|-------|
+| `'canlab2018_2mm'` / `'canlab2024'` | CANlab combined whole-brain atlas (cortex + subcortex + brainstem). |
+| `'glasser'` | Glasser (HCP-MMP1) 360-region cortical parcellation. |
+| `'schaefer400'` | Schaefer 400-region cortical parcellation. |
+| `'thalamus'` / `'morel'` / `'iglesias_thal'` | Thalamic nuclei. |
+| `'cit168'` | CIT168 subcortical/basal-ganglia atlas. |
+| `'brainstem'` / `'kragel2019pag'` | Brainstem structures / PAG. |
+| `'painpathways'` | CANlab pain-pathways atlas. |
+
+Many keywords also accept a normalization-space suffix (`_fmriprep20`, `_fsl6`) to match your data's template. All of these display with the same indexed-color pipeline shown below.
+
 ---
 
 ## 6.1 Regions in unique colors
@@ -47,7 +65,8 @@ The same indexed coloring renders on surfaces. Build cortical surfaces and paint
 
 ```matlab
 ctx  = select_atlas_subset(load_atlas('canlab2018_2mm'), {'Ctx'});   % 360 cortical parcels
-cmap = cat(1, scn_standard_colors(num_regions(ctx)){:});
+cols = scn_standard_colors(num_regions(ctx));
+cmap = cat(1, cols{:});                                              % n×3 color table
 sh   = addbrain('foursurfaces');
 render_on_surface(ctx, sh, 'colormap', cmap, 'indexmap', 'interp', 'nearest');
 ```

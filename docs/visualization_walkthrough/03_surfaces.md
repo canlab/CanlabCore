@@ -85,7 +85,7 @@ view(135, 12);  lightRestoreSingle;  camzoom(1.3);
 
 ![subcortical close-up](figures/03_subcortical_closeup.png)
 
-`addbrain` knows individual structures (`'thalamus'`, `'amygdala'`, `'hippocampus'`, `'brainstem'`, `'pag'`, `'nucleus accumbens'`, `'caudate'`, `'putamen'`, `'cerebellum'`, …), composites (`'limbic'`, `'basal ganglia'`, `'brainstem_group'`, `'thalamus_group'`), and cortical surfaces (`'hires left'`, `'inflated left'`, …). Handles are standard MATLAB graphics: set `FaceAlpha`, rotate with `view()`, zoom with `camzoom`, and re-fix lighting with `lightRestoreSingle`. `addbrain('eraseblobs', sh)` resets a surface to gray so you can render a different contrast on the same scene.
+`addbrain` knows individual structures, composites, and cortical surfaces (catalogued in §3.6 below). Handles are standard MATLAB graphics: set `FaceAlpha`, rotate with `view()`, zoom with `camzoom`, and re-fix lighting with `lightRestoreSingle`. `addbrain('eraseblobs', sh)` resets a surface to gray so you can render a different contrast on the same scene. Run `addbrain` with no arguments (`addbrain`) to print its built-in keyword list, and see `help addbrain` for the full reference. Many keywords resolve regions through `canlab_load_ROI` and the atlas objects in `Neuroimaging_Pattern_Masks` (see [6. Atlases and regions](06_atlases_and_regions.md)), so the exact anatomy depends on those installed atlases.
 
 ---
 
@@ -105,6 +105,24 @@ Atlas nuclei as bare isosurfaces | t‑map rendered onto them
 ![thalamus isosurface](figures/03_isosurface_thalamus.png) | ![thalamus isosurface rendered](figures/03_isosurface_thalamus_rendered.png)
 
 `isosurface` also builds custom cutaways from any anatomical image via `'thresh'`, `'nosmooth'`, and `'xlim'/'ylim'/'zlim'` bounds — useful for a bespoke publication surface. See `help image_vector.isosurface`.
+
+---
+
+## 3.6 The surface catalog
+
+Any of these keywords can be passed to `addbrain(keyword)` to get bare surface handles, or (for the whole-brain layouts) to `surface(obj, keyword)` to render a map in one step. The list below is the built-in set as of this writing; run `addbrain` with no arguments for the authoritative list in your install.
+
+**Cortical surfaces (single hemisphere or pair).** `'left'` / `'right'`, `'hires left'` / `'hires right'` (higher-resolution pial), `'surface left'` / `'surface right'`, `'inflated left'` / `'inflated right'` (FreeSurfer inflated), plus template-specific meshes `'MNI152NLin2009cAsym white|midthickness|pial left|right'`, `'MNI152NLin6Asym …'`, `'hcp inflated left|right'`, `'hcp sphere …'`, `'freesurfer inflated|white|sphere left|right'`, `'bigbrain left|right'`, `'flat left'` / `'flat right'`.
+
+**Whole-brain surface layouts** (pass to `surface()` to render a map): `'foursurfaces'` (lateral + medial, both hemispheres — shown in §3.1), `'foursurfaces_hcp'`, `'inflated surfaces'`, `'flat surfaces'`, `'insula surfaces'`, `'multi_surface'`.
+
+**Cutaways and slabs** (reveal interior anatomy): `'cutaway'`, `'left_cutaway'`, `'right_cutaway'`, `'left_insula_slab'`, `'right_insula_slab'`, `'accumbens_slab'`, `'coronal_slabs'`, `'coronal_slabs_4'`, `'coronal_slabs_5'`, `'brainbottom'`.
+
+**Individual subcortical / brainstem structures:** `'thalamus'`, `'amygdala'` (+ `'amygdala hires'`), `'hippocampus'` (+ `'hippocampus hires'`), `'brainstem'`, `'pag'`, `'nucleus accumbens'` (`'nacc'`), `'caudate'`, `'putamen'`, `'globus pallidus'` (`'GP'`/`'GPe'`/`'GPi'`), `'cerebellum'` (`'cblm'`), `'hypothalamus'`, `'habenula'`, `'STN'`, `'SN'` (`'SNc'`/`'SNr'`), `'VTA'`, `'red nucleus'` (`'rn'`), `'LC'`, `'PBP'`, `'BST'`/`'BNST'`, `'vmpfc'`, and many more brainstem nuclei (`'rvm'`, `'nts'`, `'drn'`, `'mrn'`, `'PBN'`, `'medullary_raphe'`, …).
+
+**Composites** (several structures at once): `'limbic'` (+ `'limbic hires'`), `'basal ganglia'` (`'BG'`), `'brainstem_group'`, `'thalamus_group'`, `'midbrain_group'`, `'subcortex'`, `'CIT168'`, `'pauli_subcortical'`.
+
+Because these are ordinary graphics handles, you compose them freely — concatenate handle arrays (`sh = [addbrain('thalamus') addbrain('brainstem')]`), then `render_on_surface` a map onto the whole scene (§3.4).
 
 ---
 

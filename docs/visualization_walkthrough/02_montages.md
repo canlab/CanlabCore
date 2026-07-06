@@ -122,4 +122,31 @@ o = addblobs(o, region(tstrict), 'color', [0 .4 1], 'no_surface');
 
 ---
 
+## 2.6 Rolling your own slices: `fmridisplay.montage`
+
+The prepackaged layouts pick their slices for you. When you need a specific set of slices — a particular orientation, a slice range, custom spacing — build an empty `fmridisplay` and call its `montage` method directly, then add your blobs. Here we lay out a **single row of axial slices** from z = −30 to z = 60 every 10 mm:
+
+```matlab
+o = fmridisplay;                                    % empty display container
+o = montage(o, 'axial', 'slice_range', [-30 60], ...
+            'spacing', 10, 'onerow');               % choose the slices
+o = addblobs(o, region(t), 'nooutline');            % paint the map onto them
+```
+
+![custom axial montage, one row, -30 to 60 mm](figures/02_custom_montage.png)
+
+The montage method's slice controls:
+
+| Option | Effect |
+|--------|--------|
+| `'axial'` / `'sagittal'` / `'coronal'` | Orientation of the slices. |
+| `'slice_range', [lo hi]` | First/last slice coordinate (mm). |
+| `'spacing', n` | Millimeters between slices. |
+| `'wh_slice', [..]` or `'slices', [..]` | Give explicit slice coordinates instead of a range. |
+| `'onerow'` | Force all slices into a single row. |
+
+You can call `montage` more than once on the same object to stack rows of different orientations (a sagittal row above an axial row, say) — exactly how the prepackaged `full`/`compact` layouts are assembled internally. See `help fmridisplay.montage`.
+
+---
+
 [← Back to index](index.md) · Next: [3. Surfaces and 3‑D rendering →](03_surfaces.md)

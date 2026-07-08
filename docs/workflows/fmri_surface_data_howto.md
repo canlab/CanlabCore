@@ -154,20 +154,25 @@ surface(ssurf, 'mni_surface', 'left');
 
 A surface atlas is simply a `.dlabel` `fmri_surface_data`. `apply_parcellation`
 averages each map within its parcels (background / medial wall excluded). The data
-and the atlas must be on the **same grayordinate space** (`compare_space == 0`):
+and the atlas must be on the **same grayordinate space** (`compare_space == 0`).
+Here we load the Gordon+Tian atlas (from `Neuroimaging_Pattern_Masks`) and
+parcellate a continuous map built on its own grayordinate set:
 
 ```matlab
-% mydata is an fmri_surface_data on the atlas's 91k grayordinate set:
-if compare_space(mydata, atl) == 0
-    [parcel_means, labels] = apply_parcellation(mydata, atl);   % [nMaps x nParcels]
-end
+atl = fmri_surface_data(which('Gordon333.32k_fs_LR_Tian_Subcortex_S2.dlabel.nii'));
+
+mydata = atl;                                 % same grayordinate space as the atlas
+mydata.dat = single(sqrt(double(atl.dat)));   % any continuous map on those grayordinates
+mydata.intent = 'dscalar';
+
+[parcel_means, labels] = apply_parcellation(mydata, atl);   % [nMaps x nParcels]
 ```
 
 Threshold (raw value, with optional cluster extent), then summarize contiguous
-clusters as region-like structs:
+clusters as region-like structs. `ssurf` is the surface t-map from Section C:
 
 ```matlab
-tthr = threshold(ssurf, 3, 'positive', 'k', 20);   % >3, clusters >= 20 grayordinates
+tthr = threshold(ssurf, 3, 'positive', 'k', 20);   % t > 3, clusters >= 20 grayordinates
 reg  = surface_region(tthr);
 [reg.numVox]                                        % cluster sizes
 ```
@@ -176,17 +181,27 @@ reg  = surface_region(tthr);
 
 ## Section F — Group analysis and writing
 
-Concatenate per-map/per-subject objects, run analyses, and write results:
+Concatenate per-map/per-subject objects, run analyses, and write results. Here we
+build a small "group" by projecting individual `emotionreg` contrast images to the
+surface (`img` is the `fmri_data` loaded in Section C):
 
 ```matlab
-group = cat(subj1, subj2, subj3);          % or [subj1 subj2 subj3]
-tmap  = ttest(group);                      % grayordinate-wise t-test
-b     = regress(group);                    % OLS on group.X (betas in .dat)
-group.Y = scores(:);
+subj = cell(1, 5);
+for i = 1:5
+    subj{i} = vol2surf(get_wh_image(img, i));   % each subject's contrast on the surface
+end
+group = cat(subj{:});                            % one object, 5 maps (or [subj{:}])
+
+tmap = ttest(group);                             % grayordinate-wise one-sample t-test
+
+group.X = [ones(5,1), (1:5)'];                   % set the design BEFORE regress
+b = regress(group);                              % OLS; betas in b.dat, t/p in additional_info
+
+group.Y = (1:5)';                                % set the outcome BEFORE predict
 [cverr, stats] = predict(group, 'algorithm_name', 'cv_lassopcr', 'nfolds', 5);
 
-write(tmap, 'group_t.dscalar.nii');        % native CIFTI
-write(ssurf, 'emo_surface.func.gii');      % native GIFTI
+write(tmap,  'group_t.dscalar.nii');             % native CIFTI
+write(ssurf, 'emo_surface.func.gii');            % native GIFTI
 ```
 
 ## Notes

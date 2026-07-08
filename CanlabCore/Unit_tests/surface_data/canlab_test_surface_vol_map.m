@@ -111,6 +111,13 @@ sm = apply_mask(s, keep);
 verifyEqual(t, nnz(any(sm.dat~=0,2)), nnz(s.dat(1:1000)~=0), 'apply_mask zeroed wrong rows.');
 verifyEqual(t, size(sm.dat), size(s.dat), 'apply_mask must keep .dat full (D5b).');
 
+% apply_mask falls back to obj.mask when no mask is passed
+s_withmask = s; s_withmask.mask = keep;
+sm2 = apply_mask(s_withmask);
+verifyEqual(t, sm2.dat, sm.dat, 'apply_mask(obj) must use obj.mask.');
+% and errors clearly when neither a mask arg nor obj.mask is available
+verifyError(t, @() apply_mask(s), 'fmri_surface_data:apply_mask:nomask');
+
 % threshold (raw, two-tailed)
 st = threshold(s, 0.5);
 verifyTrue(t, all(abs(st.dat(st.dat~=0)) >= 0.5), 'threshold left sub-threshold values.');

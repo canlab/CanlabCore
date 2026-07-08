@@ -89,8 +89,11 @@ differences from `fmri_data`:
 
 ## Analysis
 
-Delegated methods treat each grayordinate as a feature (reusing the `fmri_data`
-algorithms) and remap geometry-bearing results back to the surface.
+`ttest`, `predict`, and `ica` delegate to the corresponding `fmri_data` /
+`image_vector` methods — treating each grayordinate as a feature — and remap
+geometry-bearing results back to the surface, so those algorithms are identical
+to their volumetric counterparts. `regress` is a native grayordinate-wise OLS
+implementation.
 
 | Method | From | One-liner |
 |---|---|---|

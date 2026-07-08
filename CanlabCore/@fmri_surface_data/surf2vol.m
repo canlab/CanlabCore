@@ -32,7 +32,7 @@ function vol = surf2vol(obj, varargin)
 %
 % :Examples:
 % ::
-%     s   = vol2surf(fmri_data(which('weights_NSF_grouppred_cvpcr.img')));
+%     s   = vol2surf(ttest(load_image_set('emotionreg')));
 %     v   = surf2vol(s);
 %     % v.write('fname', '/tmp/back.nii');
 %

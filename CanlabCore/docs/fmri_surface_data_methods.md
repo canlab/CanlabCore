@@ -101,7 +101,7 @@ s.surface_space       % 'fsLR_32k'
 ## 4. Method reference
 
 > Type `methods(fmri_surface_data)` for the full list. Methods inherited from
-> `image_vector` that operate purely on `.dat` (`get_wh_image`, `ica`, `mahal`,
+> `image_vector` that operate purely on `.dat` (`get_wh_image`, `mahal`,
 > `pca`, …) also apply. volInfo-dependent display/QC methods (`descriptives`,
 > `montage`, `orthviews`, `flip`) are not yet surface-aware — run them on the
 > volumetric part via `to_fmri_data(obj)` for now.
@@ -341,7 +341,7 @@ only on core MATLAB (+ the JVM for gzip) — no external toolbox.
 | `canlab_write_cifti(file, cii)` | Write CIFTI-2 (faithful re-emit or regenerate). |
 | `canlab_read_gifti(file)` | Read GIFTI (`.surf`/`.func`/`.shape`/`.label.gii`) → struct (`.vertices`, `.faces`, `.cdata`, `.labels`). |
 | `canlab_write_gifti(file, gii)` | Write GIFTI (ASCII / Base64 / GZipBase64). |
-| `canlab_surface_vertexcolors(vals, clim, poscm, negcm)` | Map per-vertex values → truecolor (split hot/cool; NaN/zero = gray). |
+| `canlab_surface_vertexcolors(vals, clim, poscm, negcm, graycolor)` | Map per-vertex values → truecolor (split hot/cool; NaN/zero = `graycolor`, default gray). |
 | `canlab_cbig_warp_path(name)` | Resolve the vendored CBIG RF warp paths. |
 
 ---
@@ -368,8 +368,9 @@ matching bundled mesh in `canlab_canonical_brains/Canonical_brains_surfaces/`
   ribbon-constrained mapper). Best-in-class per-subject mapping is a future step.
 - **fs_LR ↔ fsaverage.** Not yet bridged; keep a workflow in one space, or go
   through a volume.
-- **Cluster-extent thresholding**, a colorbar/outline overlay on the native render,
-  and surface-aware overrides of `montage`/`orthviews`/`flip`/`descriptives` are
-  planned; the volumetric escape hatch (`to_fmri_data`) covers those cases today.
+- **Planned:** a colorbar/outline overlay on the native render, and surface-aware
+  overrides of `montage`/`orthviews`/`flip`/`descriptives`; the volumetric escape
+  hatch (`to_fmri_data`) covers those cases today. (Cluster-extent thresholding is
+  already implemented — `threshold(obj, thr, 'k', N)`.)
 - See [`fmri_surface_data_design_plan.md`](fmri_surface_data_design_plan.md) for the
   full milestone roadmap and the rationale behind these choices.

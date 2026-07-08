@@ -44,7 +44,7 @@ function cii = canlab_read_cifti(filename)
 %
 % :Examples:
 % ::
-%     c = canlab_read_cifti(which('transcriptomic_gradients.dscalar.nii'));
+%     c = canlab_read_cifti(which('S1200.MyelinMap_MSMAll.32k_fs_LR.dscalar.nii'));
 %     size(c.cdata)                         % [grayordinates x maps]
 %     cellfun(@(m) m.struct, c.diminfo{1}.models, 'unif', 0)
 %

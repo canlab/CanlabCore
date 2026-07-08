@@ -29,9 +29,9 @@ function surf = vol2surf(obj, varargin)
 %
 % :Examples:
 % ::
-%     dat = fmri_data(which('weights_NSF_grouppred_cvpcr.img'));
-%     s = vol2surf(dat);            % fsaverage surface object
-%     % surface(s)                  % (rendering: M5)
+%     dat = ttest(load_image_set('emotionreg'));   % a volumetric statistic_image
+%     s = vol2surf(dat);            % -> fmri_surface_data on the fsaverage surface
+%     % surface(s)                  % render it
 %
 % :See also: surf2vol, fmri_surface_data, canlab_cbig_warp_path
 

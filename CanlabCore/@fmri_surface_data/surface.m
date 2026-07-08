@@ -39,10 +39,10 @@ function han = surface(obj, varargin)
 %
 % :Examples:
 % ::
-%     s = fmri_surface_data(which('transcriptomic_gradients.dscalar.nii'));
+%     s = fmri_surface_data(which('S1200.MyelinMap_MSMAll.32k_fs_LR.dscalar.nii'));
 %     surface(s, 'which_image', 1);
 %
-%     v = fmri_data(which('weights_NSF_grouppred_cvpcr.img'));
+%     v = ttest(load_image_set('emotionreg'));   % a volumetric statistic_image
 %     surface(vol2surf(v));                      % native fsaverage render
 %     surface(vol2surf(v), 'mni_surface', 'left'); % on an addbrain MNI surface
 %

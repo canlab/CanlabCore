@@ -4,6 +4,7 @@ function obj = apply_mask(obj, mask, varargin)
 % :Usage:
 % ::
 %     obj = apply_mask(obj, mask)
+%     obj = apply_mask(obj)            % uses obj.mask if it is set
 %     obj = apply_mask(obj, mask, 'invert')
 %
 % Surface analogue of fmri_data.apply_mask, greatly simplified per design
@@ -14,9 +15,10 @@ function obj = apply_mask(obj, mask, varargin)
 %
 % :Inputs:
 %   **obj:**  an fmri_surface_data object.
-%   **mask:** one of
+%   **mask:** (optional) one of
 %       - logical/numeric vector [nGrayordinates x 1] (nonzero = keep)
 %       - another fmri_surface_data on the same space (nonzero/non-NaN = keep)
+%       If omitted (or empty), the object's own .mask property is used.
 %
 % :Optional Inputs:
 %   **'invert':** keep the complement (zero the in-mask grayordinates instead).
@@ -27,6 +29,16 @@ function obj = apply_mask(obj, mask, varargin)
 % :See also: fmri_surface_data, compare_space
 
 invert = any(strcmpi(varargin, 'invert'));
+
+% Fall back to the object's .mask property when no mask is passed
+if nargin < 2 || isempty(mask)
+    if isempty(obj.mask)
+        error('fmri_surface_data:apply_mask:nomask', ...
+            ['No mask supplied and obj.mask is empty. Pass a [nGrayordinates x 1] ' ...
+             'logical/numeric vector or an fmri_surface_data mask, or set obj.mask.']);
+    end
+    mask = obj.mask;
+end
 
 if isa(mask, 'fmri_surface_data')
     if compare_space(obj, mask) ~= 0

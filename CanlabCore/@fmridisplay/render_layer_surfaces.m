@@ -42,6 +42,15 @@ end
 
 layer = obj.activation_maps{k};
 
+% Surface-native layer (fmri_surface_data source): paint matching cortical meshes
+% directly from the per-vertex data, at full fidelity, using the same central
+% canlab_colormap value->colour map as montages. See add_surface_blobs.
+if isfield(layer, 'source_surface') && isa(layer.source_surface, 'fmri_surface_data')
+    if nargin < 3 || isempty(wh_surface), wh_surface = 1:numel(obj.surface); end
+    obj = paint_surface_native_layer(obj, k, wh_surface);
+    return
+end
+
 if ~isfield(layer, 'source_region') || isempty(layer.source_region)
     return   % legacy layer with no retained source; nothing to render from
 end
@@ -158,6 +167,89 @@ for i = wh_surface
 
 end
 
+end
+
+
+function obj = paint_surface_native_layer(obj, k, wh_surface)
+% Paint a surface-native layer (fmri_surface_data source) directly onto matching
+% cortical meshes, blending by the layer opacity, using the central canlab_colormap
+% so colours match montages. Meshes whose vertex count does not match the object's
+% space are skipped (a layer has no volume, so it cannot be sampled onto them).
+layer = obj.activation_maps{k};
+surf  = layer.source_surface;
+
+args = {};
+if isfield(layer, 'render_args') && ~isempty(layer.render_args), args = layer.render_args; end
+cmaprange = [];
+if isfield(layer, 'cmaprange'), cmaprange = layer.cmaprange; end
+which_image = 1;
+if isfield(layer, 'which_image') && ~isempty(layer.which_image), which_image = layer.which_image; end
+
+% Dense per-hemisphere values (medial wall = NaN)
+r = reconstruct_image(surf);
+Ldat = []; Rdat = [];
+if isfield(r, 'cortex_left'),  Ldat = r.cortex_left(:, which_image);  end
+if isfield(r, 'cortex_right'), Rdat = r.cortex_right(:, which_image); end
+
+% Robust default colour range if none stored (matches the volume path policy)
+if isempty(cmaprange)
+    v = [Ldat; Rdat]; v = v(v ~= 0 & isfinite(v));
+    if ~isempty(v)
+        sf = {}; if any(strcmp(args, 'splitcolor')), sf = {'splitcolor'}; end
+        cmaprange = canlab_default_cmaprange(v, sf{:});
+    end
+end
+
+tc_map = canlab_colormap.from_render_args(args, cmaprange);
+
+% Layer opacity (set_opacity / controller) blends this layer with what's underneath
+alpha = 1;
+wh_tv = find(strcmp(args, 'transvalue'), 1);
+if ~isempty(wh_tv) && isnumeric(args{wh_tv + 1}), alpha = args{wh_tv + 1}; end
+alpha = max(0, min(1, alpha));
+
+for i = wh_surface
+    if i < 1 || i > numel(obj.surface), continue; end
+    surfh = obj.surface{i}.object_handle;
+    surfh = surfh(ishandle(surfh));
+    for hh = surfh(:)'
+        if ~strcmp(get(hh, 'Type'), 'patch'), continue; end
+        nv  = size(get(hh, 'Vertices'), 1);
+        tag = lower(get(hh, 'Tag'));
+        vals = [];
+        if ~isempty(Rdat) && nv == numel(Rdat) && contains(tag, 'right')
+            vals = Rdat;
+        elseif ~isempty(Ldat) && nv == numel(Ldat) && (contains(tag, 'left') || ~contains(tag, 'right'))
+            vals = Ldat;
+        elseif ~isempty(Ldat) && nv == numel(Ldat)
+            vals = Ldat;                       % last-resort match by vertex count
+        end
+        if isempty(vals), continue; end        % non-matching mesh: skip
+
+        base = local_base_rgb(hh, nv);
+        rgb  = tc_map.map(double(vals));        % N x 3, NaN rows = uncoloured
+        col  = ~any(isnan(rgb), 2);
+        out  = base;
+        out(col, :) = alpha * rgb(col, :) + (1 - alpha) * base(col, :);
+        set(hh, 'FaceVertexCData', out, 'FaceColor', 'interp', 'EdgeColor', 'none');
+    end
+end
+end
+
+
+function base = local_base_rgb(hh, nv)
+% Current vertex colours to blend onto (running composite), else the patch's gray.
+c = get(hh, 'FaceVertexCData');
+if isequal(size(c), [nv 3])
+    base = c;
+else
+    fc = get(hh, 'FaceColor');
+    if isnumeric(fc) && numel(fc) == 3
+        base = repmat(fc(:)', nv, 1);
+    else
+        base = repmat([.5 .5 .5], nv, 1);
+    end
+end
 end
 
 

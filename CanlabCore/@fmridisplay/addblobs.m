@@ -176,6 +176,15 @@ if nargin < 2
          '   o2 = addblobs(o2, region(t)); %% add the blobs from t']);
 end
 
+% Surface / grayordinate data: an fmri_surface_data is an image_vector but has no
+% single 3-D volume, so it is added as a SURFACE-NATIVE layer (painted directly on
+% matching cortical meshes) rather than converted to a volume region. Handled by a
+% dedicated method so the rest of addblobs (volume/region machinery) is untouched.
+if isa(cl, 'fmri_surface_data')
+    obj = add_surface_blobs(obj, cl, varargin{:});
+    return
+end
+
 % Multi-image objects: a single blob layer shows one image, so if an
 % image_vector with more than one image (column) is passed, use only the FIRST
 % image (with a note). This keeps addblobs(o2, multi_image_obj) from erroring or

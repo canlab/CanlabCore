@@ -116,6 +116,27 @@ visualization pipeline** (`addblobs` / `set_colormap`): `clim` / `cmaprange`,
 `neg_colormap`, `splitcolor`, `maxcolor` / `mincolor`, and `color` (solid). So the
 same options color surface data and volume blobs.
 
+### Managed display (`fmridisplay`)
+
+A surface object can be added to a stateful `fmridisplay` as a **surface-native
+layer**, so the same managed-display experience works for surface and volume data:
+
+```matlab
+o2 = fmridisplay;
+o2 = surface(o2, 'hcp inflated left');  o2 = surface(o2, 'hcp inflated right');
+o2 = addblobs(o2, surf_stat, 'colormap', 'hot');   % paints the fs_LR meshes directly
+o2 = set_colormap(o2, 'maxcolor', [1 1 0], 'mincolor', [1 0 0]);  % recolors in place
+o2 = removeblobs(o2);                              % restores the anatomy
+```
+
+`addblobs` detects the `fmri_surface_data` and paints matching cortical meshes
+**directly from the per-vertex data** (no volume resampling), using the same
+central `canlab_colormap` value→color map as montages, so colors match. It
+participates in `set_colormap` / `set_opacity` / `removeblobs` / the controller
+like a volume layer. A surface layer has no volume representation, so it does not
+appear on slice montages (use `to_fmri_data` / `surf2vol` for that), and is skipped
+on any registered surface whose mesh does not match the object's space.
+
 ## Parcellation and regions
 
 | Method | From | One-liner |

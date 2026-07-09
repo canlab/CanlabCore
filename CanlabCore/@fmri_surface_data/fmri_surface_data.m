@@ -141,7 +141,57 @@ classdef fmri_surface_data < image_vector
 
     end % methods
 
+    % ---------------------------------------------------------------------
+    % Volume-only image_vector methods that have no meaningful surface /
+    % grayordinate behavior. They are overridden here inside a (Hidden) block
+    % so that (a) they no longer clutter methods(obj) / tab-completion, and
+    % (b) calling one gives a clear message (pointing to the surface
+    % equivalent) instead of a cryptic volume-machinery error. The class
+    % remains a full subclass of image_vector; only these specific methods are
+    % masked. See docs/fmri_surface_data_methods.md ("Unsupported methods").
+    % ---------------------------------------------------------------------
+    methods (Hidden)
+        function varargout = flip(varargin),                        unsupported_surface_method('flip'); varargout = {}; end
+        function varargout = isosurface(varargin),                  unsupported_surface_method('isosurface'); varargout = {}; end
+        function varargout = interpolate(varargin),                 unsupported_surface_method('interpolate'); varargout = {}; end
+        function varargout = resample_space(varargin),              unsupported_surface_method('resample_space', 'resample_space (surface): use resample_space on to_fmri_data(obj) for the subcortex, or keep surface data in its native grayordinate space'); varargout = {}; end
+        function varargout = resample_space_simple_reference(varargin), unsupported_surface_method('resample_space_simple_reference'); varargout = {}; end
+        function varargout = resample_time(varargin),               unsupported_surface_method('resample_time'); varargout = {}; end
+        function varargout = extract_gray_white_csf(varargin),      unsupported_surface_method('extract_gray_white_csf'); varargout = {}; end
+        function varargout = slice_movie(varargin),                 unsupported_surface_method('slice_movie'); varargout = {}; end
+        function varargout = display_slices(varargin),              unsupported_surface_method('display_slices'); varargout = {}; end
+        function varargout = rmssd_movie(varargin),                 unsupported_surface_method('rmssd_movie'); varargout = {}; end
+        function varargout = render_on_cerebellar_flatmap(varargin),unsupported_surface_method('render_on_cerebellar_flatmap'); varargout = {}; end
+        function varargout = rebuild_volinfo_from_dat(varargin),    unsupported_surface_method('rebuild_volinfo_from_dat'); varargout = {}; end
+        function varargout = trim_mask(varargin),                   unsupported_surface_method('trim_mask'); varargout = {}; end
+        function varargout = define_space_mapping(varargin),        unsupported_surface_method('define_space_mapping'); varargout = {}; end
+        function varargout = plot_current_orthviews_coord(varargin),unsupported_surface_method('plot_current_orthviews_coord'); varargout = {}; end
+        function varargout = read_from_file(varargin),              unsupported_surface_method('read_from_file', 'read_from_file: construct with fmri_surface_data(filename) instead (CIFTI/GIFTI are read natively)'); varargout = {}; end
+        function varargout = check_image_filenames(varargin),       unsupported_surface_method('check_image_filenames'); varargout = {}; end
+        function varargout = searchlight(varargin),                 unsupported_surface_method('searchlight'); varargout = {}; end
+        function varargout = extract_roi_averages(varargin),        unsupported_surface_method('extract_roi_averages', 'extract_roi_averages (volume ROI): use apply_parcellation(obj, surface_atlas) for surface data'); varargout = {}; end
+        function varargout = subdivide_by_atlas(varargin),          unsupported_surface_method('subdivide_by_atlas'); varargout = {}; end
+        function varargout = expand_into_atlas_subregions(varargin),unsupported_surface_method('expand_into_atlas_subregions'); varargout = {}; end
+        function varargout = table_of_atlas_regions_covered(varargin), unsupported_surface_method('table_of_atlas_regions_covered'); varargout = {}; end
+        function varargout = pattern_surf_plot_mip(varargin),       unsupported_surface_method('pattern_surf_plot_mip'); varargout = {}; end
+    end
+
 end % classdef
+
+
+% =========================================================================
+function unsupported_surface_method(name, custom_msg)
+% Consistent, informative error for volume-only methods masked on surface data.
+if nargin >= 2 && ~isempty(custom_msg)
+    hint = custom_msg;
+else
+    hint = ['For cortical surface data use surface(obj) / render_on_surface; ' ...
+            'for the subcortical volume use to_fmri_data(obj) and the fmri_data method.'];
+end
+error('fmri_surface_data:unsupportedMethod', ...
+    ['%s is a volume-only image_vector method and is not supported for ' ...
+     'fmri_surface_data (surface/grayordinate) objects.\n%s'], name, hint);
+end
 
 
 % =========================================================================

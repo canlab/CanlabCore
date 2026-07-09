@@ -19,8 +19,8 @@ Workbench, or FreeSurfer is required at runtime** (sole exception: `ica`, which
 needs the GIFT/`icatb` toolbox, like the base `image_vector` method).
 
 - **Tutorial:** [Surface & grayordinate data how-to](workflows/fmri_surface_data_howto.md)
-- **Runnable script:** `CanlabCore/docs/fmri_surface_data_walkthrough.m`
-- **Design rationale / roadmap:** `CanlabCore/docs/fmri_surface_data_design_plan.md`
+- **Runnable script:** [`CanlabCore/docs/fmri_surface_data_walkthrough.m`](../CanlabCore/docs/fmri_surface_data_walkthrough.m)
+- **Design rationale / roadmap:** [`CanlabCore/docs/fmri_surface_data_design_plan.md`](../CanlabCore/docs/fmri_surface_data_design_plan.md)
 
 ## Concept
 
@@ -116,6 +116,26 @@ implementation.
 |---|---|---|
 | `apply_parcellation` | `@fmri_surface_data` | Parcel means `[nMaps × nParcels]` from a `.dlabel` object or key vector (optional `'area'` weighting) |
 | `surface_region` | `@fmri_surface_data` | Summarize contiguous clusters as region-like structs (`.struct`, `.XYZmm`, `.numVox`, `.val`, …) |
+
+## Volume-only methods (redirected or masked)
+
+`fmri_surface_data` is a full subclass of `image_vector`, but many `image_vector`
+methods assume a single 3-D volume and are not meaningful for surface/grayordinate
+data. These are handled so you get useful behavior or a clear message instead of a
+cryptic error, and so `methods(obj)` stays clean:
+
+- **Redirected to the subcortical volume:** `orthviews`, `montage`, `slices` route
+  the subcortical grayordinates through `to_fmri_data` and call the `fmri_data`
+  method (so you see the subcortex on slices). For a cortex-only object they give a
+  clear error pointing to `surface(obj)`.
+- **Masked (hidden + informative error):** volume-only methods with no surface
+  meaning — e.g. `flip`, `isosurface`, `interpolate`, `resample_space`,
+  `extract_gray_white_csf`, `searchlight`, `slice_movie`, `trim_mask`,
+  `read_from_file`, `extract_roi_averages`, … — are overridden in a `methods
+  (Hidden)` block. They no longer appear in `methods(obj)` / tab-completion; calling
+  one raises `fmri_surface_data:unsupportedMethod` with a pointer to the surface
+  equivalent (e.g. `apply_parcellation` instead of `extract_roi_averages`). The
+  object remains an `image_vector` subclass — only these specific methods are masked.
 
 ## Surface data in Neuroimaging_Pattern_Masks
 

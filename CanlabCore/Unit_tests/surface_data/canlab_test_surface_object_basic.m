@@ -137,6 +137,31 @@ verifyFalse(t, any(o.removed_voxels));
 end
 
 
+% -------------------------------------------------------------------------
+function test_volume_only_methods_hidden(t)
+% Volume-only image_vector methods are masked (hidden from methods() and give a
+% clear error), while the class stays a full image_vector subclass.
+o = fmri_surface_data(local_synthetic_cifti());
+m = methods('fmri_surface_data');
+for name = {'flip','isosurface','interpolate','resample_space','extract_gray_white_csf'}
+    verifyFalse(t, ismember(name{1}, m), sprintf('%s should be hidden from methods().', name{1}));
+end
+verifyTrue(t, isa(o, 'image_vector'), 'Class must remain an image_vector subclass.');
+% A hidden method gives the informative error, not a cryptic one
+verifyError(t, @() flip(o), 'fmri_surface_data:unsupportedMethod');
+
+% orthviews/montage/slices route to the subcortical volume (this object has one)
+verifyTrue(t, ismember('orthviews', m), 'orthviews should be available (routes to subcortex).');
+% cortex-only object: orthviews errors clearly
+cii = local_synthetic_cifti();
+cii.diminfo{1}.models = cii.diminfo{1}.models(1:2);   % drop the voxel model
+cii.diminfo{1}.vol = [];
+cortexonly = fmri_surface_data(cii);
+cortexonly.dat = cortexonly.dat(1:10, :);             % 2 cortex models, 10 rows
+verifyError(t, @() orthviews(cortexonly), 'fmri_surface_data:orthviews:cortexonly');
+end
+
+
 % =========================================================================
 function cii = local_synthetic_cifti()
 % Minimal grayordinate dscalar: 2 surface models (L/R, 5 in-data each) + 1

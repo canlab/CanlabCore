@@ -18,7 +18,7 @@ Workbench, or FreeSurfer is required.
 
 **See also:** the full method reference,
 [`fmri_surface_data_methods.md`](../fmri_surface_data_methods.md); the runnable
-script `CanlabCore/docs/fmri_surface_data_walkthrough.m`.
+script [`CanlabCore/docs/fmri_surface_data_walkthrough.m`](../../CanlabCore/docs/fmri_surface_data_walkthrough.m).
 
 ## Quick reference
 
@@ -219,5 +219,5 @@ write(ssurf, 'emo_surface.func.gii');            % native GIFTI
 
 - [`fmri_surface_data_methods.md`](../fmri_surface_data_methods.md) — full method / option reference
 - [`Object_methods.md`](../Object_methods.md) — all CanlabCore object classes
-- `CanlabCore/docs/fmri_surface_data_walkthrough.m` — the runnable script version
-- `CanlabCore/docs/fmri_surface_data_design_plan.md` — design rationale and roadmap
+- [`CanlabCore/docs/fmri_surface_data_walkthrough.m`](../../CanlabCore/docs/fmri_surface_data_walkthrough.m) — the runnable script version
+- [`CanlabCore/docs/fmri_surface_data_design_plan.md`](../../CanlabCore/docs/fmri_surface_data_design_plan.md) — design rationale and roadmap

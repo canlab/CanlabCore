@@ -54,8 +54,10 @@ function test_apply_parcellation_from_object_and_space_check(t)
 keys = [ones(10,1); 2*ones(10,1)];
 o = local_obj([double(keys), double(keys)]);
 parc = local_obj(double(keys));        % a "dlabel"-like object on the same space
-parc.intent = 'dlabel';
-parc.label_table = struct('key', {1 2}, 'name', {'A','B'}, 'rgba', {[1 0 0 1],[0 0 1 1]});
+parc.imagetype = 'dlabel';
+% label_table is a MATLAB table (variables key, name, rgba)
+parc.label_table = table([1;2], ["A";"B"], [1 0 0 1; 0 0 1 1], ...
+    'VariableNames', {'key','name','rgba'});
 
 [pm, labels] = apply_parcellation(o, parc);
 verifyEqual(t, pm(1,:), [1 2], 'AbsTol', 1e-6);
@@ -72,8 +74,10 @@ function test_real_atlas_parcellation(t)
 f = which('Gordon333.32k_fs_LR_Tian_Subcortex_S2.dlabel.nii');
 if isempty(f), t.assumeFail('No real .dlabel atlas on path.'); end
 atl = fmri_surface_data(f);
+verifyTrue(t, istable(atl.label_table), 'A loaded .dlabel must have a MATLAB-table label_table.');
+verifyTrue(t, all(ismember({'key','name','rgba'}, atl.label_table.Properties.VariableNames)));
 % Use the atlas keys as the data: each parcel mean must equal its key
-data = atl; data.dat = single(double(atl.dat)); data.intent = 'dscalar';
+data = atl; data.dat = single(double(atl.dat)); data.imagetype = 'dscalar';
 data.removed_images = false(1,1);
 [pm, labels] = apply_parcellation(data, atl);
 ukeys = unique(round(double(atl.dat(atl.dat > 0))));
@@ -130,5 +134,5 @@ mR = struct('struct','CORTEX_RIGHT','type','surf','start',h+1,'count',h,'numvert
 bm = struct('type','dense','length',n,'models',{{mL,mR}},'vol',[]);
 bm.grayordinate_type = 'cortex_only'; bm.cluster = [];
 o = fmri_surface_data('dat', single(D), 'brain_model', bm, ...
-    'surface_space', 'fsLR_32k', 'intent', 'dscalar');
+    'surface_space', 'fsLR_32k', 'imagetype', 'dscalar');
 end

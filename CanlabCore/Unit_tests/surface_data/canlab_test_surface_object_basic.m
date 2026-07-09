@@ -31,7 +31,7 @@ verifyTrue(t, isa(o, 'fmri_surface_data'));
 verifyTrue(t, isa(o, 'image_vector'), 'Must subclass image_vector.');
 verifyEmpty(t, o.dat);
 verifyEmpty(t, o.brain_model);
-verifyEqual(t, o.intent, '');
+verifyEqual(t, o.imagetype, '');
 end
 
 
@@ -40,7 +40,7 @@ function test_build_from_grayordinate_struct(t)
 o = fmri_surface_data(t.TestData.cii);
 verifyEqual(t, class(o), 'fmri_surface_data');
 verifyEqual(t, size(o.dat), [14 2], 'Grayordinate dat should be 14 x 2.');
-verifyEqual(t, o.intent, 'dscalar');
+verifyEqual(t, o.imagetype, 'dscalar');
 
 % brain_model carries the model split, 1:1 with .dat rows
 bm = o.brain_model;

@@ -82,7 +82,7 @@ bm.grayordinate_type = 'cortex_only';
 bm.cluster = [];
 
 surf = fmri_surface_data('dat', datmat, 'brain_model', bm, ...
-    'surface_space', 'fsaverage_164k', 'intent', 'dscalar');
+    'surface_space', 'fsaverage_164k', 'imagetype', 'dscalar');
 if ~isempty(obj.image_names), surf.image_names = obj.image_names; end
 surf.history = obj.history;
 surf.history{end+1} = sprintf(['vol2surf: projected %d maps to fsaverage_164k via CBIG ' ...

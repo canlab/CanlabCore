@@ -86,9 +86,9 @@ s.surface_space       % 'fsLR_32k'
 | `dat` | `[nGrayordinates × nMaps]` single. The CIFTI cdata matrix (cortex L, cortex R, subcortical voxels). Always full (never squeezed). |
 | `brain_model` | Geometry source of truth (CIFTI BrainModels). `.models{i}` has `.struct`, `.type` `'surf'`/`'vox'`, `.start`, `.count`, `.numvert`, `.vertlist` (0-based), `.voxlist` (3×N); plus `.vol` (`.dims`, `.sform`), `.grayordinate_type`, `.cluster`. |
 | `geom` | Cortical mesh cache (faces/vertices), loaded for rendering. |
-| `intent` | `'dscalar'` / `'dtseries'` / `'dlabel'` / `'func'` / `'shape'` / `'label'`. |
+| `imagetype` | `'dscalar'` / `'dtseries'` / `'dlabel'` / `'func'` / `'shape'` / `'label'`. |
 | `series_info` | For `.dtseries`: `.start`/`.step`/`.unit`/`.exponent`. |
-| `label_table` | For `.dlabel`/`.label`: struct array `.key`/`.name`/`.rgba`. |
+| `label_table` | For `.dlabel`/`.label`: a MATLAB table (variables `key`, `name`, `rgba`). |
 | `surface_space` | `'fsLR_32k'`, `'fsaverage_164k'`, … (gatekeeps `compare_space`; drives mesh/warp choice). |
 | `volInfo` | Inherited; populated for the subcortical voxel sub-block only (empty for surface-only). |
 | `mask` | Optional `[nGray × 1]` logical (or another same-space object) for `apply_mask`. |

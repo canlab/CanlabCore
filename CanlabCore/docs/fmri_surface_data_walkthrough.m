@@ -41,7 +41,7 @@
 ciftifile = which('S1200.MyelinMap_MSMAll.32k_fs_LR.dscalar.nii');   % ships with CanlabCore
 s = fmri_surface_data(ciftifile);
 
-disp(s.intent)                 % 'dscalar'
+disp(s.imagetype)                 % 'dscalar'
 disp(s.surface_space)          % 'fsLR_32k'
 fprintf('%d grayordinates x %d maps\n', size(s.dat,1), size(s.dat,2));
 
@@ -160,7 +160,7 @@ end
 if ~isempty(sg)
     demo = sg;                                  % same grayordinate space as the atlas
     demo.dat = single(sqrt(double(sg.dat)));    % a continuous map on those grayordinates
-    demo.intent = 'dscalar';
+    demo.imagetype = 'dscalar';
     [parcel_means, parcel_labels] = apply_parcellation(demo, sg);
     fprintf('Parcellated into %d parcels; first parcel "%s" mean = %.3f\n', ...
         size(parcel_means,2), parcel_labels{1}, parcel_means(1,1));

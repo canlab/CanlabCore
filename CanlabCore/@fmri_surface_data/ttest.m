@@ -34,7 +34,7 @@ proxy = as_fmri_data_proxy(obj);
 st = ttest(proxy, varargin{:});       % -> statistic_image
 
 sobj = rebuild_like(obj, double(st.dat));
-sobj.intent = 'dscalar';
+sobj.imagetype = 'dscalar';
 sobj.image_names = {'t'};
 
 stat = struct();

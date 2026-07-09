@@ -51,10 +51,10 @@ if endsWith(lc, '.gii')
     end
     if ~isempty(obj.dat)
         g.cdata = double(obj.dat);
-        islabel = contains(lc, '.label.') || strcmp(obj.intent, 'label') || strcmp(obj.intent, 'dlabel');
+        islabel = contains(lc, '.label.') || strcmp(obj.imagetype, 'label') || strcmp(obj.imagetype, 'dlabel');
         if islabel
             g.intents = repmat({'NIFTI_INTENT_LABEL'}, 1, size(g.cdata, 2));
-            g.labels = obj.label_table;
+            g.labels = labeltable2struct(obj.label_table);
         else
             g.intents = repmat({'NIFTI_INTENT_NONE'}, 1, size(g.cdata, 2));
         end
@@ -64,7 +64,7 @@ if endsWith(lc, '.gii')
 end
 
 % ===================== CIFTI-2 =====================
-intent = local_resolve_intent(obj.intent, lc);
+intent = local_resolve_intent(obj.imagetype, lc);
 
 cii = struct();
 cii.cdata = double(obj.dat);
@@ -125,7 +125,7 @@ switch intent
             if k <= numel(tables) && ~isempty(tables{k})
                 tbl = tables{k};
             else
-                tbl = obj.label_table;
+                tbl = labeltable2struct(obj.label_table);
             end
             maps(k) = struct('name', names{k}, 'table', tbl);
         end

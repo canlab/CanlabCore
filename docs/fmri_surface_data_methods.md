@@ -45,9 +45,9 @@ differences from `fmri_data`:
 |---|---|
 | `brain_model` | Geometry source of truth (mirrors CIFTI BrainModels). `.models{i}`: `.struct`, `.type` (`surf`/`vox`), `.start`, `.count`, `.numvert`, `.vertlist` (0-based), `.voxlist`; plus `.vol` (`.dims`, `.sform`), `.grayordinate_type`, `.cluster`. |
 | `geom` | Cortical mesh cache (faces/vertices) used for rendering. |
-| `intent` | `dscalar` / `dtseries` / `dlabel` / `func` / `shape` / `label`. |
+| `imagetype` | `dscalar` / `dtseries` / `dlabel` / `func` / `shape` / `label`. |
 | `series_info` | For `.dtseries`: `.start`/`.step`/`.unit`/`.exponent`. |
-| `label_table` | For `.dlabel`/`.label`: struct array `.key`/`.name`/`.rgba`. |
+| `label_table` | For `.dlabel`/`.label`: a MATLAB table with variables `key`, `name`, `rgba` (Nx4). |
 | `surface_space` | e.g. `fsLR_32k`, `fsaverage_164k`. Gatekeeps `compare_space`; drives mesh/warp choice. |
 | `mask` | Optional `[nGray × 1]` logical (or same-space object) for `apply_mask`. |
 | `X` / `Y` / `covariates` / `images_per_session` / `metadata_table` / … | Per-map annotations, same names/roles as `fmri_data`. |

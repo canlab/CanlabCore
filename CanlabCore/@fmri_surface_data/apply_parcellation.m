@@ -47,10 +47,9 @@ if isa(parcels, 'fmri_surface_data')
             'Parcellation is not on the same grayordinate space (compare_space ~= 0).');
     end
     keys = round(double(parcels.dat(:, 1)));
-    if ~isempty(parcels.label_table)
-        for i = 1:numel(parcels.label_table)
-            names_by_key(parcels.label_table(i).key) = parcels.label_table(i).name;
-        end
+    lt = labeltable2struct(parcels.label_table);   % accepts a MATLAB table or struct array
+    for i = 1:numel(lt)
+        names_by_key(lt(i).key) = lt(i).name;
     end
 elseif isnumeric(parcels)
     keys = round(double(parcels(:)));

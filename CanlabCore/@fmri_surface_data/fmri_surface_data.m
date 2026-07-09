@@ -39,9 +39,9 @@ classdef fmri_surface_data < image_vector
 %                  .start, .count, .numvert, .vertlist 0-based, .voxlist 3xN),
 %                  .vol (.dims, .sform), .grayordinate_type, .cluster.
 %   geom           struct: cortical mesh(es) for rendering/area (lazy).
-%   intent         'dscalar'|'dtseries'|'dlabel'|'func'|'shape'|'label'.
+%   imagetype      'dscalar'|'dtseries'|'dlabel'|'func'|'shape'|'label'.
 %   series_info    struct for .dtseries (start/step/unit/exponent).
-%   label_table    struct array (.key,.name,.rgba) for .dlabel/.label.
+%   label_table    MATLAB table (key, name, rgba) for .dlabel/.label.
 %   surface_space  e.g. 'fsLR_32k', 'fsaverage_164k'.
 %   X / Y / covariates / images_per_session / metadata_table ...
 %                  per-map annotations (same names/roles as fmri_data).
@@ -63,13 +63,13 @@ classdef fmri_surface_data < image_vector
         % surface-area computations. Loaded lazily from bundled assets.
         geom = [];
 
-        % CIFTI/GIFTI intent: dscalar | dtseries | dlabel | func | shape | label
-        intent = '';
+        % CIFTI/GIFTI image type (a.k.a. CIFTI intent): dscalar | dtseries | dlabel | func | shape | label
+        imagetype = '';
 
         % For .dtseries: struct with .start/.step/.unit/.exponent
         series_info = [];
 
-        % For .dlabel/.label: struct array with fields .key, .name, .rgba
+        % For .dlabel/.label: MATLAB table with variables key, name, rgba
         label_table = [];
 
         % Canonical surface-space tag, e.g. 'fsLR_32k', 'fsaverage_164k'
@@ -222,7 +222,7 @@ end
 function obj = from_cifti_struct(obj, cii)
 % Build the object from a canlab_read_cifti output struct.
 obj.dat = single(cii.cdata);
-obj.intent = cii.intent;
+obj.imagetype = cii.intent;
 
 bm = cii.diminfo{1};                          % dense dimension
 if ~isfield(bm, 'cluster'), bm.cluster = []; end
@@ -241,7 +241,7 @@ switch md.type
         obj.image_names = reshape({md.maps.name}, [], 1);
     case 'labels'
         obj.image_names = reshape({md.maps.name}, [], 1);
-        obj.label_table = md.maps(1).table;
+        obj.label_table = struct2labeltable(md.maps(1).table);
         obj.additional_info.label_tables = {md.maps.table};
     case 'series'
         obj.series_info = struct('start', md.seriesStart, 'step', md.seriesStep, ...
@@ -277,10 +277,10 @@ if hasData
     bm.cluster = [];
     obj.brain_model = bm;
     obj.surface_space = infer_surface_space(bm);
-    obj.intent = 'func';
+    obj.imagetype = 'func';
     if isfield(g, 'labels') && ~isempty(g.labels)
-        obj.label_table = g.labels;
-        obj.intent = 'label';
+        obj.label_table = struct2labeltable(g.labels);
+        obj.imagetype = 'label';
     end
     if isfield(g, 'intents') && ~isempty(g.intents)
         obj.image_names = reshape(g.intents, [], 1);
@@ -288,7 +288,7 @@ if hasData
     obj.removed_voxels = false(n, 1);
     obj.removed_images = false(size(obj.dat, 2), 1);
     obj.history{end+1} = sprintf('fmri_surface_data created from GIFTI (%s): %d vertices x %d maps', ...
-        obj.intent, n, size(obj.dat,2));
+        obj.imagetype, n, size(obj.dat,2));
 end
 
 if hasGeom

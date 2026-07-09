@@ -66,7 +66,7 @@ tvals = B ./ se;                  % [p x nGray]
 pvals = 2 * tcdf(-abs(tvals), dfe);
 
 bobj = rebuild_like(obj, B.');    % [nGray x p] coefficients
-bobj.intent = 'dscalar';
+bobj.imagetype = 'dscalar';
 bobj.image_names = arrayfun(@(k) sprintf('beta%d', k), 1:p, 'UniformOutput', false)';
 
 stat = struct('betas', B.', 't', tvals.', 'p', pvals.', 'se', se.', 'dfe', dfe);

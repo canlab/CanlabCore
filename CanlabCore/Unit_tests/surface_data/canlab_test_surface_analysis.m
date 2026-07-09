@@ -139,7 +139,7 @@ mR = struct('struct','CORTEX_RIGHT','type','surf','start',11,'count',10,'numvert
 bm = struct('type','dense','length',20,'models',{{mL,mR}},'vol',[]);
 bm.grayordinate_type = 'cortex_only'; bm.cluster = [];
 o = fmri_surface_data('dat', single(D), 'brain_model', bm, ...
-    'surface_space', 'fsLR_32k', 'intent', 'dscalar');
+    'surface_space', 'fsLR_32k', 'imagetype', 'dscalar');
 end
 
 function o = local_obj_n(D)
@@ -150,5 +150,5 @@ mR = struct('struct','CORTEX_RIGHT','type','surf','start',h+1,'count',h,'numvert
 bm = struct('type','dense','length',n,'models',{{mL,mR}},'vol',[]);
 bm.grayordinate_type = 'cortex_only'; bm.cluster = [];
 o = fmri_surface_data('dat', single(D), 'brain_model', bm, ...
-    'surface_space', 'fsLR_32k', 'intent', 'dscalar');
+    'surface_space', 'fsLR_32k', 'imagetype', 'dscalar');
 end

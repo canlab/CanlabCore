@@ -29,10 +29,18 @@ function han = surface(obj, varargin)
 % :Optional Inputs:
 %   **'surftype':**     'inflated' (default), 'midthickness', 'sphere' (fs_LR).
 %   **'which_image':**  map (column) to render. Default 1.
-%   **'clim':**         [lo hi] color limits (default symmetric from data).
-%   **'pos_colormap' / 'neg_colormap':** [n x 3] colormaps (default hot / cool).
 %   **'existingsurface':** vector of patch handles to color.
 %   **'mni_surface':**  an addbrain keyword (string).
+%
+%   Color options (harmonized with the volume pipeline; forwarded to
+%   render_on_surface -- see there for details):
+%   **'clim' / 'cmaprange':** [lo hi] color limits (default symmetric from data).
+%   **'colormap' / 'colormapname':** named MATLAB colormap or [n x 3] matrix
+%        (a single sequential map over clim).
+%   **'pos_colormap' / 'neg_colormap':** [n x 3] split colormaps (default hot/cool).
+%   **'splitcolor':**   {neg_low, neg_high, pos_low, pos_high} colors.
+%   **'maxcolor' / 'mincolor':** endpoint colors -> a single gradient over clim.
+%   **'color':**        a single solid color for all in-data vertices.
 %
 % :Outputs:
 %   **han:** struct with fields .figure, .axes, .surfaces (graphics handles).
@@ -50,28 +58,28 @@ function han = surface(obj, varargin)
 
 surftype = 'inflated';
 which_image = 1;
-clim = [];
-poscm = [];
-negcm = [];
 existing = [];
 mni_surface = '';
+coloropts = {};             % forwarded to render_on_surface (harmonized colors)
 
 i = 1;
 while i <= numel(varargin)
-    switch lower(varargin{i})
-        case 'surftype',        surftype = varargin{i+1};   i = i + 2;
+    switch lower(char(varargin{i}))
+        case 'surftype',        surftype = varargin{i+1};    i = i + 2;
         case 'which_image',     which_image = varargin{i+1}; i = i + 2;
-        case 'clim',            clim = varargin{i+1};       i = i + 2;
-        case 'pos_colormap',    poscm = varargin{i+1};      i = i + 2;
-        case 'neg_colormap',    negcm = varargin{i+1};      i = i + 2;
         case {'existingsurface','surface_handles'}, existing = varargin{i+1}; i = i + 2;
         case 'mni_surface',     mni_surface = varargin{i+1}; i = i + 2;
         otherwise
-            error('fmri_surface_data:surface:badopt', 'Unknown option: %s', num2str(varargin{i}));
+            % Any other option (clim, colormap, cmaprange, pos_colormap /
+            % neg_colormap, splitcolor, maxcolor / mincolor, color, ...) is
+            % forwarded to render_on_surface, which harmonizes them with the
+            % volume visualization color pipeline.
+            coloropts = [coloropts, varargin(i:i+1)]; %#ok<AGROW>
+            i = i + 2;
     end
 end
 
-ropts = {'which_image', which_image, 'clim', clim, 'pos_colormap', poscm, 'neg_colormap', negcm};
+ropts = [{'which_image', which_image}, coloropts];
 
 % ---- Mode 2: existing handles ----
 if ~isempty(existing)

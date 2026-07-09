@@ -110,6 +110,12 @@ implementation.
 | `render_on_surface` | `@fmri_surface_data` | Color existing patch handles: directly if the mesh matches, else via a volume projection |
 | `plot` | `@fmri_surface_data` | QC panel: value histogram, per-map mean±sd, coverage, mean-map render |
 
+`surface` / `render_on_surface` accept the **same color vocabulary as the volume
+visualization pipeline** (`addblobs` / `set_colormap`): `clim` / `cmaprange`,
+`colormap` / `colormapname` (a single sequential map), `pos_colormap` /
+`neg_colormap`, `splitcolor`, `maxcolor` / `mincolor`, and `color` (solid). So the
+same options color surface data and volume blobs.
+
 ## Parcellation and regions
 
 | Method | From | One-liner |

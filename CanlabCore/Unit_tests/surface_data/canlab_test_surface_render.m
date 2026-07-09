@@ -70,6 +70,31 @@ end
 
 
 % -------------------------------------------------------------------------
+function test_harmonized_color_options(t)
+% surface()/render_on_surface accept the same color vocabulary as the volume
+% pipeline (colormap/cmaprange, maxcolor/mincolor, splitcolor, color).
+s = t.TestData.s;
+% Graduated maps must produce many colors
+opts = { {'colormap','parula'}, ...        % single sequential map over data range
+         {'maxcolor',[1 1 0],'mincolor',[1 0 0]}, ...
+         {'splitcolor',{[0 0 1],[0 1 1],[1 .5 0],[1 1 0]}} };
+for k = 1:numel(opts)
+    h = surface(s, opts{k}{:});
+    c = get(h.surfaces(1), 'FaceVertexCData');
+    verifyEqual(t, size(c,2), 3, 'Must set truecolor.');
+    verifyGreaterThan(t, size(unique(c,'rows'),1), 2, 'Graduated coloring should not be uniform.');
+    close(h.figure);
+end
+% solid 'color' -> the solid color (plus gray for any zero/NaN vertices)
+h = surface(s, 'color', [0 .7 0]);
+u = unique(get(h.surfaces(1),'FaceVertexCData'),'rows');
+verifyLessThanOrEqual(t, size(u,1), 2, 'Solid color should give <= 2 colors (color + gray).');
+verifyTrue(t, ismember([0 .7 0], u, 'rows'), 'Solid color must appear on the surface.');
+close(h.figure);
+end
+
+
+% -------------------------------------------------------------------------
 function test_medial_wall_is_gray(t)
 % For a 91k object (medial wall excluded), medial-wall vertices render gray.
 f = which('Gordon333.32k_fs_LR_Tian_Subcortex_S2.dlabel.nii');

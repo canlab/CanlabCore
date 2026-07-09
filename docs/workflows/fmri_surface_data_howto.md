@@ -60,7 +60,7 @@ The constructor auto-detects CIFTI (`.dscalar/.dtseries/.dlabel.nii`) and GIFTI
 ```matlab
 s = fmri_surface_data(which('S1200.MyelinMap_MSMAll.32k_fs_LR.dscalar.nii'));
 
-s.intent            % 'dscalar'
+s.imagetype            % 'dscalar'
 s.surface_space     % 'fsLR_32k'
 size(s.dat)         % [59412 1]  (grayordinates x maps)
 ```
@@ -163,7 +163,7 @@ atl = fmri_surface_data(which('Gordon333.32k_fs_LR_Tian_Subcortex_S2.dlabel.nii'
 
 mydata = atl;                                 % same grayordinate space as the atlas
 mydata.dat = single(sqrt(double(atl.dat)));   % any continuous map on those grayordinates
-mydata.intent = 'dscalar';
+mydata.imagetype = 'dscalar';
 
 [parcel_means, labels] = apply_parcellation(mydata, atl);   % [nMaps x nParcels]
 ```

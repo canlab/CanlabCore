@@ -183,7 +183,9 @@ classdef canlab_colormap
     methods (Static)
         function obj = single(mincolor, maxcolor, range)
             if nargin < 3 || isempty(range), range = [0 1]; end
-            obj = canlab_colormap('single', {mincolor, maxcolor}, range(:)');
+            range = range(:)';
+            if numel(range) == 4, range = [range(1) range(4)]; end   % split range -> full span
+            obj = canlab_colormap('single', {mincolor, maxcolor}, range);
         end
 
         function obj = split(minneg, maxneg, minpos, maxpos, range)
@@ -204,7 +206,9 @@ classdef canlab_colormap
             % CONTINUOUS  an n x 3 LUT (e.g. a perceptual colormap: viridis,
             % inferno, turbo, ...) mapped continuously over a value range.
             if nargin < 2 || isempty(range), range = [0 1]; end
-            obj = canlab_colormap('continuous', lut, range(:)');
+            range = range(:)';
+            if numel(range) == 4, range = [range(1) range(4)]; end   % split range -> full span
+            obj = canlab_colormap('continuous', lut, range);
         end
 
         function obj = from_render_args(args, clim)

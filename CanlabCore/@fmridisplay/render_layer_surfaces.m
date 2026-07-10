@@ -208,23 +208,48 @@ wh_tv = find(strcmp(args, 'transvalue'), 1);
 if ~isempty(wh_tv) && isnumeric(args{wh_tv + 1}), alpha = args{wh_tv + 1}; end
 alpha = max(0, min(1, alpha));
 
+% Vertex counts this object's data could paint (per hemisphere). A cortical patch
+% is paintable only if its vertex count matches -- i.e. it is the SAME surface
+% space. This is how we detect a cross-space mismatch (e.g. fs_LR data asked to
+% paint onto fsaverage 'foursurfaces_freesurfer' meshes) and warn instead of
+% drawing something wrong.
+data_nv = unique([numel(Ldat), numel(Rdat)]);
+data_nv = data_nv(data_nv > 0);
+
+n_cortex = 0;      % cortical patches considered across the requested surfaces
+n_painted = 0;     % of those, how many matched the data space and were painted
 for i = wh_surface
     if i < 1 || i > numel(obj.surface), continue; end
     surfh = obj.surface{i}.object_handle;
     surfh = surfh(ishandle(surfh));
     for hh = surfh(:)'
         if ~strcmp(get(hh, 'Type'), 'patch'), continue; end
-        nv  = size(get(hh, 'Vertices'), 1);
+        V   = get(hh, 'Vertices');
+        nv  = size(V, 1);
         tag = lower(get(hh, 'Tag'));
-        vals = [];
-        if ~isempty(Rdat) && nv == numel(Rdat) && contains(tag, 'right')
-            vals = Rdat;
-        elseif ~isempty(Ldat) && nv == numel(Ldat) && (contains(tag, 'left') || ~contains(tag, 'right'))
-            vals = Ldat;
-        elseif ~isempty(Ldat) && nv == numel(Ldat)
-            vals = Ldat;                       % last-resort match by vertex count
+        if iscell(tag), tag = strjoin(tag, ' '); end
+        if ismember(nv, data_nv), n_cortex = n_cortex + 1; end
+
+        % Which hemisphere is this patch? Prefer an explicit 'left'/'right' tag
+        % (e.g. addbrain 'hcp inflated left'). But addbrain RELABELS the
+        % foursurfaces_* patches with the group keyword, erasing that tag, so
+        % fall back to geometry: the left hemisphere sits at negative x, the
+        % right at positive x in world coordinates (verified: fs_LR left
+        % centroid ~ -30, right ~ +32). Without this, both hemispheres would be
+        % painted with the same hemisphere's data.
+        is_left  = contains(tag, 'left');
+        is_right = contains(tag, 'right');
+        if ~is_left && ~is_right
+            if mean(V(:, 1)) < 0, is_left = true; else, is_right = true; end
         end
-        if isempty(vals), continue; end        % non-matching mesh: skip
+
+        vals = [];
+        if ~isempty(Rdat) && nv == numel(Rdat) && is_right
+            vals = Rdat;
+        elseif ~isempty(Ldat) && nv == numel(Ldat) && is_left
+            vals = Ldat;
+        end
+        if isempty(vals), continue; end        % non-matching mesh / other hemi: skip
 
         base = local_base_rgb(hh, nv);
         rgb  = tc_map.map(double(vals));        % N x 3, NaN rows = uncoloured
@@ -232,7 +257,25 @@ for i = wh_surface
         out  = base;
         out(col, :) = alpha * rgb(col, :) + (1 - alpha) * base(col, :);
         set(hh, 'FaceVertexCData', out, 'FaceColor', 'interp', 'EdgeColor', 'none');
+        n_painted = n_painted + 1;
     end
+end
+
+% Nothing matched: the requested surfaces are a DIFFERENT surface space than the
+% data (e.g. fsaverage meshes for fs_LR data). Say so clearly rather than leave
+% the anatomy silently unpainted. A surface object has no volume representation,
+% so it cannot be resampled onto a foreign mesh; the fix is to add the matching
+% surfaces (surface(obj) does this automatically, or use the matching
+% foursurfaces_* keyword for the object's space).
+if n_painted == 0 && ~isempty(wh_surface) && ~isempty(data_nv)
+    match_kw = 'foursurfaces_hcp';
+    if any(data_nv == 163842), match_kw = 'foursurfaces_freesurfer'; end
+    warning('fmridisplay:render_layer_surfaces:spacemismatch', ...
+        ['Surface data (%s, %d verts/hemi) cannot be painted onto the requested ' ...
+         'surface(s), which are a different surface space. A surface object has no ' ...
+         'volume representation, so it cannot be resampled onto a foreign mesh. ' ...
+         'Use surface(obj) (adds the matching surfaces automatically) or the ' ...
+         'matching keyword ''%s''.'], surf.surface_space, max(data_nv), match_kw);
 end
 end
 

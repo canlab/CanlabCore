@@ -92,6 +92,52 @@ if ~any(strcmp(varargin, 'axes'))
     if ~isempty(cf) && is_uifigure(cf), figure; end
 end
 
+% An fmri_surface_data argument: add its native surface(s) AND paint it as a
+% managed surface-native layer. surface(o2, surf_obj, ...) then behaves like
+% surface(surf_obj) but on the stateful display -- the surfaces are registered
+% views under the controller, and the data is a real layer (set_colormap /
+% set_opacity / removeblobs / refresh act on it). With no surface keyword, the
+% set that MATCHES the object's space is added automatically (foursurfaces_hcp
+% for fs_LR, foursurfaces_freesurfer for fsaverage), so the data always renders
+% at full fidelity. An explicit non-matching surface (e.g. fsaverage meshes for
+% fs_LR data) is added but cannot be painted, and add_surface_blobs warns.
+% See add_surface_blobs, fmri_surface_data.surface.
+is_surf = cellfun(@(a) isa(a, 'fmri_surface_data'), varargin);
+if any(is_surf)
+    surf_data = varargin{find(is_surf, 1)};
+    rest = varargin(~is_surf);
+
+    % Split the remaining args into surface directives (WHICH surfaces to draw)
+    % and colour options (HOW to paint the layer). Colour options are the
+    % value-bearing keys add_surface_blobs / canlab_colormap understand; every
+    % other token (foursurfaces*, direction/orientation/axes pairs, a bare
+    % addbrain surface keyword) is a surface directive.
+    color_keys = {'which_image', 'clim', 'cmaprange', 'colormap', 'colormapname', ...
+        'pos_colormap', 'neg_colormap', 'splitcolor', 'maxcolor', 'mincolor', ...
+        'color', 'transvalue', 'wh_surface', 'wh_surfaces'};
+    surf_args = {}; color_args = {};
+    j = 1;
+    while j <= numel(rest)
+        a = rest{j};
+        if ischar(a) && any(strcmpi(a, color_keys))
+            color_args = [color_args, rest(j:j+1)]; j = j + 2; %#ok<AGROW>
+        else
+            surf_args{end + 1} = a; j = j + 1; %#ok<AGROW>
+        end
+    end
+
+    if isempty(surf_args)
+        surf_args = {surface_default_keyword(surf_data)};   % matching space
+    end
+
+    n0 = numel(obj.surface);
+    obj = surface(obj, surf_args{:});                       % add the view(s)
+    new_idx = (n0 + 1):numel(obj.surface);
+    if isempty(new_idx), new_idx = 1:numel(obj.surface); end
+    obj = add_surface_blobs(obj, surf_data, color_args{:}, 'wh_surface', new_idx);
+    return
+end
+
 % Multi-surface keywords (e.g. 'foursurfaces', 'foursurfaces_hcp') add a SET
 % of surface views to THIS SAME object, laid out in the current figure. Each
 % becomes its own registered view, so blobs/refresh act on all of them
@@ -332,5 +378,17 @@ function tf = is_uifigure(f)
 % Thin wrapper on the shared canlab_is_uifigure (keeps figure-creation behaviour
 % consistent with image_vector.montage / canlab_results_fmridisplay).
 tf = canlab_is_uifigure(f);
+end
+
+
+function kw = surface_default_keyword(surf_data)
+% Multi-surface keyword whose meshes MATCH the object's surface space, so the
+% data paints directly (no cross-space resampling). Used when surface(o2,
+% surf_obj) is called with no explicit surface directive.
+switch surf_data.surface_space
+    case 'fsLR_32k',       kw = 'foursurfaces_hcp';          % 32492 verts/hemi
+    case 'fsaverage_164k', kw = 'foursurfaces_freesurfer';   % 163842 verts/hemi
+    otherwise,             kw = 'foursurfaces_hcp';          % best-effort default
+end
 end
 

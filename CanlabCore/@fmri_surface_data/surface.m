@@ -12,10 +12,14 @@ function han = surface(obj, varargin)
 % Renders an fmri_surface_data object on cortical surfaces, mirroring
 % image_vector.surface. Three modes:
 %
-%   1. NATIVE (default): loads the bundled mesh that matches the object's
-%      surface_space (fs_LR-32k or fsaverage-164k) and colors vertices DIRECTLY
-%      from the data -- no resampling. Produces a 4-panel figure (L/R x
-%      lateral/medial). The medial wall and zero values render gray.
+%   1. NATIVE (default): builds a managed, stateful fmridisplay whose surface
+%      views are the mesh set that matches the object's surface_space (fs_LR-32k
+%      -> 'foursurfaces_hcp', fsaverage-164k -> 'foursurfaces_freesurfer'), then
+%      paints the data as a MANAGED surface-native layer (colored DIRECTLY from
+%      the per-vertex data -- no resampling; medial wall and zeros render gray).
+%      Because the returned object is a stateful fmridisplay under a controller,
+%      set_colormap / set_opacity / rethreshold / removeblobs / refresh act on
+%      the surfaces (this is why the colormap is now changeable after the fact).
 %
 %   2. EXISTING SURFACE ('existingsurface', han): colors patch handles you
 %      already have (e.g. from addbrain or a prior surface call). Matching-space
@@ -43,7 +47,10 @@ function han = surface(obj, varargin)
 %   **'color':**        a single solid color for all in-data vertices.
 %
 % :Outputs:
-%   **han:** struct with fields .figure, .axes, .surfaces (graphics handles).
+%   **han:** In native mode (default) a stateful **fmridisplay** object with the
+%        surfaces registered as managed views and the data added as a layer; use
+%        set_colormap / removeblobs / refresh on it. In the 'existingsurface' and
+%        'mni_surface' modes a struct with fields .figure, .axes, .surfaces.
 %
 % :Examples:
 % ::
@@ -96,36 +103,50 @@ if ~isempty(mni_surface)
     return
 end
 
-% ---- Mode 1: native 4-panel render ----
-geom = load_surface_geom(obj.surface_space, surftype);
+% ---- Mode 1: native managed render (returns a stateful fmridisplay) ----
+% Build a managed display whose surface views are the mesh set that matches this
+% object's space, then add the data as a managed surface-native layer. This is
+% what makes the colormap changeable afterwards (set_colormap / removeblobs act
+% on the returned object). The heavy lifting -- pick the matching surfaces, add
+% them, paint at full fidelity -- is done by @fmridisplay/surface's
+% fmri_surface_data path, so there is a single code path for surface(obj) and
+% surface(o2, obj).
+o2 = fmridisplay;
+o2 = surface(o2, obj, ropts{:});
 
-panels = { 'lh', [270 0], 1; ...   % left lateral
-           'lh', [90 0],  2; ...   % left medial
-           'rh', [90 0],  3; ...   % right lateral
-           'rh', [270 0], 4 };     % right medial
-
-fig = figure('Color', 'w', 'Name', sprintf('fmri_surface_data: %s (%s)', obj.surface_space, surftype));
-surfaces = gobjects(1, 4);
-axes_h = gobjects(1, 4);
-for p = 1:4
-    ax = subplot(2, 2, panels{p, 3});
-    hold(ax, 'on');
-    if strcmp(panels{p, 1}, 'lh')
-        V = geom.vertices_lh; F = geom.faces_lh; tag = 'left';
-    else
-        V = geom.vertices_rh; F = geom.faces_rh; tag = 'right';
+% Honor a non-default surftype (midthickness / sphere) by swapping the managed
+% patches' geometry to the requested mesh. The foursurfaces keyword draws
+% inflated meshes; vertex ordering is shared across fs_LR surftypes, so swapping
+% both vertices AND faces (self-consistent, from the same file) keeps the
+% painted per-vertex data aligned. Best-effort: leave inflated on any failure.
+if ~strcmpi(surftype, 'inflated')
+    try
+        o2 = swap_managed_geom(o2, obj.surface_space, surftype);
+    catch err
+        warning('fmri_surface_data:surface:surftype', ...
+            'Could not apply surftype ''%s'' (%s); showing inflated.', surftype, err.message);
     end
-    hp = patch('Parent', ax, 'Faces', F, 'Vertices', V, 'EdgeColor', 'none', ...
-        'FaceColor', [.5 .5 .5], 'Tag', tag, 'SpecularStrength', .2, 'SpecularExponent', 200);
-    axis(ax, 'off', 'image', 'vis3d');
-    view(ax, panels{p, 2}(1), panels{p, 2}(2));
-    try, lightRestoreSingle(ax); catch, camlight(ax); end %#ok<NOCOM>
-    material(ax, 'dull');
-    surfaces(p) = hp;
-    axes_h(p) = ax;
 end
 
-render_on_surface(obj, surfaces, ropts{:});
+han = o2;
+end
 
-han = struct('figure', fig, 'axes', axes_h, 'surfaces', surfaces);
+
+function o2 = swap_managed_geom(o2, surface_space, surftype)
+% Replace the Vertices/Faces of the managed cortical patches with the requested
+% surftype's mesh (same space, same vertex count -> painted data stays aligned).
+geom = load_surface_geom(surface_space, surftype);
+for i = 1:numel(o2.surface)
+    h = o2.surface{i}.object_handle;
+    for hh = h(ishandle(h))'
+        if ~strcmp(get(hh, 'Type'), 'patch'), continue; end
+        nv  = size(get(hh, 'Vertices'), 1);
+        tag = lower(get(hh, 'Tag'));
+        if nv == size(geom.vertices_rh, 1) && contains(tag, 'right')
+            set(hh, 'Vertices', geom.vertices_rh, 'Faces', geom.faces_rh);
+        elseif nv == size(geom.vertices_lh, 1)
+            set(hh, 'Vertices', geom.vertices_lh, 'Faces', geom.faces_lh);
+        end
+    end
+end
 end

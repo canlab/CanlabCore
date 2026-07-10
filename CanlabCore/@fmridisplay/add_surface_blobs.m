@@ -42,6 +42,13 @@ function obj = add_surface_blobs(obj, surf_obj, varargin)
 %
 % :See also: addblobs, render_layer_surfaces, set_colormap, fmri_surface_data.surface
 
+% ---- normalize color aliases so the surface layer honors the same options as
+% the volume path: 'clim' -> 'cmaprange', 'colormapname' -> 'colormap', and a
+% NAMED colormap string ('hot','parula',...) -> a numeric LUT (canlab_colormap
+% only recognizes a numeric 'colormap'). Without this, a named colormap silently
+% fell through to the default split map. ----
+varargin = normalize_color_args(varargin);
+
 % ---- which_image (a single layer shows one map) ----
 which_image = 1;
 wh = find(strcmp(varargin, 'which_image'), 1);
@@ -87,4 +94,28 @@ if isempty(obj.surface)
 end
 
 obj = render_layer_surfaces(obj, k, wh_surface);
+end
+
+
+function args = normalize_color_args(args)
+% Map color-option aliases onto the keys canlab_colormap.from_render_args reads.
+for i = 1:2:numel(args) - 1
+    if ~ischar(args{i}), continue; end
+    switch lower(args{i})
+        case 'clim',        args{i} = 'cmaprange';
+        case 'colormapname', args{i} = 'colormap';
+    end
+end
+% A named colormap string -> numeric LUT (from_render_args needs numeric).
+wh = find(strcmpi(args, 'colormap'), 1);
+if ~isempty(wh) && wh < numel(args) && (ischar(args{wh + 1}) || isstring(args{wh + 1}))
+    name = char(args{wh + 1});
+    try
+        args{wh + 1} = feval(name, 256);          % hot/cool/parula/jet/...
+    catch
+        warning('fmridisplay:add_surface_blobs:colormapname', ...
+            'Unknown colormap name ''%s''; using the default.', name);
+        args(wh:wh + 1) = [];                     % drop -> default map
+    end
+end
 end

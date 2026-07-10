@@ -38,7 +38,12 @@ classdef fmri_surface_data < image_vector
 %                  BrainModels). Fields .models{i} (.struct, .type 'surf'|'vox',
 %                  .start, .count, .numvert, .vertlist 0-based, .voxlist 3xN),
 %                  .vol (.dims, .sform), .grayordinate_type, .cluster.
-%   geom           struct: cortical mesh(es) for rendering/area (lazy).
+%   geom           struct: ATTACHED custom mesh geometry (.vertices/.faces),
+%                  only set when the object is built from a .surf.gii that
+%                  carries geometry. EMPTY for a data-only CIFTI (dscalar/
+%                  dtseries/dlabel) -- which is normal: standard-space meshes
+%                  (fs_LR-32k, fsaverage-164k) are NOT stored here; surface()
+%                  loads them on demand from bundled assets by surface_space.
 %   imagetype      'dscalar'|'dtseries'|'dlabel'|'func'|'shape'|'label'.
 %   series_info    struct for .dtseries (start/step/unit/exponent).
 %   label_table    MATLAB table (key, name, rgba) for .dlabel/.label.
@@ -59,8 +64,14 @@ classdef fmri_surface_data < image_vector
         % Replaces volInfo's role for surface + grayordinate data. See D3/D5b.
         brain_model = [];
 
-        % Cortical mesh cache (faces/vertices per hemisphere) for rendering and
-        % surface-area computations. Loaded lazily from bundled assets.
+        % Attached CUSTOM mesh geometry (.vertices/.faces), populated only when
+        % the object is constructed from a .surf.gii that carries geometry (see
+        % from_gifti_struct). It is EMPTY for a data-only CIFTI (e.g. a dscalar)
+        % -- that is expected, not a bug: the standard meshes for a known
+        % surface_space (fs_LR-32k, fsaverage-164k) are NOT cached here; surface()
+        % and area computations load them on demand from bundled assets keyed by
+        % surface_space (see private/load_surface_geom). Use .geom only to carry
+        % a non-standard mesh that no surface_space keyword can reproduce.
         geom = [];
 
         % CIFTI/GIFTI image type (a.k.a. CIFTI intent): dscalar | dtseries | dlabel | func | shape | label

@@ -15,6 +15,12 @@ p.addParameter('Group', {}, @(x) iscell(x) || isstring(x));
 p.addParameter('Unit', 'subject', @(x) ischar(x) || isstring(x));
 p.addParameter('MissingPolicy', 'warn', @(x) ischar(x) || isstring(x));
 p.addParameter('Alpha', 0.05, @(x) isscalar(x) && x > 0 && x < 1);
+% Across-lag multiple-comparison correction (shared hrf_group_stats engine):
+% 'none' (default; per-timepoint t, backward compatible) | 'fdr' |
+% 'permutation' (sign-flip / label max-|t| FWER) | 'cluster' (temporal
+% cluster-mass). When not 'none', adds .p_corrected / .significant_corrected.
+p.addParameter('Correction', 'none', @(x) ischar(x) || isstring(x));
+p.addParameter('Nperm', 5000, @(x) isscalar(x) && x >= 100);
 p.parse(study, varargin{:});
 opts = p.Results;
 
@@ -44,6 +50,16 @@ stats.p_value = P(:);
 stats.t_value = T(:);
 stats.significant = P(:) < opts.Alpha;
 stats.alpha = opts.Alpha;
+stats.correction = lower(char(opts.Correction));
+
+% Across-lag correction via the shared permutation engine (additive; the
+% uncorrected .significant above is preserved for backward compatibility).
+if ~strcmpi(stats.correction, 'none')
+    Cc = hrf_time_correction(D, 'Correction', stats.correction, ...
+        'Nperm', opts.Nperm, 'Alpha', opts.Alpha);
+    stats.p_corrected = Cc.p_corr(:);
+    stats.significant_corrected = Cc.sig(:);
+end
 stats.conditionA = char(opts.ConditionA);
 stats.conditionB = char(opts.ConditionB);
 stats.conditionA_matched = matchedA;
@@ -73,6 +89,12 @@ if ~isempty(group_labels)
         stats.group_labels = ug;
         stats.group_p_value = Pg(:);
         stats.group_t_value = Tg(:);
+        if ~strcmpi(stats.correction, 'none')
+            Cg = hrf_time_correction(D, 'Group', group_labels, ...
+                'Correction', stats.correction, 'Nperm', opts.Nperm, 'Alpha', opts.Alpha);
+            stats.group_p_corrected = Cg.p_corr(:);
+            stats.group_significant_corrected = Cg.sig(:);
+        end
     end
 end
 end

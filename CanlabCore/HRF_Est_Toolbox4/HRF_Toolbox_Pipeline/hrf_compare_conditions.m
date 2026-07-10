@@ -7,6 +7,11 @@ p = inputParser;
 p.addRequired('condA', @isstruct);
 p.addRequired('condB', @isstruct);
 p.addParameter('Alpha', 0.05, @(x) isscalar(x) && x > 0 && x < 1);
+% Across-time correction of the two-sample (A vs B) timepoint tests via the
+% shared engine: 'none' (default) | 'fdr' | 'permutation' | 'cluster'. When not
+% 'none', adds .p_corrected / .significant_corrected.
+p.addParameter('Correction', 'none', @(x) ischar(x) || isstring(x));
+p.addParameter('Nperm', 5000, @(x) isscalar(x) && x >= 100);
 p.parse(condA, condB, varargin{:});
 opts = p.Results;
 
@@ -50,4 +55,17 @@ cmp.p_value = pvals;
 cmp.t_value = tvals;
 cmp.significant = pvals < opts.Alpha;
 cmp.alpha = opts.Alpha;
+cmp.correction = lower(char(opts.Correction));
+
+% Across-time multiple-comparison correction of the A-vs-B contrast, via the
+% shared permutation engine (two-sample over the pooled trials).
+if ~strcmpi(cmp.correction, 'none') && isfield(condA, 'trials') && isfield(condB, 'trials')
+    A = condA.trials; B = condB.trials;
+    Dab = [A; B];
+    grp = [ones(size(A, 1), 1); 2 * ones(size(B, 1), 1)];
+    Cc = hrf_time_correction(Dab, 'Group', grp, 'Correction', cmp.correction, ...
+        'Nperm', opts.Nperm, 'Alpha', opts.Alpha);
+    cmp.p_corrected = Cc.p_corr(:);
+    cmp.significant_corrected = Cc.sig(:);
+end
 end

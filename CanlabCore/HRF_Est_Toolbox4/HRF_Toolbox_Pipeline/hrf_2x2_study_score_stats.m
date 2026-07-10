@@ -39,6 +39,11 @@ p.addParameter('ConditionB', '', @(x) ischar(x) || isstring(x));
 p.addParameter('Unit', 'subject', @(x) ischar(x) || isstring(x));
 p.addParameter('MissingPolicy', 'warn', @(x) ischar(x) || isstring(x));
 p.addParameter('Alpha', 0.05, @(x) isscalar(x) && x > 0 && x < 1);
+% Across-lag correction for the 2x2 contrast timecourses (shared engine):
+% 'none' (default) | 'fdr' | 'permutation' | 'cluster'. When not 'none', each
+% contrast gains .p_corrected / .significant_corrected.
+p.addParameter('Correction', 'none', @(x) ischar(x) || isstring(x));
+p.addParameter('Nperm', 5000, @(x) isscalar(x) && x >= 100);
 p.parse(a1b1, a1b2, a2b1, a2b2, varargin{:});
 opts = p.Results;
 
@@ -115,6 +120,21 @@ contrasts.interaction_AxB = local_contrast_stats( ...
     sprintf('Interaction: (%s - %s) x (%s - %s)', factorA{1}, factorA{2}, factorB{1}, factorB{2}), ...
     'interaction_AxB', '(A1B1 - A1B2) - (A2B1 - A2B2)', ...
     (Y11 - Y12) - (Y21 - Y22), opts.Alpha);
+
+% Across-lag correction of every contrast timecourse via the shared engine
+% (each contrast is a one-sample test of its paired difference vs 0). Additive:
+% the uncorrected per-timepoint .significant is preserved.
+stats.correction = lower(char(opts.Correction));
+if ~strcmpi(stats.correction, 'none')
+    fn = fieldnames(contrasts);
+    for i = 1:numel(fn)
+        Cc = hrf_time_correction(contrasts.(fn{i}).data, 'Correction', stats.correction, ...
+            'Nperm', opts.Nperm, 'Alpha', opts.Alpha);
+        contrasts.(fn{i}).p_corrected = Cc.p_corr(:);
+        contrasts.(fn{i}).significant_corrected = Cc.sig(:);
+        contrasts.(fn{i}).correction = stats.correction;
+    end
+end
 
 stats.contrasts = contrasts;
 stats.contrast_names = fieldnames(contrasts);
@@ -222,12 +242,16 @@ names = fieldnames(contrasts);
 label = cell(numel(names), 1);
 formula = cell(numel(names), 1);
 n_significant = zeros(numel(names), 1);
+n_significant_corrected = nan(numel(names), 1);
 min_p = nan(numel(names), 1);
 for i = 1:numel(names)
     c = contrasts.(names{i});
     label{i} = c.name;
     formula{i} = c.formula;
     n_significant(i) = sum(c.significant & ~isnan(c.p_value));
+    if isfield(c, 'significant_corrected')
+        n_significant_corrected(i) = sum(c.significant_corrected);
+    end
     valid_p = c.p_value(~isnan(c.p_value));
     if isempty(valid_p)
         min_p(i) = NaN;
@@ -235,8 +259,9 @@ for i = 1:numel(names)
         min_p(i) = min(valid_p);
     end
 end
-tbl = table(names(:), label, formula, n_significant, min_p, ...
-    'VariableNames', {'contrast', 'label', 'formula', 'n_significant_timepoints', 'min_p'});
+tbl = table(names(:), label, formula, n_significant, n_significant_corrected, min_p, ...
+    'VariableNames', {'contrast', 'label', 'formula', 'n_significant_timepoints', ...
+    'n_significant_corrected', 'min_p'});
 end
 
 function [T, P] = local_ttest_each_timepoint(D)

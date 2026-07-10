@@ -312,6 +312,11 @@ for k = 1:numel(obj.activation_maps)
     obj = render_layer_surfaces(obj, k, new_surf_idx);
 end
 
+% Keep an already-open controller bound to THIS object (no new controller is
+% created; update_controller is a no-op if none is open). This ensures adding a
+% surface view leaves the existing controller in sync rather than stale.
+obj = update_controller(obj);
+
 end % main function
 
 
@@ -405,6 +410,9 @@ end
 % separate objects and are unaffected.
 set(findobj(layout_fig, 'Type', 'axes'), 'Visible', 'off');
 canlab_hide_axes_toolbar(layout_fig);   % hide the "..." toolbar on all surface panels
+
+% Sync an already-open controller (no-op if none); no new controller is created.
+obj = update_controller(obj);
 
 end
 

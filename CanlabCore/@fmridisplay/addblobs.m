@@ -277,6 +277,21 @@ if any(whs)
     wh_surface = varargin{whs(1) + 1};
 end
 
+% The montage/surface view selectors are consumed above; strip them so they are
+% not forwarded to render_blobs (which warns "Unknown input string option") and
+% not stored in render_args (where refresh would forward them again on every
+% re-render). Do this AFTER the parsing above, which needs them in varargin.
+view_keys = {'wh_surfaces', 'wh_surface', 'which_surfaces', 'which surfaces', ...
+    'wh_montages', 'wh_montage', 'which_montages', 'which montages'};
+vi = 1;
+while vi <= numel(varargin)
+    if ischar(varargin{vi}) && any(strcmp(varargin{vi}, view_keys))
+        varargin(vi:vi + 1) = [];
+    else
+        vi = vi + 1;
+    end
+end
+
 % Default color values
 % -------------------------------------------------------------------
 

@@ -171,6 +171,111 @@ end
 
 
 % -------------------------------------------------------------------------
+function test_opacity_blends_toward_gray(t)
+% set_opacity must blend the layer toward the anatomy GRAY (not toward its own
+% colour, which was a no-op), and restore fully at opacity 1.
+o2 = surface(t.TestData.s);
+p = cortex_patches(o2, 32492); cp = p(1);
+cfull = get(cp, 'FaceVertexCData');
+v = find(~all(abs(cfull - 0.5) < 1e-3, 2)); v = v(round(numel(v)/2));
+
+o2 = set_opacity(o2, 0.3);
+c1 = get(cp, 'FaceVertexCData');
+expected = 0.3 * cfull(v,:) + 0.7 * [.5 .5 .5];
+verifyLessThan(t, max(abs(c1(v,:) - expected)), 1e-6, 'Opacity must blend toward gray.');
+
+o2 = set_opacity(o2, 1.0);
+c2 = get(cp, 'FaceVertexCData');
+verifyLessThan(t, max(abs(c2(v,:) - cfull(v,:))), 1e-6, 'Opacity 1 must restore full colour.');
+close all force
+end
+
+
+% -------------------------------------------------------------------------
+function test_rethreshold_and_colormap_preserve(t)
+% rethreshold applies a magnitude cutoff on the surface WITHOUT region()/volInfo
+% (no "Illegal size for mask.dat" warning), sub-threshold vertices go gray, and a
+% subsequent set_colormap keeps the threshold (regression: 'single'/'solid'
+% colormaps used to paint NaN vertices, resetting the threshold).
+o2 = surface(t.TestData.s);
+p = cortex_patches(o2, 32492); cp = p(1);
+r = reconstruct_image(t.TestData.s);
+d = r.cortex_left(:,1); if mean(get(cp,'Vertices')*[1;0;0]) > 0, d = r.cortex_right(:,1); end
+thr = median(abs(d(isfinite(d) & d~=0)));
+sub = find(abs(d) < thr & isfinite(d));
+
+lastwarn('');
+o2 = rethreshold(o2, thr);
+[~, wid] = lastwarn;
+verifyNotEqual(t, wid, 'MATLAB:badsubscript');   % path did not error
+c1 = get(cp, 'FaceVertexCData');
+g1 = mean(all(abs(c1(sub,:) - 0.5) < 1e-6, 2));
+verifyGreaterThan(t, g1, 0.95, 'Sub-threshold vertices must render gray after rethreshold.');
+
+o2 = set_colormap(o2, 'maxcolor', [1 1 0], 'mincolor', [1 0 0]);
+c2 = get(cp, 'FaceVertexCData');
+g2 = mean(all(abs(c2(sub,:) - 0.5) < 1e-6, 2));
+verifyGreaterThan(t, g2, 0.95, 'set_colormap must preserve the threshold (gray stays gray).');
+close all force
+end
+
+
+% -------------------------------------------------------------------------
+function test_mixed_object_subcortex_and_medial_wall(t)
+% A mixed grayordinate object renders cortex (surface-native) AND subcortex
+% (volume layer) on the surfaces, without the subcortical layer bleeding onto the
+% cortical meshes (the medial wall must stay gray).
+f = which('transcriptomic_gradients.dscalar.nii');
+if isempty(f), t.assumeFail('transcriptomic_gradients not on path.'); end
+s = fmri_surface_data(f);
+o2 = surface(s);
+verifyEqual(t, numel(o2.activation_maps), 2, 'Mixed object -> cortex + subcortex layers.');
+
+fig = ancestor(o2.surface{1}.object_handle(1), 'figure');
+pp = findobj(fig, 'Type', 'patch');
+% Subcortical meshes (thalamus 7690, combined 45406) are painted.
+sub_painted = 0;
+for hh = pp(:)'
+    nv = size(get(hh,'Vertices'),1);
+    if ismember(nv, [7690 45406])
+        c = get(hh,'FaceVertexCData');
+        if isequal(size(c),[nv 3]) && nnz(~all(abs(c-0.5)<1e-3,2)) > 50, sub_painted = sub_painted + 1; end
+    end
+end
+verifyGreaterThan(t, sub_painted, 0, 'Subcortical surfaces must be painted.');
+
+% Cortical medial wall stays gray (subcortical layer must not bleed onto cortex).
+lh_model = s.brain_model.models{1};
+inmask = false(lh_model.numvert,1); inmask(lh_model.vertlist + 1) = true;
+p = cortex_patches(o2, 32492);
+lh = p(1);
+for jj = 1:numel(p)
+    if mean(get(p(jj),'Vertices')*[1;0;0]) < 0, lh = p(jj); break; end
+end
+c = get(lh, 'FaceVertexCData');
+graymask = all(abs(c - 0.5) < 1e-6, 2);
+verifyTrue(t, all(graymask(~inmask)), 'Medial wall must stay gray (no subcortical bleed).');
+close all force
+end
+
+
+% -------------------------------------------------------------------------
+function test_montage_renders_subcortex(t)
+% montage(o2, obj) builds the montage and renders the object's subcortical
+% grayordinates as blobs on the slices (instead of ignoring obj).
+f = which('transcriptomic_gradients.dscalar.nii');
+if isempty(f), t.assumeFail('transcriptomic_gradients not on path.'); end
+s = fmri_surface_data(f);
+o2 = montage(fmridisplay, s);
+verifyEqual(t, numel(o2.activation_maps), 1, 'Subcortical volume added as one layer.');
+nblob = 0;
+for k = 1:numel(o2.activation_maps), nblob = nblob + numel(o2.activation_maps{k}.blobhandles); end
+verifyGreaterThan(t, nblob, 0, 'Subcortical blobs must be drawn on the slices.');
+close all force
+end
+
+
+% -------------------------------------------------------------------------
 function p = cortex_patches(o2, nv)
 % Cortical patches (vertex count nv) across all managed surface views.
 p = gobjects(0);

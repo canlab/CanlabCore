@@ -141,12 +141,21 @@ cortical meshes **directly from the per-vertex data** (no volume resampling), us
 the same central `canlab_colormap` value→color map as montages, so colors match. Each
 hemisphere shows its own data (resolved by tag, falling back to vertex x-position when
 `addbrain` relabels the `foursurfaces` patches). The layer participates in
-`set_colormap` / `set_opacity` / `removeblobs` / the controller like a volume layer. A
-surface layer has no volume representation, so it does not appear on slice montages
-(use `to_fmri_data` / `surf2vol` for that), and it is **skipped with a clear
-`spacemismatch` warning** on any registered surface whose mesh is a different surface
-space than the object (add the matching surfaces instead — `surface(obj)` does so
-automatically).
+`set_colormap` / `set_opacity` / `rethreshold` / `removeblobs` / the controller like a
+volume layer (`rethreshold` on a surface layer is a magnitude cutoff applied per
+vertex — no volume/`volInfo` needed). It is **skipped with a clear `spacemismatch`
+warning** on any registered surface whose mesh is a different surface space than the
+object (add the matching surfaces instead — `surface(obj)` does so automatically).
+
+**Mixed grayordinate objects (cortex + subcortex).** For an object that also has
+subcortical voxels (a `91k`-style dscalar), `surface(obj)` adds a *second* managed
+layer: the subcortical grayordinates go in as a standard **volume layer**, which paints
+the subcortical anatomical meshes the `foursurfaces` set draws (thalamus, brainstem,
+cerebellum, …) and is confined to them (it does not bleed onto the cortical meshes /
+medial wall). Both layers respond to `set_colormap` / `rethreshold` / `set_opacity` /
+the controller together. `montage(o2, obj)` builds the slice montage and renders those
+same subcortical grayordinates on the slices (cortical surface data has no volume and
+is not shown on slices — use `surface(obj)` for the cortex).
 
 ## Parcellation and regions
 

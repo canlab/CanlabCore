@@ -60,7 +60,11 @@ end
 function test_surface_native_render(t)
 o = surface(t.TestData.s, 'which_image', 1);
 verifyTrue(t, isa(o, 'fmridisplay'), 'Native surface() returns a managed fmridisplay.');
-verifyEqual(t, numel(o.activation_maps), 1, 'The data is added as one managed layer.');
+% transcriptomic_gradients is a mixed grayordinate object: cortex (surface-native
+% layer) + subcortex (volume layer), so two managed layers.
+verifyGreaterThanOrEqual(t, numel(o.activation_maps), 1, 'At least the cortical layer exists.');
+verifyTrue(t, isa(o.activation_maps{1}.source_surface, 'fmri_surface_data'), ...
+    'First layer is the surface-native cortical layer.');
 p = cortex_patches(o, 32492);
 verifyEqual(t, numel(p), 4, 'Expected 4 cortical panels (L/R x lateral/medial).');
 for k = 1:numel(p)

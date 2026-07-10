@@ -62,12 +62,17 @@ classdef canlab_colormap
             switch obj.type
                 case 'solid'
                     rgb = repmat(rowcolor(obj.colors{1}), n, 1);
+                    rgb(~isfinite(v), :) = NaN;         % keep NaN/Inf uncoloured
+                    % (a thresholded / medial-wall vertex must stay gray, not take
+                    % the solid colour).
 
                 case 'single'
                     lo = obj.range(1); hi = obj.range(2);
                     w = clamp01((v - lo) ./ nonzero(hi - lo));
                     mn = rowcolor(obj.colors{1}); mx = rowcolor(obj.colors{2});
                     rgb = (1 - w) .* mn + w .* mx;
+                    rgb(~isfinite(v), :) = NaN;         % clamp01(NaN)=0 -> would
+                    % otherwise paint uncoloured vertices with the min endpoint.
 
                 case 'split'
                     r = obj.range;                                   % [negmin negmax posmin posmax]

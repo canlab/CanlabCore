@@ -90,10 +90,16 @@ if isempty(obj.surface)
     warning('fmridisplay:add_surface_blobs:nosurface', ...
         ['No surface views on this fmridisplay. Add one first, e.g. ' ...
          'o2 = surface(o2, ''hcp inflated'');']);
+    obj = update_controller(obj);
     return
 end
 
 obj = render_layer_surfaces(obj, k, wh_surface);
+
+% Keep an open controller panel in sync with the new layer (mirrors addblobs).
+% Without this the auto-launched controller keeps showing its empty state until
+% the user reopens it by hand.
+obj = update_controller(obj);
 end
 
 

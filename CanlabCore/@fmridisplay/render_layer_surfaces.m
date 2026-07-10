@@ -134,6 +134,19 @@ for i = wh_surface
     surfh = surfh(ishandle(surfh));        % skip handles whose figure was closed
     if isempty(surfh), continue, end
 
+    % A subcortical-volume layer (added alongside a cortical surface-native layer
+    % for a mixed grayordinate object) must NOT paint the cortical meshes -- the
+    % cortex belongs to the surface-native layer, and projecting the subcortical
+    % volume onto the cortical surface would bleed onto medial-wall vertices that
+    % sit next to subcortical structures. Skip patches whose vertex count is a
+    % cortical mesh (see fmridisplay.surface, which sets skip_cortex_nv).
+    if isfield(layer, 'skip_cortex_nv') && ~isempty(layer.skip_cortex_nv)
+        keep = arrayfun(@(h) ~(strcmp(get(h, 'Type'), 'patch') && ...
+            ismember(size(get(h, 'Vertices'), 1), layer.skip_cortex_nv)), surfh);
+        surfh = surfh(keep);
+        if isempty(surfh), continue, end
+    end
+
     % NOTE: this paints layer k onto the CURRENT surface colours (no erase), so a
     % new layer composites on top of lower layers (true-colour, top wins per
     % vertex). The anatomy gray is saved once (render_on_surface) so removeblobs/
@@ -190,6 +203,18 @@ r = reconstruct_image(surf);
 Ldat = []; Rdat = [];
 if isfield(r, 'cortex_left'),  Ldat = r.cortex_left(:, which_image);  end
 if isfield(r, 'cortex_right'), Rdat = r.cortex_right(:, which_image); end
+
+% Apply the layer's threshold (rethreshold stores it here for surface-native
+% layers, which have no volume to re-region). A scalar is a magnitude cutoff:
+% sub-threshold vertices become NaN -> uncoloured (fall back to anatomy). This is
+% applied at PAINT time so set_colormap / set_opacity, which re-paint, preserve
+% the threshold rather than resetting it.
+thr = [];
+if isfield(layer, 'applied_threshold'), thr = layer.applied_threshold; end
+if ~isempty(thr) && isscalar(thr) && isfinite(thr)
+    if ~isempty(Ldat), Ldat(abs(Ldat) < thr) = NaN; end
+    if ~isempty(Rdat), Rdat(abs(Rdat) < thr) = NaN; end
+end
 
 % Robust default colour range if none stored (matches the volume path policy)
 if isempty(cmaprange)
@@ -252,6 +277,16 @@ for i = wh_surface
         if isempty(vals), continue; end        % non-matching mesh / other hemi: skip
 
         base = local_base_rgb(hh, nv);
+
+        % Save the anatomy (gray) on first paint so composite_surfaces can reset
+        % this patch to gray before recompositing. Without this, set_opacity /
+        % set_colormap re-paint on TOP of the layer's own colours (base == the
+        % painted colour), so opacity blends a colour with itself and does
+        % nothing. addbrain('eraseblobs') restores this saved FaceVertexCData.
+        if isempty(get(hh, 'UserData'))
+            set(hh, 'UserData', base);
+        end
+
         rgb  = tc_map.map(double(vals));        % N x 3, NaN rows = uncoloured
         col  = ~any(isnan(rgb), 2);
         out  = base;

@@ -295,22 +295,43 @@ reg = surface_region(threshold(t, 3, 'positive', 'k', 20));
 #### `surface(obj, ...)`
 Render on cortical surfaces. Three modes:
 
-- **Native (default):** loads the bundled mesh matching `surface_space` and colors
-  vertices directly (no resampling) in a 4-panel figure (L/R × lateral/medial).
-- **`'existingsurface', handles`:** color patch handles you already have.
+- **Native (default):** builds a **managed, stateful `fmridisplay`** whose surface
+  views are the mesh set matching `surface_space` (fs_LR-32k → `'foursurfaces_hcp'`,
+  fsaverage-164k → `'foursurfaces_freesurfer'`), and paints the data as a managed
+  surface-native layer — colored directly, no resampling. Because the returned
+  object is under a controller, `set_colormap` / `set_opacity` / `rethreshold` /
+  `removeblobs` / `refresh` act on the surfaces (this is how you change the colormap
+  after rendering). Each hemisphere shows its own data.
+- **`'existingsurface', handles`:** color patch handles you already have (returns a
+  struct with `.figure`/`.axes`/`.surfaces`).
 - **`'mni_surface', name`:** create an `addbrain` surface (e.g. `'left'`,
   `'hcp inflated'`) and render onto it, projecting through a volume when the
-  surface is not the object's native mesh.
+  surface is not the object's native mesh (returns a struct).
+
+You can also add a surface object to an **existing** managed display:
+`o2 = surface(o2, obj)` adds the object's matching native surfaces and paints it;
+`o2 = surface(o2, obj, 'foursurfaces_hcp')` targets a named surface set. Requesting a
+surface of a **different** space than the data (e.g. fsaverage meshes for fs_LR data)
+warns (`fmridisplay:render_layer_surfaces:spacemismatch`) rather than mapping wrong —
+a surface object has no volume to resample onto a foreign mesh, so use the matching
+surfaces (the bare `surface(obj)` picks them automatically).
 
 | Option | Meaning |
 |---|---|
 | `'surftype'` | `'inflated'` (default), `'midthickness'`, `'sphere'` (fs_LR). |
 | `'which_image'` | map (column) to render (default 1). |
-| `'clim'` | `[lo hi]` color limits (default symmetric from data). |
+| `'clim'` / `'cmaprange'` | `[lo hi]` color limits (default symmetric from data). |
+| `'colormap'` | named map (`'hot'`, `'parula'`, …) or `[n × 3]` matrix. |
 | `'pos_colormap'` / `'neg_colormap'` | `[n × 3]` colormaps (default hot / cool). |
 
 ```matlab
-surface(s, 'which_image', 1);                      % native fs_LR, 4 views
+o2 = surface(s, 'which_image', 1);                 % managed fs_LR, 4 views
+o2 = set_colormap(o2, 'maxcolor', [1 1 0], 'mincolor', [1 0 0]);  % recolor live
+o2 = removeblobs(o2);                              % back to anatomy
+
+o2 = montage(fmridisplay, 'axial');                % existing managed display
+o2 = surface(o2, s);                               % add + paint its native surfaces
+
 surface(ssurf, 'mni_surface', 'left');             % on an addbrain MNI surface
 han = addbrain('hcp inflated left');               % an fs_LR mesh
 surface(s, 'existingsurface', han);                % color it directly

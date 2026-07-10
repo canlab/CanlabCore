@@ -45,18 +45,30 @@ disp(s.imagetype)                 % 'dscalar'
 disp(s.surface_space)          % 'fsLR_32k'
 fprintf('%d grayordinates x %d maps\n', size(s.dat,1), size(s.dat,2));
 
-%% 2. Render on the native cortical surface
+%% 2. Render on the native cortical surface (managed display)
 %
 % surface() loads the bundled mesh matching the object's surface_space (here
-% fs_LR-32k) and colors vertices directly -- no resampling. The default is a
-% 4-panel figure (left/right x lateral/medial). The medial wall renders gray.
+% fs_LR-32k), colors vertices directly -- no resampling -- and returns a stateful
+% fmridisplay object. The default is a 4-panel view (left/right x lateral/medial);
+% the medial wall renders gray. Because the result is a managed display under a
+% controller, you can recolor / rethreshold / remove the layer AFTER rendering.
 
-surface(s, 'pos_colormap', hot(256));
+o2 = surface(s, 'colormap', hot(256));
 drawnow, snapnow;
 
-% Options: pick a map ('which_image'), color range ('clim'), or mesh ('surftype',
-% e.g. 'midthickness' for fs_LR). For example:
-% surface(s, 'clim', [1 1.8], 'surftype', 'midthickness');
+% Change the colormap live on the returned object (this is why surface() returns
+% a managed fmridisplay rather than raw handles):
+o2 = set_colormap(o2, 'maxcolor', [1 1 0], 'mincolor', [1 0 0]);
+drawnow, snapnow;
+
+% Options: pick a map ('which_image'), color range ('clim'/'cmaprange'), a named
+% or matrix colormap ('colormap'), or mesh ('surftype', e.g. 'midthickness' for
+% fs_LR). For example:
+% o2 = surface(s, 'clim', [1 1.8], 'surftype', 'midthickness');
+%
+% To add the object's surfaces to a display you already have (e.g. a montage),
+% pass the fmridisplay first -- it adds the matching native surfaces and paints:
+% o2 = montage(fmridisplay, 'axial'); o2 = surface(o2, s);
 
 %% 3. The grayordinate model (brain_model)
 %

@@ -24,7 +24,8 @@ script [`CanlabCore/docs/fmri_surface_data_walkthrough.m`](../../CanlabCore/docs
 
 ```matlab
 s   = fmri_surface_data(which('S1200.MyelinMap_MSMAll.32k_fs_LR.dscalar.nii'));  % load CIFTI
-surface(s);                                    % render on the native fs_LR surface
+o2  = surface(s);                              % render on native fs_LR surface -> managed fmridisplay
+o2  = set_colormap(o2, 'maxcolor', [1 1 0], 'mincolor', [1 0 0]);   % recolor live
 r   = reconstruct_image(s);                    % dense vertex arrays + subcortex volume
 vol = to_fmri_data(s);                          % subcortex -> fmri_data (writeable .nii)
 ssurf = vol2surf(ttest(load_image_set('emotionreg')));   % volume result -> surface

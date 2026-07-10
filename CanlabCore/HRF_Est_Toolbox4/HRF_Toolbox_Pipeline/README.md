@@ -5,6 +5,7 @@ This folder hosts the user-facing pipeline that goes from a **4D fMRI NIfTI** an
 ## Documentation
 
 - **[Tutorial](docs/Tutorial.md)** — narrative walkthrough from single-subject quick start through SLURM scaling, audit/repair, group analysis, and the new OOP classes.
+- **[Object-oriented tour](examples/hrf_oo_demo.mlx)** (`examples/hrf_oo_demo.m`) — short, runnable walkthrough of the `fmri_hrf` / `statistic_hrf` classes: how they subclass `fmri_data` / `statistic_image`, and how model fitting, whole-brain maps, and corrected per-lag group inference all hang off the standard CANlab object surface.
 - **[Architecture](docs/Architecture.md)** — code-map and call graph: how the ~40 files fit into layers, what depends on what, and where to add new code.
 - **[Phased Plan](docs/HRF_Pipeline_Phased_Plan.md)** — the four-phase refactor roadmap (Phases 1–3 shipped, Phase 4 pending).
 

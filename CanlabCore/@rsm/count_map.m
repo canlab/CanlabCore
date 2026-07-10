@@ -69,8 +69,11 @@ p.addParameter('Transform', 'auto', @(x) ischar(x) || isstring(x));
 p.addParameter('Reduction', 'mean', @(x) ischar(x) || isstring(x));
 p.addParameter('Correction', 'fdr', @(x) ischar(x) || isstring(x));
 p.addParameter('GroupNperm', 5000, @(x) isscalar(x) && x >= 100);
+p.addParameter('doplot', false, @(x) islogical(x) || isnumeric(x));
+p.addParameter('plot', [], @(x) isempty(x) || islogical(x) || isnumeric(x));
 p.parse(varargin{:});
 o = p.Results;
+doplot = logical(o.doplot); if ~isempty(o.plot), doplot = logical(o.plot); end
 
 D = obj.dat;
 if ismatrix(D), D = reshape(D, size(D, 1), size(D, 2), 1); end
@@ -109,7 +112,7 @@ count = sum(hit, 2, 'omitnan');
 prop = count / N;
 
 % ---- group-level effect + p over cells (shared engine) -----------------
-G = hrf_group_stats(V, 'Correction', o.Correction, 'Nperm', o.GroupNperm);
+G = rsm_group_stats(V, o.Correction, o.GroupNperm);
 
 % ---- pack map + table --------------------------------------------------
 name_a = {specs.name_a}'; name_b = {specs.name_b}';
@@ -128,6 +131,38 @@ else
     out.count_map = local_to_matrix(count, specs, mapsz);
     out.prop_map = local_to_matrix(prop, specs, mapsz);
 end
+
+if doplot, out.figure = local_plot_countmap(out, mapsz); end
+end
+
+
+function h = local_plot_countmap(out, mapsz)
+% Heatmap (blocks/full) or bar (contrasts) of the subject counts.
+h = figure('Color', 'w', 'Name', 'rsm count map');
+ttl = sprintf('subjects meeting criterion (%s, %s/%d)', out.criterion, ...
+    'n', out.n);
+if isempty(mapsz)
+    bar(out.count_map); ylim([0 out.n]); ylabel('# subjects'); box off;
+    set(gca, 'XTick', 1:numel(out.labels), 'XTickLabel', out.labels, 'XTickLabelRotation', 30);
+else
+    imagesc(out.count_map, [0 out.n]); axis image; colormap(parula); colorbar;
+    set(gca, 'XTick', 1:numel(out.collabels), 'XTickLabel', out.collabels, ...
+        'YTick', 1:numel(out.labels), 'YTickLabel', out.labels, 'XTickLabelRotation', 30);
+    for i = 1:size(out.count_map, 1)
+        for j = 1:size(out.count_map, 2)
+            v = out.count_map(i, j);
+            if ~isnan(v)
+                text(j, i, sprintf('%d', v), 'HorizontalAlignment', 'center', ...
+                    'Color', local_txtcolor(v, out.n), 'FontWeight', 'bold');
+            end
+        end
+    end
+end
+title(ttl, 'Interpreter', 'none');
+end
+
+function c = local_txtcolor(v, n)
+if v > 0.6 * n, c = [0 0 0]; else, c = [1 1 1]; end
 end
 
 

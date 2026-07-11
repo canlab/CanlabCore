@@ -3,11 +3,12 @@ function tests = canlab_test_load_registries
 % newly-added surface (CIFTI) and volumetric map sets, the categorized 'list'
 % output, and the Tian subcortical scale atlases.
 %
-% Requires the full Neuroimaging_Pattern_Masks data (large CIFTI/.mat binaries) on
-% the path. Individual tests assumeFail (skip) when a specific data file is not
-% present, so this file can never *fail* CI -- but it is intentionally SKIPPED
-% entirely under GitHub Actions (see setupOnce) so the CI unit tier does not depend
-% on those large data files. It runs normally when executed locally.
+% Requires the Neuroimaging_Pattern_Masks data (CIFTI/.mat map sets and the Tian
+% subcortical atlas objects) on the path -- all committed to the public NPM repo,
+% which CI checks out, so this runs in the CI unit tier. The test is headless-safe
+% (native CIFTI / .mat loads, no SPM volumetric reads, no display). Individual
+% tests assumeFail (skip) when a specific data file is not present, so a missing
+% file becomes an Incomplete (skip), never a CI failure.
 %
 % Run:    runtests('canlab_test_load_registries')
 %
@@ -19,12 +20,6 @@ end
 
 % -------------------------------------------------------------------------
 function setupOnce(t)
-% Skip the whole file in GitHub Actions CI (kept out of the CI set by request);
-% still runs locally. GITHUB_ACTIONS is set to 'true' on all GitHub runners.
-if ~isempty(getenv('GITHUB_ACTIONS'))
-    t.assumeFail(['Skipped in GitHub Actions: this registry test needs the full ' ...
-        'Neuroimaging_Pattern_Masks data files. It runs locally.']);
-end
 assert(~isempty(which('load_image_set')), 'load_image_set not on path.');
 assert(~isempty(which('load_atlas')),     'load_atlas not on path.');
 t.TestData.figvis = get(0, 'DefaultFigureVisible');

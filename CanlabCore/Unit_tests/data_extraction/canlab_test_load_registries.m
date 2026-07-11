@@ -3,8 +3,11 @@ function tests = canlab_test_load_registries
 % newly-added surface (CIFTI) and volumetric map sets, the categorized 'list'
 % output, and the Tian subcortical scale atlases.
 %
-% Requires Neuroimaging_Pattern_Masks on the path (tagged RequiresMasks); tests
-% assumeFail (skip) when a specific data file is not present.
+% Requires the full Neuroimaging_Pattern_Masks data (large CIFTI/.mat binaries) on
+% the path. Individual tests assumeFail (skip) when a specific data file is not
+% present, so this file can never *fail* CI -- but it is intentionally SKIPPED
+% entirely under GitHub Actions (see setupOnce) so the CI unit tier does not depend
+% on those large data files. It runs normally when executed locally.
 %
 % Run:    runtests('canlab_test_load_registries')
 %
@@ -16,6 +19,12 @@ end
 
 % -------------------------------------------------------------------------
 function setupOnce(t)
+% Skip the whole file in GitHub Actions CI (kept out of the CI set by request);
+% still runs locally. GITHUB_ACTIONS is set to 'true' on all GitHub runners.
+if ~isempty(getenv('GITHUB_ACTIONS'))
+    t.assumeFail(['Skipped in GitHub Actions: this registry test needs the full ' ...
+        'Neuroimaging_Pattern_Masks data files. It runs locally.']);
+end
 assert(~isempty(which('load_image_set')), 'load_image_set not on path.');
 assert(~isempty(which('load_atlas')),     'load_atlas not on path.');
 t.TestData.figvis = get(0, 'DefaultFigureVisible');
@@ -24,7 +33,11 @@ end
 
 function teardownOnce(t)
 close all force
-set(0, 'DefaultFigureVisible', t.TestData.figvis);
+% figvis is unset if setupOnce bailed early (e.g. the GitHub Actions skip), so
+% guard against it -- an error here would flip filtered tests to "failed".
+if isfield(t.TestData, 'figvis')
+    set(0, 'DefaultFigureVisible', t.TestData.figvis);
+end
 end
 
 

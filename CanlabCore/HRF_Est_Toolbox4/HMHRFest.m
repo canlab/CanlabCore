@@ -109,11 +109,11 @@ Beta = zeros(L, voxels);                    % Voxel-wise beta
 G = zeros(nbasis, voxels);                  % Voxel-wise gamma
 K = zeros(N1*nbasis*L, voxels);             % Voxel-wise ksi
 % E = zeros(len, voxels);                   % Voxel-wise epsilon
-Ar = zeros(p,voxels);                       % Voxel-wise AR coeficients
+Ar = zeros(p,voxels);                       % Voxel-wise AR coefficients
 S2e = zeros(1,voxels);                      % Voxel-wise withing-subject variance
 CC = zeros(1,voxels);                       % Voxel-wise Lagrange Multiplier
 
-% Create initial covariance matrix (indentity matrix for all subjects)
+% Create initial covariance matrix (identity matrix for all subjects)
 
 iV = zeros(len,len,sub);
 for j=1:sub

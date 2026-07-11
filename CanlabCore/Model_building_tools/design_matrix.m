@@ -142,7 +142,7 @@ classdef design_matrix < handle
                             newname = varargin{varg + 1};
                             isnewname = 1;
                         else
-                            error('Make sure ''Name'' is follwed by a valid variable name')
+                            error('Make sure ''Name'' is followed by a valid variable name')
                         end
                         varargin{varg} = {}; varargin{varg + 1} = {};
                     end
@@ -151,7 +151,7 @@ classdef design_matrix < handle
                         if isnumeric(varargin{varg + 1}) && varargin{varg + 1} <= size(obj,2)
                             varorder = varargin{varg + 1};
                         else
-                            error('Make sure ''Order'' is follwed by a valid column number')
+                            error('Make sure ''Order'' is followed by a valid column number')
                         end
                         varargin{varg} = {}; varargin{varg + 1} = {};
                     end
@@ -165,7 +165,7 @@ classdef design_matrix < handle
                     obj.varname = [newname, obj.varname];
                 elseif varorder == size(obj,2) %end
                     obj.varname = [obj.varname, newname];
-                else %Somewhere inbetween
+                else %Somewhere in between
                     obj.varname = [obj.varname(1:varorder), newname, obj.varname(varorder + 1 : end)];
                 end
             end
@@ -175,7 +175,7 @@ classdef design_matrix < handle
                 obj.dat = [x, obj.dat];
             elseif varorder == size(obj,2) %end
                 obj.dat = [obj.dat, x];
-            else %Somewhere inbetween
+            else %Somewhere in between
                 obj.dat = [obj.dat(:,1:varorder), x, obj.dat(:,varorder + 1 : end)];
             end
         end
@@ -497,7 +497,7 @@ classdef design_matrix < handle
             %
             % tr           : Repetition time (e.g., 2)
             %
-            % timing       : Timing converstion from onset array to design matrix
+            % timing       : Timing conversion from onset array to design matrix
             %                  (e.g., 'sec2tr','tr2sec','sec2sec',or
             %                  'tr2tr'). Need to know which format each
             %                  array is in.

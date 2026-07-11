@@ -22,7 +22,7 @@ Inputs are flexible — pass an `fmri_data`, `statistic_image`, `region`,
 or NIfTI/Analyze filename and the function will convert it to a
 `region` object and overlay the blobs. Pass `[]` (or no argument) to
 get just the anatomy, ready for you to call `addblobs` later. Pass an
-existing `fmridisplay` object and it will be re-used (combined with
+existing `fmridisplay` object and it will be reused (combined with
 `'addmontages'` to extend a previous layout).
 
 ## Quick example
@@ -49,7 +49,7 @@ o2 = canlab_results_fmridisplay(t, 'full hcp inflated');
 o2 = canlab_results_fmridisplay(t, 'regioncenters');      % per-region row
 o2 = canlab_results_fmridisplay([], 'overlay', myunderlay);
 
-% Re-use: swap blobs without redrawing anatomy
+% Reuse: swap blobs without redrawing anatomy
 removeblobs(o2);
 o2 = addblobs(o2, region(t2), 'color', [0 0 1]);
 ```

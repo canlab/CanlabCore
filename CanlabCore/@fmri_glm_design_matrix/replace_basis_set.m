@@ -25,15 +25,52 @@ function obj = replace_basis_set(obj, condition_num, xBF_hires)
 %    %save this to get info that is not typically in basis set until after
 %    %model is built.
 
-oldBF = obj.xBF(1); 
+oldBF = obj.xBF(1);
 
-% SPM adds these things here, so we will too, for consistency
-xBF_hires.T = oldBF.T;
-xBF_hires.T0 = oldBF.T0;
-xBF_hires.UNITS = oldBF.UNITS;
-xBF_hires.Volterra = oldBF.Volterra;
+% Expand the basis-set array to one entry per condition (filled with the
+% current default), so that replacing one condition's basis leaves the others
+% unchanged regardless of whether the model has been built yet. (build's
+% check_model only replicates a length-1 xBF, which would otherwise overwrite
+% all conditions with the replacement.)
+nconds = condition_num;
+if ~isempty(obj.Sess) && isfield(obj.Sess, 'U') && ~isempty(obj.Sess(1).U)
+    nconds = max(condition_num, length(obj.Sess(1).U));
+end
+for c = length(obj.xBF) + 1 : nconds
+    obj.xBF(c) = oldBF;
+end
+
+% SPM adds these things here, so we will too, for consistency. Inherit them
+% from the existing basis when the replacement does not provide them.
+for f = {'T', 'T0', 'UNITS', 'Volterra'}
+    if ~isfield(xBF_hires, f{1}) && isfield(oldBF, f{1})
+        xBF_hires.(f{1}) = oldBF.(f{1});
+    end
+end
+
+% Assigning into the struct array obj.xBF(condition_num) requires identical
+% field sets and order. Different basis-set builders (spm_get_bf,
+% fmri_spline_basis, ...) return different fields, so harmonize first: add any
+% missing fields (filled with []) to both sides, then match the ordering.
+allflds = union(fieldnames(obj.xBF), fieldnames(xBF_hires), 'stable');
+obj.xBF    = local_ensure_fields(obj.xBF, allflds);
+xBF_hires  = local_ensure_fields(xBF_hires, allflds);
+xBF_hires  = orderfields(xBF_hires, obj.xBF(1));
 
 obj.xBF(condition_num) = xBF_hires;
 
+end
+
+
+% =========================================================================
+function s = local_ensure_fields(s, flds)
+% Add any missing fields (default []) to every element of struct array s,
+% then reorder fields to match flds.
+for k = 1:numel(flds)
+    if ~isfield(s, flds{k})
+        [s.(flds{k})] = deal([]);
+    end
+end
+s = orderfields(s, flds);
 end
 

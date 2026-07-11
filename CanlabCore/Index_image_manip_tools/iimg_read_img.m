@@ -264,7 +264,7 @@ if(reading_data)
 end
 
 
-% Return only the first volInfo struture because it contains generic info
+% Return only the first volInfo structure because it contains generic info
 % about all volumes.  Don't need to return every volume for our
 % purposes.
 volInfo = volInfo(1);

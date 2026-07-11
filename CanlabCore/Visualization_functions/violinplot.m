@@ -6,7 +6,7 @@ function [h, L, MX, MED, pointloc, bw, F, U] = violinplot(Y,varargin)
 % estimated with different bandwidth!
 %
 % Differently to other boxplot functions, you may specify the x-position.
-% This is particularly usefule when overlaying with other data / plots.
+% This is particularly useful when overlaying with other data / plots.
 %
 % :Usage:
 %        [h, L, MX, MED, pointloc, bw, F, U] = violinplot(Y,varargin)
@@ -16,7 +16,7 @@ function [h, L, MX, MED, pointloc, bw, F, U] = violinplot(Y,varargin)
 %   **Y:**
 %        Data to be plotted, being either
 %        n x m matrix. A 'violin' is plotted for each column m, OR
-%        1 x m Cellarry with elements being numerical colums of nx1 length.
+%        1 x m Cellarry with elements being numerical columns of nx1 length.
 %
 % **varargin:**
 %
@@ -835,7 +835,7 @@ for i = 1:k
         
         % this will be the limit on x-values
         
-        % re-use nbins here for convenience - now it means bins ACROSS the
+        % reuse nbins here for convenience - now it means bins ACROSS the
         % graph within the violin shape, though
         % interleave points on either side of the midline
         % make the first point the actual midline value

@@ -28,7 +28,7 @@ function [eff,eff_vector, contrasts] = calcEfficiency(contrastweights,contrasts,
 %
 % eff               overall efficiency, equal to eff_vector * contrastweights for A-optimality
 %                   or det[Z] for D-optimality, where Z is a matrix you can see if you look at the code
-% eff_vector        vector of efficency scores for each contrast
+% eff_vector        vector of efficiency scores for each contrast
 % [D-opt flag]      optional argument that specifies computation of D-optimality,
 %                   which is the det of the inversion of the Fisher Info Matrix instead of the trace
 %                   this is better for model selection, whereas A-opt is better for testing a particular

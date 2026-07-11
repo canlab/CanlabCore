@@ -77,12 +77,12 @@ function [group_metrics individual_metrics values gwcsf gwcsfmean gwcsf_l2norm] 
 % Coverage:  Percentage of standard MNI gray-matter mask with non-zero/non-nan values
 %       NOT IMPLEMENTED YET
 %       Range: [0 100],  100 is good (full coverage). Low values indicate
-%       dropout due to artifacts or space mis-match
+%       dropout due to artifacts or space mismatch
 %
 % Template match:  Dice coefficient (point-biserial r?) with standard MNI gray-matter mask
 %       NOT IMPLEMENTED YET
 %       Range: [0 100],  100 is good (full coverage). Low values indicate
-%       dropout due to artifacts or space mis-match
+%       dropout due to artifacts or space mismatch
 %
 % Bright-edge bias:  "brightedge"
 %       NOT IMPLEMENTED YET

@@ -150,7 +150,7 @@ classdef statistic_image < image_vector
             % arguments
             % ---------------------------------
             obj.type = 'generic';
-            %obj.X = []; alread defined
+            %obj.X = []; already defined
             
             obj.p = [];
             obj.p_type = [];

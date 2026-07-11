@@ -22,7 +22,7 @@ function [z,p,sig,pt] = fisherp(p,varargin)
 %        p-values for combined test
 %
 %   **sig:**
-%        signficance 1 / 0 binary mask, p < .05 (or alph) FDR-corr
+%        significance 1 / 0 binary mask, p < .05 (or alph) FDR-corr
 %
 %   **pt:**
 %        p-value threshold for FDR corrected significance at alph

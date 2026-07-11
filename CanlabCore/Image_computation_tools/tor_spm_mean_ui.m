@@ -1,5 +1,5 @@
 function tor_spm_mean_ui(P,varargin)
-% Promts for a series of images and averages them
+% Prompts for a series of images and averages them
 %
 % :Usage:
 % ::

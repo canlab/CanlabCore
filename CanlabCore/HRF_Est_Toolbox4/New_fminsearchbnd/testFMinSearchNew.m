@@ -34,7 +34,7 @@ function testFMinSearchNew
         'FunValCheck','off',...
         'OutputFcn', @firstOutputFunction,...  
         'PlotFcns',@firstPlotFunction);
-    % NOTE: you could add several output or plot functions by incluing a cell array of function
+    % NOTE: you could add several output or plot functions by including a cell array of function
     % handles, such as {@firstOutputFunction, @secondOutputFunction}
     
       
@@ -49,7 +49,7 @@ function testFMinSearchNew
     
     
     
-    % Define output and print functions.  These functions are nexted WITHIN the overall routine so they 
+    % Define output and print functions.  These functions are nested WITHIN the overall routine so they 
     % have access to variables in the above code if needed.
     %
 

@@ -54,7 +54,7 @@ MATLAB for the live list on any instance.
 | `posneg_separate` | `@region` | Split regions into positive- and negative-valued sub-regions |
 | `subdivide_by_atlas` | `@region` | Subdivide each blob by anatomical atlas parcels |
 | `subdivide_by_local_max` | `@region` | Subdivide regions by local peak Z-score / maxima |
-| `reparse_continguous` | `@region` | Re-define regions based on contiguous blobs (note: spelling is `continguous` in source) |
+| `reparse_continguous` | `@region` | Re-define regions based on contiguous blobs (note: spelling is `continguous` in source) | <!-- codespell:ignore continguous -->
 | `select_coordinates_near_regions` | `@region` | Filter MNI mm coordinates by minimum distance to the region object |
 
 ## Display and visualization
@@ -67,6 +67,8 @@ MATLAB for the live list on any instance.
 | [`isosurface`](individual_functions/region_isosurface.md) | `@region` | One 3-D isosurface per region, with optional L/R color matching |
 | [`labelled_surface`](individual_functions/region_labelled_surface.md) | `@region` | Transparent isosurfaces with centroid labels and text annotations |
 | `match_colors_left_right` | `@region` | Assign matched colors to symmetric L/R regions |
+
+**Interactive viewers (stand-alone functions, not class methods):** `canlab_orthviews(r)` opens an enhanced SPM-style three-plane viewer in MATLAB (multiple blob layers, region tables, and an atlas region-name readout under the crosshair); [`canlab_niivue(r)`](canlab_niivue_guide.md) writes a portable point-and-click **web** viewer (NiiVue) with the same crosshair atlas readout, embeddable in HTML reports.
 
 ## Tables
 

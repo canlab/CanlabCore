@@ -1,6 +1,6 @@
 function [r1, r2, rdiff, rdiff_p, rdiff_zscore] = correl_compare_indep(y_g1, y_g2, varargin)
 % Compute statistics on the difference between correlation coefficients
-% for indepndent samples g1 and g2.
+% for independent samples g1 and g2.
 %
 % :Usage:
 % ::
@@ -54,7 +54,7 @@ function [r1, r2, rdiff, rdiff_p, rdiff_zscore] = correl_compare_indep(y_g1, y_g
 %    y_g2 = rand(20,5);
 %    [r1, r2, rdiff, rdiff_p, rdiff_zscore] = correl_compare_indep(y_g1,y_g2);
 %
-%    %supress output
+%    %suppress output
 %    [r1, r2, rdiff, rdiff_p, rdiff_zscore] = correl_compare_indep(y_g1,y_g2,'noverbose');
 %
 %

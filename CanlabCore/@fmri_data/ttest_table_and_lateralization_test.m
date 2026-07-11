@@ -73,7 +73,7 @@ function [roi_table, subj_dat] = ttest_table_and_lateralization_test(imgs, varar
 % --------------------------------------------------------
 
 domontage = true;
-% initalize optional variables to default values here.
+% initialize optional variables to default values here.
 
 % optional inputs with default values
 for i = 1:length(varargin)

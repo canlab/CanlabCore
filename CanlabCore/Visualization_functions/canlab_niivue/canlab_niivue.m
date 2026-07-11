@@ -108,6 +108,21 @@ function htmlpath = canlab_niivue(obj, varargin)
 %        non-significant voxels) rather than the raw values. Default true
 %        for statistic_image, false otherwise. Ignored for non-objects.
 %
+%   **'atlas', [atlas object | keyword | logical]:**
+%        Attach an atlas for a crosshair region readout (the page names the
+%        region under the crosshair, like canlab_orthviews) and a single-region
+%        highlight: the page shows ONLY the region under the crosshair, with an
+%        "Atlas region" dropdown to view it as an Outline (default), Shaded
+%        (transparent fill), or Off. The atlas is loaded as a hidden integer
+%        label volume. Accepts:
+%          - an atlas object,
+%          - a keyword string resolved by load_atlas (e.g. 'canlab2024'),
+%          - true -> load the default 'canlab2024' atlas.
+%        ON by default in both standalone and folder modes (the label volume
+%        gzips to ~74 KB, so the standalone .html cost is small). If the OVERLAY
+%        object is itself an atlas, it is used as the readout source
+%        automatically. Pass 'noatlas' (or 'atlas','none') to suppress it.
+%
 %   **'open', [logical]:**
 %        Open the resulting page in the web browser (web(htmlpath)).
 %        Default true. 'noopen' to turn off.
@@ -138,6 +153,15 @@ function htmlpath = canlab_niivue(obj, varargin)
 %
 %    % Render a NIfTI file directly, without opening a browser:
 %    htmlpath = canlab_niivue('my_stat_map.nii.gz', 'noopen');
+%
+%    % The atlas region readout + single-region highlight (Outline/Shaded/Off
+%    % dropdown) is ON by default. Use a specific atlas as the source:
+%    canlab_niivue(t, 'atlas', 'glasser');
+%
+%    % Pass an atlas object directly, or disable the atlas entirely:
+%    atl = load_atlas('canlab2024');
+%    canlab_niivue(t, 'atlas', atl);
+%    canlab_niivue(t, 'noatlas');
 %
 % :References:
 %   NiiVue: Hanayik et al., niivue.com (BSD-2-Clause). CANlab tools:
@@ -188,6 +212,15 @@ if any(verbose_idx)
     varargin(verbose_idx) = [];   % remove so inputParser doesn't see it
 end
 
+% 'noatlas' keyword: force the atlas region-name readout off (overrides the
+% folder-mode default-on and the obj-is-an-atlas auto-attach).
+force_no_atlas = false;
+noatlas_idx = strcmpi(varargin, 'noatlas');
+if any(noatlas_idx)
+    force_no_atlas = true;
+    varargin(noatlas_idx) = [];
+end
+
 % Default for 'thresh' depends on object type: statistic_image -> true.
 default_thresh = isa(obj, 'statistic_image');
 
@@ -208,6 +241,8 @@ p.addParameter('cal_max', [], @(x) isempty(x) || (isnumeric(x) && isscalar(x)));
 p.addParameter('opacity', 0.8, @(x) isnumeric(x) && isscalar(x));
 p.addParameter('underlay_2mm', true, @(x) islogical(x) || isnumeric(x));
 p.addParameter('thresh', default_thresh, @(x) islogical(x) || isnumeric(x));
+p.addParameter('atlas', [], @(x) isempty(x) || ischar(x) || isstring(x) || ...
+    islogical(x) || isnumeric(x) || isa(x, 'atlas'));
 p.addParameter('open', doplot, @(x) islogical(x) || isnumeric(x));
 
 % Special key/value pairs that we have potentially set with optional keywords
@@ -249,6 +284,47 @@ cal_min  = ARGS.cal_min;
 cal_max  = ARGS.cal_max;
 opacity  = ARGS.opacity;
 dolite   = logical(ARGS.underlay_2mm);
+
+% -------------------------------------------------------------------------
+% Resolve the ATLAS readout source (region-name-under-crosshair).
+% Default: OFF in standalone (keep the single-file .html small), ON in folder
+% mode (default 'canlab2024'). 'noatlas' / 'atlas','none' force it off. If the
+% OVERLAY object is itself an atlas, it doubles as the readout source.
+% load_atlas attempts are wrapped so a missing Neuroimaging_Pattern_Masks (or
+% any load failure) degrades to "no atlas" rather than erroring.
+% -------------------------------------------------------------------------
+
+atlas_arg = ARGS.atlas;
+atlas_obj = [];
+
+is_none = (ischar(atlas_arg) || isstring(atlas_arg)) && ...
+    (strcmpi(atlas_arg, 'none') || strcmpi(atlas_arg, 'off') || strcmp(atlas_arg, ''));
+is_false = (islogical(atlas_arg) || isnumeric(atlas_arg)) && isscalar(atlas_arg) && ~atlas_arg;
+
+if force_no_atlas || is_none || is_false
+    atlas_obj = [];
+
+elseif isa(atlas_arg, 'atlas')
+    atlas_obj = atlas_arg;
+
+elseif (ischar(atlas_arg) || isstring(atlas_arg)) && ~isempty(char(atlas_arg))
+    atlas_obj = local_try_load_atlas(char(atlas_arg), verbose);
+
+elseif (islogical(atlas_arg) || isnumeric(atlas_arg)) && isscalar(atlas_arg) && atlas_arg
+    atlas_obj = local_try_load_atlas('canlab2024', verbose);
+
+elseif isa(obj, 'atlas')
+    % The overlay is itself an atlas -> use it as the readout source.
+    atlas_obj = obj;
+
+elseif isempty(atlas_arg)
+    % Default-on (both standalone and folder modes): attach the default atlas
+    % if available. The label volume gzips to ~74 KB, so the standalone .html
+    % cost is small. Pass 'noatlas' to opt out.
+    atlas_obj = local_try_load_atlas('canlab2024', verbose);
+end
+
+has_atlas = isa(atlas_obj, 'atlas');
 
 % -------------------------------------------------------------------------
 % Locate asset directory
@@ -340,6 +416,25 @@ if has_underlay && logical(standalone) && dolite
 end
 
 % -------------------------------------------------------------------------
+% Resolve ATLAS to an int16 label .nii.gz file (+ label key) if requested
+% -------------------------------------------------------------------------
+
+atlas_file   = '';
+atlas_labels = {};
+atlas_name   = '';
+
+if has_atlas
+    try
+        [atlas_file, atlas_labels, atlas_name] = local_resolve_atlas( ...
+            atlas_obj, fullfile(tmpdir, 'atlas.nii.gz'), verbose);
+    catch ME
+        warning('canlab_niivue: could not prepare atlas readout (%s); continuing without it.', ME.message);
+        has_atlas = false;
+        atlas_file = '';
+    end
+end
+
+% -------------------------------------------------------------------------
 % Read template, viewer, css
 % -------------------------------------------------------------------------
 
@@ -367,6 +462,18 @@ if ~isempty(cal_max)
     opt_fields = sprintf('%s, cal_max: %s', opt_fields, num2str(cal_max));
 end
 
+% Atlas readout option fields (label key + name) and the per-mode atlas SOURCE
+% field, both empty when no atlas is attached. The label key is a JS array of
+% region names; index = (integer code - 1), matching atlas.labels.
+atlas_src_std    = '';
+atlas_src_folder = '';
+if has_atlas
+    opt_fields = sprintf('%s, atlasLabels: %s, atlasName: %s', ...
+        opt_fields, local_jsstrarray(atlas_labels), local_jsstr(atlas_name));
+    atlas_src_std    = sprintf('  atlas: { base64: ATLAS_B64, name: "atlas.nii.gz" },\n');
+    atlas_src_folder = sprintf('  atlas: "./data/atlas.nii.gz",\n');
+end
+
 % -------------------------------------------------------------------------
 % Assemble STYLE_BLOCK and SCRIPT_BLOCK per mode
 % -------------------------------------------------------------------------
@@ -382,12 +489,14 @@ if logical(standalone)
         cfg = sprintf(['{\n', ...
             '  underlay: { base64: UNDERLAY_B64, name: "underlay.nii.gz" },\n', ...
             '  overlay:  { base64: OVERLAY_B64, name: "overlay.nii.gz" },\n', ...
-            '  %s\n}'], opt_fields);
+            '%s', ...
+            '  %s\n}'], atlas_src_std, opt_fields);
     else
         underlay_b64 = '';
         cfg = sprintf(['{\n', ...
             '  overlay: { base64: OVERLAY_B64, name: "overlay.nii.gz" },\n', ...
-            '  %s\n}'], opt_fields);
+            '%s', ...
+            '  %s\n}'], atlas_src_std, opt_fields);
     end
 
     % Embed base64 payloads as JS const string literals, then reference them.
@@ -395,6 +504,10 @@ if logical(standalone)
         sprintf('const OVERLAY_B64 = %s;\n', local_jsstr(overlay_b64))];
     if has_underlay
         boot = [boot sprintf('const UNDERLAY_B64 = %s;\n', local_jsstr(underlay_b64))];
+    end
+    if has_atlas
+        atlas_b64 = local_base64_of_file(atlas_file);
+        boot = [boot sprintf('const ATLAS_B64 = %s;\n', local_jsstr(atlas_b64))];
     end
     boot = [boot sprintf('canlabNiivue("gl", %s);\n', cfg)];
 
@@ -420,16 +533,22 @@ else
     if ~exist(datadir, 'dir'), mkdir(datadir); end
     copyfile(overlay_file, fullfile(datadir, 'overlay.nii.gz'));
 
+    if has_atlas
+        copyfile(atlas_file, fullfile(datadir, 'atlas.nii.gz'));
+    end
+
     if has_underlay
         copyfile(underlay_file, fullfile(datadir, 'underlay.nii.gz'));
         cfg = sprintf(['{\n', ...
             '  underlay: "./data/underlay.nii.gz",\n', ...
             '  overlay:  "./data/overlay.nii.gz",\n', ...
-            '  %s\n}'], opt_fields);
+            '%s', ...
+            '  %s\n}'], atlas_src_folder, opt_fields);
     else
         cfg = sprintf(['{\n', ...
             '  overlay: "./data/overlay.nii.gz",\n', ...
-            '  %s\n}'], opt_fields);
+            '%s', ...
+            '  %s\n}'], atlas_src_folder, opt_fields);
     end
 
     script_block = sprintf([ ...
@@ -471,11 +590,23 @@ if verbose
     else
         fprintf('  Underlay: (none)\n');
     end
+    if has_atlas
+        fprintf('  Atlas:    %s (%d regions) - crosshair region readout + show button\n', ...
+            atlas_name, numel(atlas_labels));
+    end
     fprintf('%s\n', dashes);
 end
 
 if doopen
-    web(htmlpath, '-browser');
+    if logical(standalone)
+        % Standalone is a single self-contained file -> open directly.
+        web(htmlpath, '-browser');
+    else
+        % Folder bundles use ES-module imports, which browsers BLOCK on file://
+        % (CORS). Serve the bundle over a short-lived local HTTP server and open
+        % the http:// URL instead, so the viewer actually boots.
+        local_serve_and_open(outdir, fname, verbose);
+    end
 end
 
 end % main function
@@ -541,6 +672,154 @@ if ~exist(out_file, 'file')
 end
 
 end % local_resolve_image
+
+
+function local_serve_and_open(outdir, fname, verbose)
+% Serve a folder bundle over a local HTTP server and open it in the browser.
+% Folder bundles import ES modules (niivue.js, the viewer), which browsers
+% refuse to load from file:// (CORS: "origin null"), leaving a blank page. A
+% local static server gives the page an http:// origin so the imports resolve.
+% Uses Python's stdlib http.server (no extra deps); falls back to a file:// open
+% with a heads-up if Python is unavailable.
+
+opened = false;
+
+[st, py] = system('which python3');
+py = strtrim(py);
+if st ~= 0 || isempty(py)
+    [st, py] = system('which python');
+    py = strtrim(py);
+end
+
+if st == 0 && ~isempty(py)
+    % Grab a free ephemeral port via a momentarily-bound Java socket.
+    try
+        ss = java.net.ServerSocket(0);
+        port = double(ss.getLocalPort());
+        ss.close();
+    catch
+        port = 8899;
+    end
+
+    % Launch the server in the background, rooted at the bundle directory.
+    cmd = sprintf('%s -m http.server %d --directory "%s" > /dev/null 2>&1 &', ...
+        py, port, outdir);
+    launch_status = system(cmd);
+
+    if launch_status == 0
+        url = sprintf('http://localhost:%d/%s', port, fname);
+        pause(0.7);   % give the server a moment to start listening
+        web(url, '-browser');
+        opened = true;
+        if verbose
+            fprintf('canlab_niivue: serving folder bundle at %s\n', url);
+            fprintf('  (a local "%s -m http.server" was started on port %d;\n', py, port);
+            fprintf('   it keeps running until you close MATLAB or kill the process.)\n');
+        end
+    end
+end
+
+if ~opened
+    web(fullfile(outdir, fname), '-browser');
+    warning(['canlab_niivue: opened the folder bundle via file:// because no local ' ...
+        'web server could be started. Browsers block ES-module imports on file://, ' ...
+        'so the viewer may appear BLANK. Serve %s over http (e.g. ''python3 -m ' ...
+        'http.server'' in that folder), or use standalone mode (the default).'], outdir);
+end
+
+end % local_serve_and_open
+
+
+function atl = local_try_load_atlas(keyword, verbose)
+% Try to load_atlas(keyword), returning [] on any failure (e.g. the
+% Neuroimaging_Pattern_Masks repo is not on the path). Warnings/chatter from
+% load_atlas are suppressed so an opportunistic default load stays quiet.
+
+ws = warning('off', 'all');
+restore_warn = onCleanup(@() warning(ws));
+try
+    atl = load_atlas(keyword);
+catch ME
+    if verbose
+        fprintf('canlab_niivue: could not load atlas ''%s'' (%s); no region readout.\n', ...
+            keyword, ME.message);
+    end
+    atl = [];
+end
+
+end % local_try_load_atlas
+
+
+function [out_file, labels, aname] = local_resolve_atlas(a, target_nii, verbose)
+% Write an atlas object to an int16 label .nii.gz and return its file path,
+% region-name list, and atlas name. Two properties are REQUIRED for NiiVue to
+% render the parcellation correctly:
+%   (1) int16 datatype, so NiiVue selects its integer-label shader (colormapLabel
+%       coloring + atlasOutline work only for label shaders), and
+%   (2) scl_slope == 1 (pinfo = [1;0;0]), so the RAW voxel value equals the
+%       label index. This is why we do NOT use the standard write()/
+%       iimg_reconstruct_vols path: it strips pinfo and lets spm_write_vol
+%       auto-rescale integer data across the full int16 range (slope ~0.016 for
+%       a 518-region atlas). With a non-unit slope the on-screen value (which
+%       applies the slope) is still right, but NiiVue's label shader indexes the
+%       colormapLabel LUT by the raw texture value, so it samples far out of
+%       range and the regions never paint. Writing with pinfo = [1;0;0] keeps
+%       raw == index.
+
+a = replace_empty(a);
+
+% Some atlases carry only probability maps; derive integer labels then.
+dat = double(a.dat(:, 1));
+if ~any(dat) && ~isempty(a.probability_maps)
+    try
+        a = replace_empty(probability_maps_to_region_index(a));
+    catch
+        % fall through with whatever dat we have
+    end
+end
+
+labels = a.labels;
+if isempty(labels), labels = {}; end
+labels = labels(:);
+
+aname = '';
+if isprop(a, 'atlas_name') && ~isempty(a.atlas_name)
+    aname = char(a.atlas_name);
+end
+
+% Reconstruct the dense 3-D label volume (integer codes; 0 = background).
+vol3d = iimg_reconstruct_vols(round(double(a.dat(:, 1))), a.volInfo);
+if ndims(vol3d) > 3, vol3d = vol3d(:, :, :, 1); end
+
+nii_tmp = strrep(target_nii, '.nii.gz', '.nii');
+if verbose
+    fprintf('canlab_niivue: writing atlas label volume to %s\n', target_nii);
+end
+
+% Write directly via SPM with pinfo = [1;0;0] (no rescaling) and int16 dt, so
+% the raw stored value equals the label index that NiiVue's label LUT expects.
+V = struct();
+V.fname   = nii_tmp;
+V.dim     = a.volInfo.dim(1:3);
+V.mat     = a.volInfo.mat;
+V.dt      = [spm_type('int16') 0];
+V.pinfo   = [1; 0; 0];
+V.n       = [1 1];
+V.descrip = 'canlab_niivue atlas labels (raw value = region index)';
+spm_write_vol(V, vol3d);
+
+if ~exist(nii_tmp, 'file')
+    error('canlab_niivue: atlas write did not produce expected file: %s', nii_tmp);
+end
+
+local_gzip_to_target(nii_tmp, target_nii);
+out_file = target_nii;
+
+if ~exist(out_file, 'file')
+    error('canlab_niivue: failed to produce %s', out_file);
+end
+
+end % local_resolve_atlas
 
 
 function local_gzip_to_target(src_nii, target_gz)
@@ -675,6 +954,19 @@ str = strrep(str, sprintf('\r'), '\r');
 s = ['''' str ''''];
 
 end % local_jsstr
+
+
+function s = local_jsstrarray(c)
+% Encode a cell array of strings as a JS array literal of string literals.
+
+c = c(:);
+parts = cell(1, numel(c));
+for i = 1:numel(c)
+    parts{i} = local_jsstr(char(c{i}));
+end
+s = ['[' strjoin(parts, ', ') ']'];
+
+end % local_jsstrarray
 
 
 function m = niivue_inline_marker()

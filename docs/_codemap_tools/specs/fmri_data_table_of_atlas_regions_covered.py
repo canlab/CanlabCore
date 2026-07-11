@@ -20,7 +20,7 @@ def build() -> Slide:
 
     s.notes([
         "Internally uses the subdivide_by_atlas() method — one row per atlas parcel (not per blob).",
-        "atlas_of_regions_covered is an atlas-class object you can re-use for visualization or further analysis.",
+        "atlas_of_regions_covered is an atlas-class object you can reuse for visualization or further analysis.",
     ], y=3.40, h=1.50)
 
     s.legend(x=0.30, y=5.30)

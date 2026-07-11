@@ -7,11 +7,14 @@ A lightweight, dependency-free **web orthviews** for CANlab results, built on
 statistic/mask overlay in any browser, with multiplanar / axial / coronal / sagittal / 3-D-render
 layouts, transparent sub-threshold voxels (blobs only over anatomy), a colormap dropdown, a
 dynamic display-threshold slider, overlay/underlay opacity sliders, and a live MNI-coordinate +
-value readout that updates as you move the crosshair. There is **no plugin, no server-side
-compute, and no build step** — it runs entirely in the browser and works offline.
+value readout that updates as you move the crosshair. An attached **atlas** (on by default) names
+the region under the crosshair and highlights *just that region* — as an outline (default), a
+shaded fill, or off, via an "Atlas region" dropdown. There is **no plugin, no server-side compute,
+and no build step** — it runs entirely in the browser and works offline.
 
 It is the web counterpart to `orthviews` / `canlab_orthviews`: the same point-and-click slice
-view, but as a portable `.html` file you can email, host, or drop into an HTML report.
+view (including the same crosshair atlas region-name readout), but as a portable `.html` file you
+can email, host, or drop into an HTML report.
 
 ---
 
@@ -22,14 +25,15 @@ view, but as a portable `.html` file you can email, host, or drop into an HTML r
 
 *One-sample t-test on the CANlab `emotionreg` sample dataset (p &lt; .005 uncorrected, k ≥ 10),
 shown as warm/cool blobs over a 2&nbsp;mm MNI underlay. Use the **layout buttons** to switch views,
-the **Colormap** dropdown to recolor, the **Threshold** slider to raise the display threshold, the
-**Overlay/Underlay** sliders to fade layers, and click anywhere to move the crosshair (its MNI
-coordinate and t-value print below the canvas). If the frame above is blank in your environment,
+the **Colormap** dropdown to recolor, the **Atlas region** dropdown to outline/shade the region at
+the crosshair, the **Threshold** slider to raise the display threshold, the **Overlay/Underlay**
+sliders to fade layers, and click anywhere to move the crosshair (its MNI coordinate, t-value, and
+the **atlas region name** print below the canvas). If the frame above is blank in your environment,
 [open the demo directly](niivue_demo/emotionreg_ttest.html).*
 
-This entire viewer — the NiiVue library, the image data, and the styling — is inlined into a
-single self-contained `emotionreg_ttest.html` (~3.6&nbsp;MB). It was generated with one MATLAB
-call (below).
+This entire viewer — the NiiVue library, the image data, the canlab2024 atlas labels, and the
+styling — is inlined into a single self-contained `emotionreg_ttest.html` (~3.7&nbsp;MB). It was
+generated with one MATLAB call (below).
 
 ---
 
@@ -46,6 +50,11 @@ or a path to a `.nii`/`.nii.gz` — as the **overlay**, and supplies a default M
 **underlay** automatically. For a `statistic_image` it writes the thresholded map by default, and
 auto-derives the color limits from the suprathreshold values (so `cal_min` becomes the threshold
 and below-threshold voxels are transparent).
+
+> **Shortcut:** for a `statistic_image`, the method **`orthviews_niivue(t)`** is a one-line wrapper
+> that writes a standalone page to a temporary folder and opens it in the browser — the web
+> counterpart to `orthviews(t)`. It forwards any `canlab_niivue` options (`'colormap'`, `'cal_min'`,
+> `'outdir'`, `'noopen'`, …).
 
 ```matlab
 % Folder bundle instead of a single file (page + copied assets + data/*.nii.gz):
@@ -73,7 +82,7 @@ is fully interactive on its own afterwards.
 | Mode | What you get | Use when |
 |------|--------------|----------|
 | **Standalone** (default) | One self-contained `.html` with the NiiVue library, the image data (base64), the viewer JS, and CSS all inlined. | Sharing a single file, emailing, or embedding one viewer in a report. A fine (≤2&nbsp;mm) underlay is auto-downsampled to ~2&nbsp;mm so the file stays small. |
-| **Folder** (`'standalone', false`) | `index.html` + copies of `niivue.js`, `canlab_niivue_viewer.js`, `canlab_niivue.css`, and `data/*.nii.gz`. | Serving from a web folder, or many viewers that share one cached NiiVue bundle. Must be served over `http(s)` (ES-module imports are blocked on `file://`). |
+| **Folder** (`'standalone', false`) | `index.html` + copies of `niivue.js`, `canlab_niivue_viewer.js`, `canlab_niivue.css`, and `data/*.nii.gz`. | Serving from a web folder, or many viewers that share one cached NiiVue bundle. Folder bundles use ES-module imports, which browsers block on `file://`, so `canlab_niivue` **auto-starts a small local web server** and opens the `http://localhost` URL for you (standalone has no such restriction). |
 
 ---
 
@@ -139,6 +148,7 @@ rather than repeating it inside every standalone file.
 | Option | Default | Description |
 |--------|---------|-------------|
 | `'underlay'` | lab MNI template | Anatomical underlay: filename, keyword (e.g. `'mni152_1mm'`), or image object. `'none'` shows the overlay alone. |
+| `'atlas'` | `'canlab2024'` (on) | Atlas for the crosshair region readout + single-region highlight: an `atlas` object, a `load_atlas` keyword, or `true`. If the overlay object is itself an `atlas`, it is used automatically. Pass `'noatlas'` (or `'atlas','none'`) to turn it off. |
 | `'standalone'` | `true` | Single self-contained file vs. folder bundle. |
 | `'colormap'` | `'inferno'` | Overlay positive colormap. |
 | `'colormapNegative'` | `'winter'` | Overlay negative colormap (hot/cool split). |
@@ -156,6 +166,7 @@ See `help canlab_niivue` for the full list.
 | Key | Default | Description |
 |-----|---------|-------------|
 | `underlay` / `overlay` | — | URL string or `{ base64, name }` payload. |
+| `atlas` / `atlasLabels` / `atlasName` | — | Integer-label atlas volume (URL or `{ base64, name }`) + its region-name list, for the crosshair region readout and single-region highlight. |
 | `colormap` / `colormapNegative` | `"inferno"` / `"winter"` | Overlay positive / negative colormaps. |
 | `cal_min` / `cal_max` | auto | Display range + transparency cutoff. |
 | `opacity` | `0.8` | Overlay opacity. |
@@ -173,9 +184,10 @@ See `help canlab_niivue` for the full list.
 - **Layout buttons** — Axial / Coronal / Sagittal / Multiplanar / 3D Render.
 - **Colormap dropdown** — recolor the overlay live.
 - **Load overlay…** — open a different `.nii`/`.nii.gz` from disk into the viewer.
+- **Atlas region dropdown** — show the region under the crosshair as an **Outline** (default), a **Shaded** translucent fill, or **Off**.
 - **Threshold slider** — raise/lower the display threshold (`cal_min`); below it is transparent.
 - **Overlay / Underlay sliders** — fade each layer's opacity.
-- **Crosshair** — click any slice; the MNI coordinate and overlay value print below the canvas.
+- **Crosshair** — click any slice; the MNI coordinate, overlay value, and **atlas region name** print below the canvas.
 
 ---
 
@@ -194,4 +206,5 @@ update, re-download `dist/index.js` from unpkg into `assets/niivue.js` and re-te
 - [`canlab_results_fmridisplay`](individual_functions/canlab_results_fmridisplay.md) — montage/surface scaffolds (`fmridisplay`)
 - `surface`, `isosurface` (image_vector methods) — 3-D cortical-surface rendering in MATLAB
 - `orthviews` / `canlab_orthviews` — SPM-based interactive orthviews in MATLAB
+- `statistic_image.orthviews_niivue` — one-line `statistic_image` method that opens this web viewer
 - [Object methods index](Object_methods.md)

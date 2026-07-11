@@ -465,7 +465,7 @@ switch labelstyle
                 theta = theta(midpoint);
                 alignment = 'left';
             end
-            handels(i).texth(1) = text(XY(1,midpoint),XY(2,midpoint),text_labels{i},'rotation',theta,...
+            handles(i).texth(1) = text(XY(1,midpoint),XY(2,midpoint),text_labels{i},'rotation',theta,...
                 'horizontalalignment',alignment,'verticalalignment','bottom', 'FontSize', mytextsize);
         
         end         

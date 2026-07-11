@@ -2,6 +2,25 @@
 
 All notable changes to CanlabCore are documented in this file.
 
+## [Unreleased]
+
+### Visualization: stateful `fmridisplay` (display overhaul, Phase 1–2)
+
+- **`fmridisplay` is now a handle class** (`classdef fmridisplay < handle`). The
+  value-style call contract is fully preserved — `o2 = addblobs(o2, ...)` and every
+  existing call site keep working (a full audit found no copy-then-reuse aliasing).
+  The object instance is now a single source of truth that figures and a controller
+  widget can reference.
+- **Blob layers retain their source data and render options**, so they can be
+  re-rendered in place. New `@fmridisplay` methods: `rethreshold`, `set_colormap`,
+  `set_opacity`, and `refresh` (live re-threshold / colormap / opacity on montages).
+- **`controller(obj)`** opens a `uifigure` control panel bound to the instance
+  (per-layer opacity / colormap / threshold / visibility), the MATLAB-side analog of
+  the `canlab_niivue` web control panel.
+- **Fix:** a bare `'colormap'` flag (e.g. `montage(r, o2, 'colormap')`) no longer
+  errors in `render_blobs`; `addblobs` strips it before forwarding.
+- New tests: `Unit_tests/image_vector/canlab_test_fmridisplay_handle.m`.
+
 ## [v2.1.0] - 2026-05-18
 
 This release is dominated by infrastructure work: a real automated test harness,

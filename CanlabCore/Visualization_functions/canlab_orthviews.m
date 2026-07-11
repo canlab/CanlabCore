@@ -29,6 +29,15 @@ function varargout = canlab_orthviews(varargin)
 %     canlab_orthviews('AddBlobs', [handle,] obj [, opts...])  % obj = statistic_image / fmri_data / region / ...
 %     canlab_orthviews('RemoveBlobs')                   % drop all blob layers
 %
+%     canlab_orthviews('AddAtlasLabel', atlas_obj)      % region-name readout source
+%     canlab_orthviews('RemoveAtlasLabel')              % hide the region-name readout
+%
+% On first open the viewer tries to attach the canlab2024 atlas so the
+% crosshair region-name readout (the line at the bottom of the figure)
+% works out of the box. If the atlas cannot be loaded (e.g. the
+% Neuroimaging_Pattern_Masks repo is not on the path), the readout shows a
+% one-line hint on how to attach an atlas with 'AddAtlasLabel'.
+%
 % Note: the SPM-style `handle` selects one of several linked orthviews
 % windows. canlab_orthviews maintains a single linked figure, so the
 % handle is accepted for source-compatibility but ignored — you can
@@ -161,7 +170,8 @@ function tf = is_command_string(s)
             'image','addblobs','addcolouredblobs','addcoloredblobs', ...
             'removeblobs','rmblobs','rmcolouredblobs','rmcoloredblobs', ...
             'overlay','underlay','redraw','close','window','context', ...
-            'legend', 'colorbar', 'nocolorbar','nolegend','no_colorbar','no_legend'};
+            'legend', 'colorbar', 'nocolorbar','nolegend','no_colorbar','no_legend', ...
+            'addatlaslabel','atlaslabel','removeatlaslabel','noatlaslabel'};
     tf = ismember(lower(strtrim(s)), cmds);
 end
 
@@ -264,6 +274,28 @@ function varargout = dispatch_command(varargin)
         case {'nocolorbar','nolegend','no_colorbar','no_legend'}
             set_colorbar_visibility(false);
 
+        case {'addatlaslabel','atlaslabel'}
+            % canlab_orthviews('AddAtlasLabel', atlas_obj) — attach an
+            % atlas as the source for the crosshair region-name readout.
+            [fh, state] = ensure_figure_with_underlay([]);
+            if ~isempty(args) && isa(args{1}, 'atlas')
+                AL = build_atlas_label(args{1});
+            else
+                % no/invalid atlas given: fall back to the default atlas
+                AL = load_default_atlas_label();
+            end
+            state.atlas_label = AL;   % struct, or [] -> "how to attach" line
+            setappdata(fh, 'canlab_orthviews_state', state);
+            redraw_all(fh);
+
+        case {'removeatlaslabel','noatlaslabel'}
+            fh = find_canlab_orthviews_figure();
+            if isempty(fh), return; end
+            state = getappdata(fh, 'canlab_orthviews_state');
+            state.atlas_label = 'off';   % sentinel: hide the readout strip
+            setappdata(fh, 'canlab_orthviews_state', state);
+            redraw_all(fh);
+
         case 'context'
             % no-op placeholder for parity with spm_orthviews('context_menu')
     end
@@ -337,6 +369,16 @@ function varargout = dispatch_object(varargin)
     state = getappdata(fh, 'canlab_orthviews_state');
     for k = 1:numel(blob_layers)
         state.blobs{end+1} = blob_layers{k};
+    end
+
+    % If the displayed object is itself an atlas, use it as the source for
+    % the crosshair region-name readout so the labels match what is shown.
+    if isa(obj, 'atlas')
+        try
+            state.atlas_label = build_atlas_label(obj);
+        catch
+            % leave whatever readout source was already attached
+        end
     end
     setappdata(fh, 'canlab_orthviews_state', state);
 
@@ -917,6 +959,7 @@ function state = default_state(fh)
         'bgcolor', [1 1 1], ...        % white background by default
         'underlay', [], ...
         'blobs', {{}}, ...
+        'atlas_label', [], ...          % atlas region-name readout (see draw_atlas_label)
         'drag_panel', [], ...
         'drag_active', false );
 end
@@ -943,7 +986,7 @@ function fh = build_figure()
             'XColor','none','YColor','none', ...
             'Units','normalized', ...
             'LooseInset',[0 0 0 0]);
-        title(ax(k), titles{k}, 'Color', fg_for(bg), 'FontSize', 11);
+        title(ax(k), titles{k}, 'Color', fg_for(bg), 'FontSize', 14);
         hold(ax(k), 'on');
 
         % Tight per-axis position: no horizontal padding so panels are
@@ -965,6 +1008,14 @@ function fh = build_figure()
 
     % Click + right-click context menu wiring (attach to each axis)
     install_interaction(fh);
+
+    % Try to attach the default atlas (canlab2024) so the crosshair
+    % region-name readout works out of the box. If it can't be loaded
+    % (atlas not on path), the readout strip shows a one-line hint on how
+    % to attach one instead. This runs once per figure lifetime.
+    state = getappdata(fh, 'canlab_orthviews_state');
+    state.atlas_label = load_default_atlas_label();   % struct or []
+    setappdata(fh, 'canlab_orthviews_state', state);
 end
 
 
@@ -978,11 +1029,12 @@ function rebuild_panels(fh)
         bg = state.bgcolor;
     end
 
-    % Remove any leftover plain axes (the colorbar axis has its own tag
-    % and is preserved).
+    % Remove any leftover plain axes. The colorbar and atlas-label axes
+    % have their own tags and are preserved.
+    keep_tags = {'canlab_orthviews_cbar', 'canlab_orthviews_label'};
     leftovers = findall(fh, 'Type', 'axes');
     for k = 1:numel(leftovers)
-        if ~strcmp(get(leftovers(k), 'Tag'), 'canlab_orthviews_cbar')
+        if ~ismember(get(leftovers(k), 'Tag'), keep_tags)
             delete(leftovers(k));
         end
     end
@@ -998,7 +1050,7 @@ function rebuild_panels(fh)
             'XColor','none','YColor','none', ...
             'LooseInset',[0 0 0 0]);
         axis(ax(k), 'image','off');
-        title(ax(k), titles{k}, 'Color', fg_for(bg), 'FontSize', 11);
+        title(ax(k), titles{k}, 'Color', fg_for(bg), 'FontSize', 14);
         hold(ax(k), 'on');
         try, ax(k).Toolbar.Visible = 'off'; end %#ok<TRYNC>
         try, disableDefaultInteractivity(ax(k)); end %#ok<TRYNC>
@@ -1508,6 +1560,9 @@ function redraw_all(fh)
     % Horizontal colorbar for autocolor blob layers (no-op when no
     % autocolor layer is present, e.g. for 'unique' / 'posneg' / 'color')
     draw_colorbar(fh, state);
+
+    % Atlas region-name readout for the voxel under the crosshair.
+    draw_atlas_label(fh, state);
 end
 
 
@@ -1580,7 +1635,7 @@ function draw_colorbar(fh, state)
     end
     rgb = cat(3, R, G, B);
 
-    set(cb_ax, 'Position', [0.35, 0.04, 0.30, 0.045], ...
+    set(cb_ax, 'Position', [0.35, 0.04, 0.30, 0.03], ...
                'Color', state.bgcolor, ...
                'XLim', [vmin vmax], 'YLim', [0 1]);
 
@@ -1884,7 +1939,195 @@ end
 
 
 function update_title(ax, name, xyz)
-    bg = get(ax, 'Color');
-    title(ax, sprintf('%s  (%.0f, %.0f, %.0f)', name, xyz(1), xyz(2), xyz(3)), ...
-        'Color', fg_for(bg), 'FontSize', 10);
+    % Draw the coordinate readout above the panel as an explicit text child
+    % rather than the axes Title. The panels are created with `axis off`
+    % (axes Visible = 'off'), which suppresses the Title; child text
+    % objects, however, render regardless of axes visibility (the same way
+    % the crosshair lines and blob images do). A tagged text object is
+    % reused across redraws (plot_panel's cla wipes it, so it is recreated
+    % here when missing).
+    bg  = get(ax, 'Color');
+    str = sprintf('%s  (%.0f, %.0f, %.0f)', name, xyz(1), xyz(2), xyz(3));
+    tag = 'canlab_orthviews_paneltitle';
+
+    t = findobj(ax, 'Type', 'text', 'Tag', tag);
+    if isempty(t)
+        t = text('Parent', ax, 'Tag', tag, 'Units', 'normalized', ...
+                 'Position', [0.5 1.0 0], ...
+                 'HorizontalAlignment', 'center', 'VerticalAlignment', 'bottom', ...
+                 'Interpreter', 'none', 'FontSize', 14, 'Clipping', 'off', ...
+                 'HitTest', 'off', 'PickableParts', 'none');
+    else
+        t = t(1);
+    end
+    set(t, 'String', str, 'Color', fg_for(bg));
+end
+
+
+% =========================================================================
+% Atlas region-name readout
+% =========================================================================
+
+function AL = load_default_atlas_label()
+    % Build the label-readout payload for the default atlas (canlab2024),
+    % cached in a persistent so repeated viewer opens don't reload it.
+    % Returns [] when the atlas can't be loaded (e.g. Neuroimaging_Pattern_
+    % Masks not on the path), which makes the readout strip show a one-line
+    % hint on how to attach an atlas manually.
+    persistent cached tried
+    if ~isempty(cached)
+        AL = cached;
+        return
+    end
+    if ~isempty(tried)
+        % Already failed once this session; don't repeat a slow/noisy load
+        % attempt on every new figure. A manual AddAtlasLabel call still
+        % works (it calls build_atlas_label directly, bypassing this cache).
+        AL = [];
+        return
+    end
+    tried = true;
+    AL = [];
+    % Suppress load_atlas chatter/warnings during the automatic attach so
+    % an opportunistic default load can't disrupt a caller (and so opening
+    % the viewer stays warning-free when the atlas is present).
+    ws = warning('off', 'all');
+    restore_warn = onCleanup(@() warning(ws)); %#ok<NASGU>  keeps warnings off until return
+    try
+        atl = load_atlas('canlab2024');
+        AL  = build_atlas_label(atl);
+        cached = AL;
+    catch
+        AL = [];
+    end
+end
+
+
+function AL = build_atlas_label(obj)
+    % Build a compact lookup payload from an atlas object: a dense integer
+    % label volume plus the mm->voxel affine and the region-name list. This
+    % is what draw_atlas_label / atlas_label_at consume. Kept small (int16
+    % volume + labels) so it is cheap to stash on the figure.
+    obj = replace_empty(obj);
+
+    dat = double(obj.dat(:, 1));
+    % Some atlases carry only probability maps; derive integer labels then.
+    if ~any(dat) && ~isempty(obj.probability_maps)
+        try
+            tmp = replace_empty(probability_maps_to_region_index(obj));
+            dat = double(tmp.dat(:, 1));
+        catch
+            % fall through with whatever dat we have
+        end
+    end
+
+    V = iimg_reconstruct_vols(dat, obj.volInfo);
+    if ndims(V) > 3, V = V(:, :, :, 1); end
+
+    nm = '';
+    if isprop(obj, 'atlas_name') && ~isempty(obj.atlas_name)
+        nm = char(obj.atlas_name);
+    end
+
+    labels = obj.labels;
+    if isempty(labels), labels = {}; end
+
+    AL = struct( ...
+        'vol',     int16(round(V)), ...
+        'inv_mat', inv(obj.volInfo.mat), ...
+        'dim',     size(V), ...
+        'labels',  {labels(:)}, ...
+        'name',    nm);
+end
+
+
+function name = atlas_label_at(AL, xyz)
+    % Return the region name for the atlas voxel under mm coordinate xyz.
+    % Empty string means "outside the atlas FOV" or "unlabeled voxel".
+    name = '';
+    if isempty(AL) || ~isstruct(AL), return; end
+
+    p   = AL.inv_mat * [xyz(1); xyz(2); xyz(3); 1];
+    ijk = round(p(1:3));
+    d   = AL.dim;
+    if ijk(1) < 1 || ijk(2) < 1 || ijk(3) < 1 ...
+            || ijk(1) > d(1) || ijk(2) > d(2) || ijk(3) > d(3)
+        return
+    end
+
+    code = double(AL.vol(ijk(1), ijk(2), ijk(3)));
+    if code >= 1 && code <= numel(AL.labels)
+        name = char(AL.labels{code});
+    end
+end
+
+
+function draw_atlas_label(fh, state)
+    % Render the single-line region-name readout in a thin strip at the
+    % bottom of the figure. Reuses one tagged axes + text object so each
+    % redraw is just a String update (cheap, drag-friendly).
+    tag = 'canlab_orthviews_label';
+    ax  = findall(fh, 'Type', 'axes', 'Tag', tag);
+
+    AL = [];
+    if isfield(state, 'atlas_label'), AL = state.atlas_label; end
+
+    % Explicitly hidden via RemoveAtlasLabel
+    if ischar(AL) && strcmpi(AL, 'off')
+        if ~isempty(ax), delete(ax); end
+        return
+    end
+
+    % Compose the readout text. Show the region name on its own (that is
+    % what the readout is for); fall back to a clear "no region" note.
+    if isstruct(AL)
+        nm = atlas_label_at(AL, state.centre);
+        if isempty(nm)
+            str = '(no region under crosshair)';
+        else
+            str = nm;
+        end
+    else
+        % No atlas attached -> tell the user how to add one via the API.
+        str = ['No atlas attached for region labels.  Add one with:  ' ...
+               'canlab_orthviews(''AddAtlasLabel'', load_atlas(''canlab2024''))'];
+    end
+
+    bg = [1 1 1];
+    if isfield(state, 'bgcolor') && ~isempty(state.bgcolor), bg = state.bgcolor; end
+    fg = fg_for(bg);
+
+    txt_tag = [tag '_txt'];
+    if isempty(ax)
+        % Sits in the strip just above the colorbar (which lives at
+        % y ~0.04-0.07) and below the panels (which start at y 0.11), so the
+        % region label can't collide with the colorbar.
+        ax = axes('Parent', fh, 'Tag', tag, 'Units', 'normalized', ...
+                  'Position', [0.0 0.072 1.0 0.038], ...
+                  'XLim', [0 1], 'YLim', [0 1], ...
+                  'Color', 'none', 'Visible', 'off', ...
+                  'HitTest', 'off', 'PickableParts', 'none');
+        t = make_label_text(ax, txt_tag);
+    else
+        ax = ax(1);
+        t  = findobj(ax, 'Type', 'text', 'Tag', txt_tag);
+        if isempty(t)
+            t = make_label_text(ax, txt_tag);
+        else
+            t = t(1);
+        end
+    end
+
+    set(t, 'String', str, 'Color', fg);
+    set(ax, 'HitTest', 'off', 'PickableParts', 'none');
+    try, ax.Toolbar.Visible = 'off'; end %#ok<TRYNC>
+end
+
+
+function t = make_label_text(ax, txt_tag)
+    t = text('Parent', ax, 'Tag', txt_tag, ...
+             'Units', 'normalized', 'Position', [0.5 0.5 0], ...
+             'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle', ...
+             'Interpreter', 'none', 'FontSize', 14, 'FontWeight', 'bold', ...
+             'HitTest', 'off', 'PickableParts', 'none');
 end

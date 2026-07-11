@@ -681,7 +681,7 @@ else
         fnames = fieldnames(atlas_obj.additional_info);
         if ~any(ismember('hash',fnames)) || ~strcmp(latest,atlas_obj.additional_info.hash)
             % evaluation is rounded to the nearest second to deal with
-            % floating point issues. If there's an atlas 1s newer availble
+            % floating point issues. If there's an atlas 1s newer available
             % then it means we rebuild the atlas to get it.
             if verbose
                 fprintf('Updating atlas...\n');

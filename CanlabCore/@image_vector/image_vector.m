@@ -227,6 +227,7 @@ classdef image_vector
 %   - statistic_image
 %   - atlas
 %   - region
+%   - glm_map
 %
 % ..
 %     Author and copyright information:

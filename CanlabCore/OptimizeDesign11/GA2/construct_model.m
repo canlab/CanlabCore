@@ -12,7 +12,7 @@ function [X,paramvec,conditions] = construct_model(mspec,conditions,paramvec,var
 % dooverlap = 1 or 0, last (optional) argument; constrains events to not overlap with
 % other trials
 % If a 2nd element is entered, this is the min time in TRs between onsets of 
-% different trials - this performs a selective assigment of all trial times to conditions
+% different trials - this performs a selective assignment of all trial times to conditions
 % before calculating subparts, so may not work well with multiple trial types,
 % but works well with multiple conditions.
 %
@@ -369,7 +369,7 @@ return
 
 
 % -----------------------------------------------------------------------------------
-% * given conditions, get concatentated onsets of all trial types (conditions)
+% * given conditions, get concatenated onsets of all trial types (conditions)
 % ----------------------------------------------------------------------------------- 
 
 function alltons = get_all_trialonsets(conditions,mspec,paramvec,paramindex,varargin)

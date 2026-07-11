@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Written by Wu Jianxiao and CBIG under MIT license: https://github.com/ThomasYeoLab/CBIG/blob/master/LICENSE.md
-# This warpper script runs CBIG_projectVol2fsaverage.sh for an example input
+# This wrapper script runs CBIG_projectVol2fsaverage.sh for an example input
 
 if [ "$(uname)" == "Linux" ]; then
   SCRIPT_DIR=$(dirname "$(readlink -f "$0")")

@@ -254,7 +254,7 @@ end % parse_inputs
 rowsz = [];
 doplot = 0;
 basistype = 'spm+disp';
-% initalize optional variables to default values here.
+% initialize optional variables to default values here.
 
 % -------------------------------------------------------------------------
 % OPTIONAL INPUTS

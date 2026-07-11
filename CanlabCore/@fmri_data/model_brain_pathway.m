@@ -178,7 +178,7 @@ function stats = model_brain_pathway(obj,source_one,source_two,target_one,target
 
 % ..
 %    Programmers' notes:
-% 10/10/2019 Wrote funcion (Phil Kragel)
+% 10/10/2019 Wrote function (Phil Kragel)
 % 4/14/2020 Major overhaul and documentation (Phil Kragel and Tor Wager)
 % 4/15/2020 Add more documentation (Phil Kragel)
 % 9/16/2020 Tor Wager - update documentation
@@ -307,7 +307,7 @@ end
 
 % Convert data into cell arrays for cross-validation
 % Each cell contains a Voxels x Images matrix for the corresponding fold
-% For 10-fold, images will be devided into 10 cells
+% For 10-fold, images will be divided into 10 cells
 
 % note by kodiweera: convert to a cell array before the cross validation loop. I took this loop out of the main loop below to make the the program little faster as this is repeatedlty run during the k-fold validation.
 % Convert to cell array, one cell per subject
@@ -766,17 +766,17 @@ stats_report{2} = sprintf('Correlations were %s significant for Pathway 1, t(%3.
 
 istat = stats.latent_correlation_interaction_ttest;
 
-stats_report{3} = sprintf('The interaction between on-targed (expected) and off-target pathways was %s signficant, t(%3.1f) = %3.2f, p = %3.6f.', ...
+stats_report{3} = sprintf('The interaction between on-targed (expected) and off-target pathways was %s significant, t(%3.1f) = %3.2f, p = %3.6f.', ...
     sigstr{(istat.p < 0.05) + 1}, istat.df(1), istat.tstat(1), istat.p(1));
 
 istat = stats.latent_correlation_pathway_one_ttest;
 
-stats_report{4} = sprintf('Pathway 1 on-target vs. off-target correlations were %s signficant, t(%3.1f) = %3.2f, p = %3.6f.', ...
+stats_report{4} = sprintf('Pathway 1 on-target vs. off-target correlations were %s significant, t(%3.1f) = %3.2f, p = %3.6f.', ...
     sigstr{(istat.p < 0.05) + 1}, istat.df(1), istat.tstat(1), istat.p(1));
 
 istat = stats.latent_correlation_pathway_two_ttest;
 
-stats_report{5} = sprintf('Pathway 2 on-target vs. off-target correlations were %s signficant, t(%3.1f) = %3.2f, p = %3.6f.', ...
+stats_report{5} = sprintf('Pathway 2 on-target vs. off-target correlations were %s significant, t(%3.1f) = %3.2f, p = %3.6f.', ...
     sigstr{(istat.p < 0.05) + 1}, istat.df(1), istat.tstat(1), istat.p(1));
 
 stats_report{6} = '       ';
@@ -803,17 +803,17 @@ stats_report{wh_last + 2} = sprintf('Correlations were %s significant for Pathwa
 
 istat = stats.simple_correlation_interaction_ttest;
 
-stats_report{wh_last + 3} = sprintf('The interaction between on-targed (expected) and off-target pathways was %s signficant, t(%3.1f) = %3.2f, p = %3.6f.', ...
+stats_report{wh_last + 3} = sprintf('The interaction between on-targed (expected) and off-target pathways was %s significant, t(%3.1f) = %3.2f, p = %3.6f.', ...
     sigstr{(istat.p < 0.05) + 1}, istat.df(1), istat.tstat(1), istat.p(1));
 
 istat = stats.simple_correlation_pathway_one_ttest;
 
-stats_report{wh_last + 4} = sprintf('Pathway 1 on-target vs. off-target correlations were %s signficant, t(%3.1f) = %3.2f, p = %3.6f.', ...
+stats_report{wh_last + 4} = sprintf('Pathway 1 on-target vs. off-target correlations were %s significant, t(%3.1f) = %3.2f, p = %3.6f.', ...
     sigstr{(istat.p < 0.05) + 1}, istat.df(1), istat.tstat(1), istat.p(1));
 
 istat = stats.simple_correlation_pathway_two_ttest;
 
-stats_report{wh_last + 5} = sprintf('Pathway 2 on-target vs. off-target correlations were %s signficant, t(%3.1f) = %3.2f, p = %3.6f.', ...
+stats_report{wh_last + 5} = sprintf('Pathway 2 on-target vs. off-target correlations were %s significant, t(%3.1f) = %3.2f, p = %3.6f.', ...
     sigstr{(istat.p < 0.05) + 1}, istat.df(1), istat.tstat(1), istat.p(1));
 
 stats_report{wh_last + 6} = '       ';

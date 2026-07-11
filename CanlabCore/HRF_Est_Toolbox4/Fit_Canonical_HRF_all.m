@@ -7,7 +7,7 @@ function [HRF, Fit, Resid, Parameters, Results, df] = Fit_Canonical_HRF_all(TC, 
 % 
 % TC    - time course (voxel x time course)
 % TR    - time resolution
-% Runs  - expermental design
+% Runs  - experimental design
 % T     - length of estimated HRF
 % p     - Model type
 % Z     - Nuisance covariates (time course x number of components)

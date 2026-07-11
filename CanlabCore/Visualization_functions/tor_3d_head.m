@@ -1,5 +1,5 @@
 % run this script AFTER using talairach space utility (tsu.m) to get clusters
-% this copies the orignial tsu stuff in ihb_TalSpaceView3D.m, but in the workspace
+% this copies the original tsu stuff in ihb_TalSpaceView3D.m, but in the workspace
 
 %------------------------------------------------------------------------------
 % Get cluster information

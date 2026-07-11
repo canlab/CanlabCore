@@ -8,7 +8,7 @@ function [x,fval,exitflag,output]=fminsearchbnd4(fun,x0,LB,UB,options,varargin)
 % 2) I have moved the 'intrafun' and 'xtransform' functions and wrappers to be nested functions 
 % (INSIDE the fminsearchbnd function), so they do not need to pass the params structure around 
 % (into fminsearch) - but have access to it directly.  This maintains the integrity of the varargin, 
-% which the user may be passing thru fminsearch to their optmization funciton (fminsearchbnd had 
+% which the user may be passing thru fminsearch to their optimization function (fminsearchbnd had 
 % passed the params structure to fminsearch, thus ruining any varargin that the user passed in).
 % This also obviates the params.(whatever) structure the author had, so I've eliminated it so things
 % are simpler.

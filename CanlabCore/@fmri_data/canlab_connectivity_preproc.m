@@ -178,7 +178,7 @@ function [dat, roi_val, maskdat, beta_dat, beta_roi_val] = canlab_connectivity_p
 %               spikes., Consistent with principles in Lindquist 2019
 %               "sequential filtering" paper. See more notes below.
 %    08/01/19: Wani reversed Tor and Marianne's revision above 
-%               after dicussion with Tor and others. Spikes should be removed
+%               after discussion with Tor and others. Spikes should be removed
 %               before "low-pass filtering" the nuisance covariates, and
 %               added to the covariates later (see Ciric et al., 2018)
 %               Lindquist et al., 2019 did not address the issue related to 
@@ -571,7 +571,7 @@ function R = filter_cov_wo_spikes(R, TR, filter)
 % time series data appropriately, accounting for filtering.
 %
 % 8/1/2019: Wani reversed this to the previous version after
-% dicussion with Tor and others. Spikes should be removed
+% discussion with Tor and others. Spikes should be removed
 % before "low-pass filtering" the nuisance covariates, and
 % added to the covariates later (see Ciric et al., 2018)
 

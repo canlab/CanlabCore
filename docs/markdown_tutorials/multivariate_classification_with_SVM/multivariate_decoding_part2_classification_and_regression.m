@@ -3,9 +3,9 @@
 %[text] Both classification and regression are supervised decoding: learn a map from a brain image **X** to an outcome **Y**, cross-validate, read out a weight map and an out-of-sample score. They differ only in **Y**: categorical (classification → accuracy / ROC / confusion) vs continuous (regression → prediction–outcome *r* / R²). Everything else is shared.
 %%
 %[text] ## 1. One-line loaders
-%[text] Two keyword datasets give a ready-to-decode |fmri\_data| object with |.Y| and a |metadata\_table| already populated — no manual masking, concatenation, or label-building.
+%[text] Two keyword datasets give a ready-to-decode |fmri\_data| object with |.Y| and a |metadata\_table| already populated — no manual masking, concatenation, or label-building. The BMRK3 pain dataset (198 images = 33 subjects × 6 heat levels) is built directly from the per-subject images that ship inside CanlabCore, so |load\_image\_set('bmrk3')| needs no download.
 hw_obj = load_image_set('DPSP_hotwarm', 'noverbose');   % classification: Y = +1 (Hot) / -1 (Warm)
-bmrk3  = load_image_set('bmrk3', 'noverbose');          % regression: Y = continuous pain rating %[output:2d11e046]
+bmrk3  = load_image_set('bmrk3', 'noverbose');          % regression: Y = continuous pain rating (ships with CanlabCore) %[output:2d11e046]
 %%
 %[text] ## 2. Classification end-to-end with fmri\_data.predict
 %[text] Pass the image object, choose an algorithm by keyword, and with |'newapi'| get back a |predictive\_model| (4th output) you can visualize directly. The model carries a |weights.weight\_obj|, so |montage(pm)| / |rocplot(pm)| / |confusionchart(pm)| work with no extra arguments.

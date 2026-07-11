@@ -21,7 +21,7 @@
 % If the defaults are used then the result is identical to PCR, only you 
 % get both within and between subject predictive models in addition to the 
 % full model. Different results may be obtained with hyperparameter
-% optimization or concensus PCA enabled.
+% optimization or consensus PCA enabled.
 %
 % Input ::
 %
@@ -30,7 +30,7 @@
 %   Y           - n x 1 outcome vector
 %
 %   'subjIDs    - n x 1 vector (ideal) or cellstr (throws warning, but
-%                   fine) indicating group affilitations. Subjects must be
+%                   fine) indicating group affiliations. Subjects must be
 %                   adjacent. Don't intermix blocks with one another. This
 %                   function was not designed for this scenario and will
 %                   break even with equivalently intermixed block labels.
@@ -52,9 +52,9 @@
 %                   default if you wish to treat trait differences as
 %                   noise.
 %
-%   'cpca'      - followed by 0/1 to indicate whether or not concensus PCA
+%   'cpca'      - followed by 0/1 to indicate whether or not consensus PCA
 %                   (Westerhuis, et al. 1998) should be used in place of 
-%                   standard pca. If concensus PCA is enabled eigenvectors 
+%                   standard pca. If consensus PCA is enabled eigenvectors 
 %                   will be selected such that variance is explained 
 %                   equally across all blocks. Otherwise eigenvectors will 
 %                   best represent blocks with the most observations.
@@ -64,7 +64,7 @@
 %                   and will consequently fight against CPCA. A future 
 %                   update may fix this, and if so this note should be 
 %                   removed.
-%                 Note 2: In principle concensus PCA could be implemened
+%                 Note 2: In principle consensus PCA could be implemented
 %                   for traditional PCR too. It just hasn't been.
 %
 %   'randInt'   - Fit a random intercept model. Default=false
@@ -120,7 +120,7 @@
 %       Hierarchical PCA and PLS Methods. Journal of Chemometrics 12(5).
 %   
 %
-% Designed and writen by Bogdan, 5/4/2020
+% Designed and written by Bogdan, 5/4/2020
 %                   
 %
 %
@@ -129,7 +129,7 @@
 %   (allowing the user to force retention of one or the other even if
 %   eigenvalue rank doesn't justify it)
 % - passthrough options to higher level cv_mlpcr, cv_mlpcr_bt and
-%   cv_mlpcr_wi scripts. Concensus PCA should also use concensus cv_err,
+%   cv_mlpcr_wi scripts. Consensus PCA should also use consensus cv_err,
 %   cv_mlpcr_wi and cv_mlpcr_bt should have within and between priority
 %   (respectively) by default.
 
@@ -173,7 +173,7 @@ function [B, Bb, Bw, pc_b, sc_b, pc_w, sc_w, b] = mlpcr3(X,Y,varargin)
     intercept = ones(1,size(X,2))';
     wh = cellfun(@(x) isequal(x,intercept),num2cell(X,1));
     if ~isempty(wh)
-        warning('Your input X should not contain an intercept. Removing it. Model parameters will corespond to intercept free design')
+        warning('Your input X should not contain an intercept. Removing it. Model parameters will correspond to intercept free design')
         X(:,wh) = [];
     end
     %}
@@ -217,14 +217,14 @@ function [B, Bb, Bw, pc_b, sc_b, pc_w, sc_w, b] = mlpcr3(X,Y,varargin)
         % determine within dimension retention
         if wiDim > length(subjIDs) - length(uniq_grp)
             if wiDim < Inf % something user supplied was too big
-                warning('Max wiDim exceeds max df, reseting wiDim to %d',length(subjIDs) - length(uniq_grp));
+                warning('Max wiDim exceeds max df, resetting wiDim to %d',length(subjIDs) - length(uniq_grp));
             end
 
             wiDim = min(length(subjIDs) - length(uniq_grp), size(X,2));
         end
         
         
-        % Get concensus PCA solution, which weighs each block equally
+        % Get consensus PCA solution, which weighs each block equally
         % requires Matlab 2016b or later perform operation across all
         %   columns like this with sf
         [pc_w,~,~] = svd((sf.*Xw)', 'econ');
@@ -253,7 +253,7 @@ function [B, Bb, Bw, pc_b, sc_b, pc_w, sc_w, b] = mlpcr3(X,Y,varargin)
         % get between components from residual between fraction
         if btDim > length(uniq_grp) - 1
             if btDim < Inf % something user supplied was too big
-                warning('Max btDim exceeds max df, reseting btDim to %d',length(uniq_grp) - 1);
+                warning('Max btDim exceeds max df, resetting btDim to %d',length(uniq_grp) - 1);
             end
 
             btDim = min(length(uniq_grp) - 1, size(Xb,2));
@@ -280,7 +280,7 @@ function [B, Bb, Bw, pc_b, sc_b, pc_w, sc_w, b] = mlpcr3(X,Y,varargin)
     
     % 3/8/13 TW solution from cv_pcr code to use numcomps, because sc is 
     %   not always full rank during bootstrapping. 
-    % Modified by Bogdan for use in mlpcr to keep componens with the 
+    % Modified by Bogdan for use in mlpcr to keep components with the 
     %   highest ranking eigenvectors (not necessarily sequential in mlpcr 
     %   because of within/between stratification)
     % ToDo: create a bootstrap priority option to allow the user to specify

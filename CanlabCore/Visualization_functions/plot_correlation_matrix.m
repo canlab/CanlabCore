@@ -45,7 +45,7 @@ function OUT = plot_correlation_matrix(X, varargin)
 %           It must have the fields 'r', 'p', and 'sig', each with a k x k matrix
 %           r = correlation values
 %           p = p-values
-%           sig = signficance matrix (logical)
+%           sig = significance matrix (logical)
 %        In this case, plot_correlation_matrix will ignore all calculation-related inputs
 %
 % :Optional Inputs:
@@ -184,7 +184,7 @@ max_radius = [];        % set by default to range(colorlimit)/4 or 0.5 if empty
 partitions = [];
 partitioncolors = {};
 partitionlabels = {};
-doreorder = false;      % Reorder columns to sort by partition labels; udpated below
+doreorder = false;      % Reorder columns to sort by partition labels; updated below
 reorder_by_clustering = false;
 
 % names
@@ -319,7 +319,7 @@ elseif isstruct(X)
     % It must have the fields 'r', 'p', and 'sig', each with a k x k matrix
     % r = correlation values
     % p = p-values
-    % sig = signficance matrix (logical)
+    % sig = significance matrix (logical)
     
     if doreorder
         X.r = X.r(sort_order, sort_order);

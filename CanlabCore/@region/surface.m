@@ -222,4 +222,14 @@ end
 
 render_on_surface(obj, surface_handles, varargin{:});
 
+% Hide the "..." interaction toolbar on the surface axes (recent MATLAB shows one
+% in the corner of every axes). Sweep the figure(s) holding the surface patches.
+try
+    sh = surface_handles(ishandle(surface_handles));
+    if ~isempty(sh)
+        canlab_hide_axes_toolbar(ancestor(sh(1), 'figure'));
+    end
+catch
+end
+
 end % function

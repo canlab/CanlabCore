@@ -189,7 +189,7 @@ if noverbose, doverbose = false; end
 % Checks for required functions
 if isempty(which('mafdr')), error('Sorry, you need the Matlab bioinformatics toolbox on your Matlab path to use the Storey 2002 mafdr function called here.'); end
 
-% Load parcel atlas and initalize object
+% Load parcel atlas and initialize object
 if ~isempty(ARGS.mask)
 
 

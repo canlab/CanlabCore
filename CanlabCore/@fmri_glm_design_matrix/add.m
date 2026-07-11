@@ -97,18 +97,31 @@ for i = find(isothermethod)
             isothermethod(i + 1) = false;
             
         case 'condition_names'
-            
-            % special function for checking SPM-style format rules
-            [names, nsess, nconds] = check_req_and_length(obj, varargin{i+1});
-            
-            indx = 1;
+
+            % Condition names are assumed to be the same for all sessions.
+            % Accept either nconds names (shared across sessions) or
+            % nsess*nconds names (session-major). Use the actual number of
+            % conditions from the onset structures when available.
+            names = varargin{i + 1};
+            if ~iscell(names), names = {names}; end
+
+            nsess = length(obj.nscan);
+            nconds = length(obj.Sess(1).U);
+            if nconds == 0
+                nconds = length(names) ./ nsess;   % legacy fallback (no onsets yet)
+            end
+
+            shared = (numel(names) == nconds);
             for ss = 1:nsess
                 for condname = 1:nconds
-                    obj.Sess(ss).U(condname).name = names{indx};
-                    indx = indx + 1;
+                    if shared
+                        obj.Sess(ss).U(condname).name = names{condname};
+                    else
+                        obj.Sess(ss).U(condname).name = names{(ss - 1) * nconds + condname};
+                    end
                 end
             end
-            
+
             isothermethod(i + 1) = false;
             
         case 'SPM'

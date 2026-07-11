@@ -1,5 +1,5 @@
 function [wh_outlier_uncorr, wh_outlier_corr, X] = plot(fmridat, varargin)
-% Custom plots for fmri_data object. Includes mulitple plots and outlier detection.
+% Custom plots for fmri_data object. Includes multiple plots and outlier detection.
 %
 % :Usage:
 % ::
@@ -79,7 +79,7 @@ function [wh_outlier_uncorr, wh_outlier_corr, X] = plot(fmridat, varargin)
 %         of each image are equal. If the variances are all of approximately the same scale,
 %         the diagonal will be a single color.
 %
-%        Correlation Matrix $\frac{{X}'X}{n-1}$, colums of X are Z-scored, n is number of rows in X
+%        Correlation Matrix $\frac{{X}'X}{n-1}$, columns of X are Z-scored, n is number of rows in X
 %        This plot shows the correlation between each image and the others.
 %        Now, the main diagonal will always be one because each image is
 %        perfectly correlated with itself. The off-diagonals should be positive

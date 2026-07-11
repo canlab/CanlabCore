@@ -4,7 +4,9 @@ A lightweight, dependency-free **web orthviews** for CANlab neuroimaging results
 [NiiVue](https://github.com/niivue/niivue). It renders a NIfTI underlay plus a statistic/mask
 overlay in the browser — multiplanar / axial / coronal / sagittal / 3-D-render layouts,
 transparent sub-threshold voxels (blobs over anatomy), colormap / threshold / opacity controls,
-and a live MNI-coordinate + value readout. No build step, no CDN, works offline.
+and a live MNI-coordinate + value readout. An atlas (attached by default) names the region under
+the crosshair and highlights **just that region** — shown as an Outline (default), Shaded fill, or
+Off via the "Atlas region" dropdown. No build step, no CDN, works offline.
 
 ## 📖 Full documentation
 
@@ -15,9 +17,21 @@ and a live MNI-coordinate + value readout. No build step, no CDN, works offline.
 
 ```matlab
 t = threshold(ttest(load_image_set('emotionreg')), .005, 'unc', 'k', 10);
-canlab_niivue(t);                                  % standalone .html, opened in browser
-canlab_niivue(t, 'outdir', 'myfig', 'standalone', false);  % folder bundle
+canlab_niivue(t);                                  % standalone .html (atlas on by default)
+canlab_niivue(t, 'outdir', 'myfig', 'standalone', false);  % folder bundle (auto-served)
+canlab_niivue(t, 'atlas', 'glasser');              % use a different atlas as the source
+canlab_niivue(t, 'noatlas');                        % disable the atlas region readout
 ```
+
+The atlas (`'atlas', obj | keyword | true`) is loaded as a hidden integer-label layer that names
+the region under the crosshair and highlights only that region (Outline / Shaded / Off dropdown).
+It is **on by default** in both modes — the label volume gzips to ~74 KB, so the standalone
+`.html` cost is small. `'noatlas'` (or `'atlas','none'`) disables it.
+
+> **Folder mode is auto-served.** Folder bundles use ES-module imports, which browsers block on
+> `file://` (CORS) — opening one directly shows a blank page. `canlab_niivue` therefore starts a
+> short-lived local `python3 -m http.server` and opens the `http://localhost` URL for you.
+> Standalone mode has no such restriction (single self-contained file).
 
 ## Embed in your own HTML page (folder mode)
 

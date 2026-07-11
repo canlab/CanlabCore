@@ -1,5 +1,5 @@
 function info = roi_contour_map(dat, varargin)
-% Draw a pattern map of one slice (either saggital, axial, or coronal) that
+% Draw a pattern map of one slice (either sagittal, axial, or coronal) that
 % shows the most voxels, or the slice that you specify (e.g., x = #). 
 % You can also draw outlines for the significant voxels from a statistical test. 
 %
@@ -64,7 +64,7 @@ function info = roi_contour_map(dat, varargin)
 %
 %   **'xyz':**
 %        When you want a specific view and slice, you can use this
-%        option with 'coord'. (1:x - saggital view, 2:y - coronal 
+%        option with 'coord'. (1:x - sagittal view, 2:y - coronal 
 %        view, 3:z - axial view)
 %
 %   **'coord':**

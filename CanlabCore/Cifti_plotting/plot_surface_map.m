@@ -17,7 +17,7 @@ function h = plot_surface_map(dat,varargin)
 %     h = plot_surface_map(d, varargin);
 %
 %
-% See make_surface_figure for the underlaying rendering of the brain surfaces.
+% See make_surface_figure for the underlying rendering of the brain surfaces.
 % 
 % :Dependencies:
 %
@@ -44,7 +44,7 @@ function h = plot_surface_map(dat,varargin)
 %        right hemispheres in each cell, respectively. Here, dat{1} 
 %        contains functional information for the left hemisphere, and 
 %        dat{2} contains functional information for the right hemisphere. 
-%        Data for each hemispere are v x 1 vectors with one
+%        Data for each hemisphere are v x 1 vectors with one
 %        datapoint for each surface vertex. Default for HCP standard space
 %        is 32,492 vertices per hemisphere. If you provide individual
 %        hemisphere surface files via the 'surfacefiles' option, the number
@@ -73,7 +73,7 @@ function h = plot_surface_map(dat,varargin)
 %
 %   **'colmap'**
 %       followed by a colormap matrix to use for the data (m x 3) or a 
-%       string with name of a MATLAB build-in colormap (eg. 'parula'). If
+%       string with name of a MATLAB built-in colormap (eg. 'parula'). If
 %       you have the cbrewer2 package installed, you can call this, 
 %       eg. plot_surface_map(dat,'colormap',cbrewer2('RdBu',64));
 %
@@ -186,7 +186,7 @@ onecolor = []; % plot a mask in a single color
 facealpha = 0.7; % face alpha value for data
 bgcol = [1 1 1]; % background color
 txtcol= [0 0 0]; % text color
-figtitle = []; % title for figure to pring
+figtitle = []; % title for figure to print
 dooutline = 0; % only plot the outlines of clusters 
 wh_map = 1;
 datafield = 'dscalar'; % default fieldname of dscalar-structure

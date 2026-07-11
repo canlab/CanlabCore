@@ -55,7 +55,7 @@ function o2 = montage(obj, varargin)
 %        fmridisplay or edit code for defaults as example).
 %
 %   **'montagetype':**
-%        'full' for full montages of axial and saggital slices.
+%        'full' for full montages of axial and sagittal slices.
 %        'full hcp' for full montage, but with surfaces and volumes from
 %        HCP data.
 %        'compact' [default] for single-figure parasagittal and axial slices.

@@ -26,7 +26,7 @@
 %
 % Usage:
 % ------------------------------
-% Class constuctor method: Usage for creating objects of this type:
+% Class constructor method: Usage for creating objects of this type:
 % - Loads first image in 4-D volume only
 % - Returns values within mask (excludes zeros and NaNs)
 % - entering 'implicit' as an optional keyword will use fmri_mask_image to get an implicit mask

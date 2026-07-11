@@ -137,7 +137,7 @@ return;
 function [G] = Create_Design_Eq2(y, x, Vy)
 % function [G] = Create_Design(y, x, Vy)
 %
-% Create Design matrix for estimation of variance componets
+% Create Design matrix for estimation of variance components
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 

@@ -220,7 +220,7 @@ for i = 1:k
         
         legendtext = sprintf('Wedge plots depict normalized local pattern expression (sqrt(w''*w)/(vol_in_mm+1000) based on the signature pattern visualized. ');
         legendtext = [legendtext 'The color of each wedge indicates the pattern valence, whether values are positive (red) or negative (blue) on average. '];
-        legendtext = [legendtext 'A region may have high pattern importance (large weights, indicated by a large wedge) and either net positive weights (red), negative weights (blue), or mixed weights (purple). If weights are homogenous (bright red or blue), the region average is a good summary of the pattern. But if weights are mixed, the region average is not a good summary of the pattern. '];
+        legendtext = [legendtext 'A region may have high pattern importance (large weights, indicated by a large wedge) and either net positive weights (red), negative weights (blue), or mixed weights (purple). If weights are homogeneous (bright red or blue), the region average is a good summary of the pattern. But if weights are mixed, the region average is not a good summary of the pattern. '];
         
         legendtext = [legendtext '\nNote: Importance is defined as mean squared weight per cubic mm of tissue, regularized by adding a constant (1 cm^3). This is not absolute importance across all voxels (which would favor large regions and favors small regions with large weights over large regions with local ''hot-spots''. Therefore, importance is regularized by adding 1 cm^3 to all region volumes'];
 

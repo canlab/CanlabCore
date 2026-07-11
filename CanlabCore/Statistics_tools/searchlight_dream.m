@@ -96,7 +96,7 @@ function searchlight_dream(dat, dist_n, mask, varargin)
 %        save weights for each searchlight (default = false)
 %
 %   **'email':**
-%        should be followed by an email adress (default = false)
+%        should be followed by an email address (default = false)
 %
 % :Outputs:
 %

@@ -38,7 +38,7 @@ require a graphics environment (won't fully work in headless `matlab -batch`).
 
 | Method | From | One-liner |
 |---|---|---|
-| `montage` | `fmridisplay` | Create a slice montage (axial / saggital / coronal) and register it on the object |
+| `montage` | `fmridisplay` | Create a slice montage (axial / sagittal / coronal) and register it on the object |
 | `surface` | `fmridisplay` | Add cortical surface(s) to the figure and register them on the object |
 | `addblobs` | `fmridisplay` | Render a region/cluster object as blobs on every registered montage and surface |
 | `addthreshblobs` | `fmridisplay` | Add blobs from a `statistic_image` at multiple thresholds (single color) |

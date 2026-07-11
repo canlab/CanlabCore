@@ -103,7 +103,7 @@ function [fitresult, gof,stats] = evaluate_spatial_scale(data_obj,parcel_obj,var
 %
 %   Phil: created, Dec 2018
 %
-%   TODOs: - change outcome metric to optionally incude accuracy/AUC/etc.
+%   TODOs: - change outcome metric to optionally include accuracy/AUC/etc.
 %          - change outcome to optionally reflect % of noise ceiling
 %          - account for regions that have small number of voxels
 % ..

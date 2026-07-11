@@ -425,7 +425,7 @@ wh = strcmp(varargin, 'subcortex slices');
 if any(wh), montagetype = varargin{find(wh)}; varargin(wh) = []; end
 
 
-% if these are run before coronal/saggital arguments are parsed they will
+% if these are run before coronal/sagittal arguments are parsed they will
 % overwrite the blob/regioncenters argument, so run these last.
 wh = strcmp(varargin, 'blobcenters');
 if any(wh)
@@ -493,9 +493,35 @@ if ~exist('o2', 'var')
         % complete path specified
         o2 = fmridisplay('overlay',overlay);
     end
-    
-    % You can customize these and run them from the command line
-    
+
+    do_setup_display = true;   % freshly constructed object: compose the layout
+
+else
+    % An existing fmridisplay object was passed in (e.g.
+    % o2 = canlab_results_fmridisplay(cl, o2, ...)): REUSE it instead of building
+    % a new one. Compose the requested montage/surface layout onto it when it has
+    % NO montages yet (so fmridisplay.multiview can compose even onto an object
+    % that already has surfaces); if montages already exist, skip composition and
+    % just add blobs to it (the long-standing reuse behaviour). This lets
+    % fmridisplay.multiview delegate the figure/axes compositions here.
+    do_setup_display = isempty(o2.montage);
+
+end
+
+% You can customize these and run them from the command line
+
+if do_setup_display
+
+    % Never draw into the interactive controller (a uifigure): several montage
+    % layouts (e.g. the default 'compact') draw into the current figure via
+    % axes(), which errors on a uifigure ('AutoResizeChildren' is 'on'). If the
+    % current figure is a uifigure, open a fresh traditional figure so behaviour
+    % is consistent with fmridisplay.montage / .surface. (Layouts that create
+    % their own figure below are unaffected.)
+    if dofigure && canlab_is_uifigure(get(groot, 'CurrentFigure'))
+        figure;
+    end
+
     switch montagetype
         
         case {'blobcenters', 'regioncenters'}
@@ -558,7 +584,7 @@ if ~exist('o2', 'var')
         case 'compact'
             % The default
             
-            % saggital
+            % sagittal
             axh1 = axes('Position', [-0.02 0.4 .17 .17]);
             [o2, dat] = montage(o2, 'saggital', 'wh_slice', [-4 0 0], 'onerow', 'noverbose', 'existing_axes', axh1);
             text(50, -50, 'left');
@@ -668,7 +694,7 @@ if ~exist('o2', 'var')
                     
                 end
                     
-                % saggital
+                % sagittal
                 axh = axes('Position', [-0.02 .75-shiftvals(i) .17 .17]);  % [-0.02 0.15+shiftvals(i) .17 .17]);
                 axh(2) = axes('Position', [.022 .854-shiftvals(i) .17 .17]);
                 
@@ -733,10 +759,10 @@ if ~exist('o2', 'var')
             end
 
         case 'full'
-            % --- Saggital ---
+            % --- Sagittal ---
             [o2, dat] = montage(o2, 'saggital', 'wh_slice', xyz, 'onerow', 'noverbose');
             shift_axes(-0.02, -0.04);
-            sag_coords = xyz(:, 1);  % x-coordinates for saggital
+            sag_coords = xyz(:, 1);  % x-coordinates for sagittal
 
             % --- Coronal ---
             sr_cor = [-40 50];
@@ -821,7 +847,7 @@ if ~exist('o2', 'var')
 
         case 'full2'
 
-            % saggital
+            % sagittal
             [o2, dat] = montage(o2, 'saggital', 'wh_slice', xyz, 'onerow', 'noverbose');
             shift_axes(-0.02, -0.04);
 
@@ -1172,7 +1198,7 @@ if ~exist('o2', 'var')
             wh_montages = [1 2 3];
             
         case 'full hcp'
-            % saggital
+            % sagittal
             [o2, dat] = montage(o2, 'saggital', 'wh_slice', xyz, 'onerow', 'noverbose');
             shift_axes(-0.02, -0.04);surface right
             
@@ -1253,7 +1279,7 @@ if ~exist('o2', 'var')
 
 
         case 'full hcp inflated'
-            % saggital
+            % sagittal
             [o2, dat] = montage(o2, 'saggital', 'wh_slice', xyz, 'onerow', 'noverbose');
             shift_axes(-0.02, -0.04);
             
@@ -1333,7 +1359,7 @@ if ~exist('o2', 'var')
 
 
         case 'full no surfaces'
-            % saggital
+            % sagittal
             [o2, dat] = montage(o2, 'saggital', 'wh_slice', xyz, 'onerow', 'noverbose');
             % shift_axes(-0.02, -0.04);
             
@@ -1405,7 +1431,7 @@ if ~exist('o2', 'var')
             wh_montages = [1 2 3 4];
 
         case 'hcp grayordinates'
-            % saggital
+            % sagittal
             f1 = gcf;
             mainLayout = tiledlayout(f1,1,5);
             surfLayout = tiledlayout(mainLayout, 2, 2, 'Parent', mainLayout, 'TileSpacing', 'compact', 'Padding', 'none');
@@ -1451,7 +1477,7 @@ if ~exist('o2', 'var')
             wh_surfaces = [1:4];
 
         case 'hcp grayordinates subcortex'
-            % saggital
+            % sagittal
             f1 = gcf;
             n_col = size(grayord_xyz,1);
             n_row = size(grayord_xyz,2);
@@ -1629,7 +1655,7 @@ if ~exist('o2', 'var')
             wh_surfaces = [1:4];
 
         case 'leftright inout subcortex'
-            % saggital
+            % sagittal
             f1 = gcf;
             mainLayout = tiledlayout(f1,1,5);
             surfLayout = tiledlayout(mainLayout, 2, 2, 'Parent', mainLayout, 'TileSpacing', 'compact', 'Padding', 'none');
@@ -1673,7 +1699,7 @@ if ~exist('o2', 'var')
 
 
         case 'subcortex full'
-            % saggital
+            % sagittal
             f1 = gcf;
             mainLayout = tiledlayout(f1,1,5);
             surfLayout = tiledlayout(mainLayout, 2, 2, 'Parent', mainLayout, 'TileSpacing', 'compact', 'Padding', 'none');
@@ -1885,7 +1911,7 @@ if ~exist('o2', 'var')
             wh_surfaces = [1:4];
 
         otherwise 
-            error('illegal montage type. choose one of the following: blobcenters, regioncenters, compact, multirow, full, full2, compact2, compact3, coronal, saggital, allslices, full hcp, full hcp inflated, full no surfaces, hcp grayordinates, hcp grayordinates subcortex, hcp inflated, hcp sphere, freesurfer inflated, freesurfer white, freesurfer sphere, MNI152NLin2009cAsym white, MNI152NLin2009cAsym midthickness, MNI152NLin2009cAsym pial, MNI152NLin6Asym white, MNI152NLin6Asym midthickness, MNI152NLin6Asym pial, MNI152NLin6Asym sphere, inout leftright, inout leftright subcortex.');
+            error('illegal montage type. choose one of the following: blobcenters, regioncenters, compact, multirow, full, full2, compact2, compact3, coronal, sagittal, allslices, full hcp, full hcp inflated, full no surfaces, hcp grayordinates, hcp grayordinates subcortex, hcp inflated, hcp sphere, freesurfer inflated, freesurfer white, freesurfer sphere, MNI152NLin2009cAsym white, MNI152NLin2009cAsym midthickness, MNI152NLin2009cAsym pial, MNI152NLin6Asym white, MNI152NLin6Asym midthickness, MNI152NLin6Asym pial, MNI152NLin6Asym sphere, inout leftright, inout leftright subcortex.');
     end
     
     % wh_montages = [1 2];
@@ -1902,7 +1928,7 @@ else % use existing o2 object to add montages
         % use same o2, but add montages
         switch montagetype
             case 'full'
-            % saggital
+            % sagittal
             [o2, dat] = montage(o2, 'saggital', 'wh_slice', xyz, 'onerow', 'noverbose');
             shift_axes(-0.02, -0.04);        
 
@@ -2204,6 +2230,24 @@ end
 
 if dooutline
     o2 = addblobs(o2, cl, 'color', outlinecolor, 'outline', 'wh_montages', wh_montages, 'no_surface');
+end
+
+% Hide the "..." per-axes interaction toolbar on every panel of the composed
+% figures (montage slices AND rendered surfaces, incl. layouts like 'full' /
+% 'compact2' that build extra axes). Sweep the figures that hold this object's
+% montage / surface axes.
+try
+    composed_figs = gobjects(0);
+    for mi = 1:numel(o2.montage)
+        ah = o2.montage{mi}.axis_handles; ah = ah(ishandle(ah));
+        if ~isempty(ah), composed_figs(end+1) = ancestor(ah(1), 'figure'); end %#ok<AGROW>
+    end
+    for si = 1:numel(o2.surface)
+        oh = o2.surface{si}.object_handle; oh = oh(ishandle(oh));
+        if ~isempty(oh), composed_figs(end+1) = ancestor(oh(1), 'figure'); end %#ok<AGROW>
+    end
+    canlab_hide_axes_toolbar(composed_figs);
+catch
 end
 
 

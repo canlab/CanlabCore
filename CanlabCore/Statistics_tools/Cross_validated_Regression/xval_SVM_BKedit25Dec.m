@@ -52,7 +52,7 @@ function S = xval_SVM(varargin)
 %
 % Class probability estimates: 
 % - crossval returns cross-validated yfit (class predictions), scores (dist_from_hyperplane_xval),
-% class_probability_xval. Scores and class probabilties will diverge (may
+% class_probability_xval. Scores and class probabilities will diverge (may
 % not be perfectly correlated) because the sigmoid scaling (Platt scaling) varies across folds.
 % They will diverge more if there is no true signal.
 %
@@ -372,7 +372,7 @@ end
 S.nfolds = length(S.trIdx);
 
 % crossval returns cross-validated yfit (class predictions), scores (dist_from_hyperplane_xval),
-% class_probability_xval. Scores and class probabilties will diverge (may
+% class_probability_xval. Scores and class probabilities will diverge (may
 % not be perfectly correlated) because the sigmoid scaling (Platt scaling) varies across folds.
 % They will diverge more if there is no true signal.
 
@@ -1081,7 +1081,7 @@ else
     
     xlabel(sprintf('ID, %3.0f%% single-interval acc', S.crossval_accuracy));
     
-    disp('Red cicles: Errors. Green triangles: Scores for Class 1, Blue triangles: Scores for Class -1');
+    disp('Red circles: Errors. Green triangles: Scores for Class 1, Blue triangles: Scores for Class -1');
     
     axis tight
     
@@ -1140,7 +1140,7 @@ end
 function xval_plot_scores_vs_class_probability(S)
 
 % crossval returns cross-validated yfit (class predictions), scores (dist_from_hyperplane_xval),
-% class_probability_xval. Scores and class probabilties will diverge (may
+% class_probability_xval. Scores and class probabilities will diverge (may
 % not be perfectly correlated) because the sigmoid scaling (Platt scaling) varies across folds.
 % They will diverge more if there is no true signal.
 

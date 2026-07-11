@@ -86,7 +86,7 @@ function desc = descriptives(dat, varargin)
 doverbose = true;
 plotcoverage = false;
 
-% initalize optional variables to default values here.
+% initialize optional variables to default values here.
 
 
 % optional inputs with default values

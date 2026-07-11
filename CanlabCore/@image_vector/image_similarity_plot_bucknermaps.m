@@ -75,7 +75,7 @@ function stats = image_similarity_plot_bucknermaps(obj, varargin)
 % DEFAULTS AND INPUTS
 % ..
 
-doaverage = 0; % initalize optional variables to default values here.
+doaverage = 0; % initialize optional variables to default values here.
 
 
 % optional inputs with default values

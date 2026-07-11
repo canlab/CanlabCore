@@ -13,7 +13,7 @@ function [X,mP,spmP] = tor_get_physio(varargin)
 % The program extracts raw/preprocessed image data from the ventricles (CSF space), as
 % defined by a mask denoting which voxels are CSF for that subject.  
 % Either all voxels or a randomly selected subset [nvoxels] is subjected to
-% principal components analysis, to determine regular patters of drift over time
+% principal components analysis, to determine regular patterns of drift over time
 % and across voxels.  Those patterns are expected to be related to global signal drift,
 % head movement, and physiological noise, and are assumed to be UNrelated to the task
 % of interest, by virtue of the fact that they occur in the ventricles.

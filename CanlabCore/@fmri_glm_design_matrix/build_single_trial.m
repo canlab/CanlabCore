@@ -45,6 +45,8 @@ TR = obj.xY.RT;
 [sess_delta,  sess_conditions,  sess_X, sess_C, sess_B] = deal(cell(1, nsess)); 
 
 
+res = 16;   % high-resolution samples per second (TR-independent)
+
 for s = 1:nsess
 
 [ons, name] = deal(cell(1, nconds));
@@ -52,50 +54,48 @@ for s = 1:nsess
 [ons{:}] = deal(obj.Sess(s).U(:).ons);
 %[name{:}] = deal(obj.Sess(s).U(:).name);
 
-% make sure onsets are in TRs, not secs
-switch obj.xBF(1).UNITS
-    case 'secs'
-        % onsets are in sec, convert
-        for i = 1:nconds
-            ons{i} = ons{i} ./ TR;
-        end
-        
-    case {'tr', 'TR', 'trs'}
-        % ok, do nothing
+% Convert onsets to seconds (we build at high resolution, downsample to TR)
+to_sec = 1;
+if any(strcmpi(obj.xBF(1).UNITS, {'scans', 'tr', 'trs'})), to_sec = TR; end
+for i = 1:nconds
+    ons{i} = ons{i}(:) * to_sec;
 end
 
 % ----------------------------------------------
 % Build predictors for each session
 % ----------------------------------------------
 
-delta = onsets2delta(ons, obj.nscan(s));
-
-ns = size(delta, 1);
+nscan = obj.nscan(s);
+len_hires = round(nscan * TR * res);
 
 [trialdelta, cond_assignment] = deal(cell(1, nconds));
 
 % ----------------------------------------------
-% For each condition, parse into separate columns
-% for each onset (single-trial)
+% For each condition, parse into separate columns for each onset
+% (single-trial), at high resolution; convolve and downsample to TR.
 % ----------------------------------------------
 for j = 1:nconds
-    
-    wh = find(delta(:, j));
-    
-    trialdelta{j} = false(ns, length(wh));
-    
-    for k = 1:length(wh)
-        trialdelta{j}(wh(k), k) = true;
+
+    os = ons{j};
+    ntrials = numel(os);
+
+    trialdelta{j} = zeros(len_hires, ntrials);   % one hi-res column per trial
+    for k = 1:ntrials
+        idx = round(os(k) * res) + 1;
+        if idx >= 1 && idx <= len_hires, trialdelta{j}(idx, k) = 1; end
     end
-    
-    cond_assignment{j} = ones(length(wh), 1);
-    
+
+    cond_assignment{j} = ones(ntrials, 1);
+
+    % custom per-condition HRF, sampled at high resolution (res samples/s)
     bf = obj.xBF(j);
     xvals = 0:TR:bf.length - TR;
-    hrf = interp1(xvals, inputhrf{j}(1:length(xvals)), 1:bf.dt:bf.length, 'spline', 'extrap');  
-    
-    condX{j} = getPredictors(trialdelta{j}, hrf, 16);
-    
+    hrf = interp1(xvals, inputhrf{j}(1:length(xvals)), 0:1/res:bf.length, 'spline', 'extrap');
+    hrf = hrf(:);
+
+    Xi = getPredictors(trialdelta{j}, hrf, 'dsrate', res * TR, 'force_delta');
+    condX{j} = Xi(1:nscan, :);
+
 end % conditions
 
 sess_delta{s} = cat(2, trialdelta{:}); % not needed?
@@ -116,13 +116,15 @@ end  % Session
 % Put the pieces together
 % ----------------------------------------------
 
-obj.xX.X = [blkdiag(sess_X{:}) blkdiag(sess_C{:}) blkdiag(sess_B{:})];
+% Index xX(1) explicitly: obj.xX starts as an empty (0x0) struct, and a
+% dot-assignment to an empty struct array is illegal.
+obj.xX(1).X = [blkdiag(sess_X{:}) blkdiag(sess_C{:}) blkdiag(sess_B{:})];
 
-obj.xX.cond_assignments = cat(1, sess_conditions{:});
+obj.xX(1).cond_assignments = cat(1, sess_conditions{:});
 
-obj.xX.iH = find(any(obj.xX.cond_assignments, 2));
-obj.xX.iC = find(~any(obj.xX.cond_assignments, 2));
-obj.xX.iB = size(obj.xX.X, 2) - nsess : size(obj.xX.X, 2);
+obj.xX(1).iH = find(any(obj.xX(1).cond_assignments, 2));
+obj.xX(1).iC = find(~any(obj.xX(1).cond_assignments, 2));
+obj.xX(1).iB = size(obj.xX(1).X, 2) - nsess + 1 : size(obj.xX(1).X, 2);
 
 
 end % function
@@ -174,7 +176,10 @@ elseif length(obj.xBF) < nconds
 end
 
 for i = 1:nconds
-    obj.xBF(i).name = sprintf('%s for Condition %3.0f', obj.xBF(i).name, i);
+    % Idempotent: strip any prior " for Condition N" suffix so repeated
+    % build calls do not keep appending to the basis-set name.
+    basename = regexprep(obj.xBF(i).name, '\s*for Condition\s+\d+\s*$', '');
+    obj.xBF(i).name = sprintf('%s for Condition %3.0f', basename, i);
 end
 
 end

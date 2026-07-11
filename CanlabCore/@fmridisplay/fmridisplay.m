@@ -124,23 +124,42 @@
 %    Copyright 2011 - Tor Wager
 % ..
 
-classdef fmridisplay 
-    
+classdef fmridisplay < handle
+    % NOTE (2026 visualization overhaul): fmridisplay is now a HANDLE class.
+    % This is the load-bearing change behind live re-thresholding, colormap,
+    % and opacity edits (see VISUALIZATION_OVERHAUL_NOTES.md). Because every
+    % existing method uses the value-style `obj = method(obj, ...)` idiom and
+    % every call site self-reassigns (`o2 = addblobs(o2, ...)`), the returned
+    % handle equals the input handle and back-compatibility is preserved: a
+    % full audit found NO `o3 = o2; ... mutate(o3); ... use(o2)` aliasing
+    % sites in CanlabCore or CANlab_help_examples. The new capability is that
+    % the object instance is now a single source of truth that a figure
+    % (appdata back-pointer) and a controller widget can both reference, and
+    % that blob layers retain their source data + render options so they can
+    % be re-rendered in place via refresh / rethreshold / set_colormap /
+    % set_opacity.
+
     properties
-        
+
         overlay
-        SPACE 
+        SPACE
         activation_maps
 
         montage
         surface
         orthviews
-        
+
         history
-        history_descrip = 'Cell array: names of methods applied to this data, in order';      
+        history_descrip = 'Cell array: names of methods applied to this data, in order';
         additional_info = struct('');
-        
+
     end % properties
+
+    properties (Transient, Hidden)
+        % Handle of an open controller (uifigure) bound to this instance, if any.
+        % Transient: a live graphics handle, never saved with the object.
+        controller_handle = [];
+    end
     
     methods
         
@@ -194,13 +213,16 @@ classdef fmridisplay
             obj.history_descrip = [];
             obj.additional_info = '';
             
-            if nargin == 0
-                return
-            end
-            
+            % Control-only flag: 'nocontroller' suppresses the auto-launched
+            % controller (below). Stripped here so it is not forwarded to the
+            % input parser. The controller auto-opens by default but never in
+            % -batch (so scripts / unit tests are unaffected).
+            do_controller = ~batchStartupOptionUsed;
+            wh_noctrl = strcmp(varargin, 'nocontroller');
+            if any(wh_noctrl), do_controller = false; varargin(wh_noctrl) = []; end
 
             % Now parse inputs and run methods depending on what is entered
-            
+
             if any(strcmp(varargin, 'montage'))
                 wh = strcmp(varargin, 'montage');
                 varargin(wh) = [];
@@ -220,20 +242,61 @@ classdef fmridisplay
                             
                             obj = addblobs(obj, cl, varargin);
                             
-                        case {'slice_range', 'smooth', 'spacing', 'onerow'}
+                        case {'slice_range', 'smooth', 'spacing', 'onerow', 'legend', 'nolegend'}
                             % other inputs that we should ignore here
                             % but are used in subfunctions like montage,
-                            % etc.
+                            % etc. ('legend'/'nolegend' control the montage
+                            % figure colorbar; see @image_vector/montage.)
                             
                         otherwise, warning(['Unknown input string option:' varargin{i}]);
                     end
                 end
             end
 
-            
+            % Bring up the interactive controller by default (fmridisplay is a
+            % handle class, so it stays bound to this object and updates as layers
+            % are added). Suppressed in -batch and with 'nocontroller'; wrapped so
+            % it can never break construction. Save/restore the current figure so
+            % opening the controller uifigure does NOT hijack gcf — otherwise the
+            % very next montage/surface call (e.g. `figure; montage(dat)`) would
+            % render its slices into the controller window.
+            if do_controller
+                prevfig = get(groot, 'CurrentFigure');
+                try
+                    controller(obj);
+                catch ME
+                    warning('fmridisplay:controllerAutolaunch', ...
+                        'Could not open display controller: %s', ME.message);
+                end
+                % Do not leave the controller uifigure as the current figure:
+                % downstream rendering (montage's bare axes(), addbrain's subplot)
+                % targets gcf and would draw into / error on the controller.
+                if ~isempty(prevfig) && isgraphics(prevfig) && isvalid(prevfig)
+                    set(groot, 'CurrentFigure', prevfig);     % back to the caller's figure
+                elseif isgraphics(obj.controller_handle) && ...
+                        isequal(get(groot, 'CurrentFigure'), obj.controller_handle)
+                    figure;                                    % no prior figure: hand off a fresh one
+                end
+            end
+
         end % constructor function
-        
+
     end % methods
-    
-    
+
+
+    % Internal / helper methods: still callable, but Hidden so they don't
+    % clutter the user-facing control surface (methods(obj), tab-completion).
+    % Bodies live in the separate @fmridisplay/*.m files; these are signature-
+    % only declarations that just set the Hidden attribute. Hidden (not private)
+    % so existing external callers keep working (e.g. activate_figures is used
+    % by help-example scripts, refresh by tests).
+    methods (Hidden)
+        [figure_handles, figure_numbers, all_axis_han, is_valid_handle] = activate_figures(o2, varargin)
+        obj = prune_dead_views(obj, doverbose)
+        obj = refresh(obj, varargin)
+        obj = render_layer_surfaces(obj, k, wh_surface, show_legend)
+        obj = update_controller(obj)
+    end
+
+
 end

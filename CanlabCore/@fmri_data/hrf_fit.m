@@ -51,7 +51,7 @@ function [params_obj, hrf_obj, params_obj_dat, hrf_obj_dat] = hrf_fit(obj,TR,Run
 %
 % A. **Fit HRF using IL-function**
 %        Choose mode (deterministic/stochastic)
-%           - 0 - deterministic aproach 
+%           - 0 - deterministic approach 
 %           - 1 - simulated annealing approach
 %
 %        Please note that when using simulated annealing approach you

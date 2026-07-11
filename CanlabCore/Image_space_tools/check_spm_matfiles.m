@@ -19,7 +19,7 @@ end
 if any(notok)
     wh = find(notok);
 
-    disp(['The following images'' mat files differend from the first:'])
+    disp(['The following images'' mat files different from the first:'])
     disp(num2str(wh));
 
     disp(['First mat:']);

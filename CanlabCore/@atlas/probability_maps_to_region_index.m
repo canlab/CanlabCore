@@ -53,7 +53,7 @@ if length(n_maps) < n_regions
     dropped_ind = find(~ismember(1:n_regions,n_maps));
     
     % note, labels must be last in this list or else it would end up being
-    % asigned to the labels variable which is needed subsequently
+    % assigned to the labels variable which is needed subsequently
     fnames = {'probability_maps', 'labels_2','labels_3','labels_4',...
         'labels_5','label_descriptions','labels'};
     assert(strcmp(fnames{end},'labels'));

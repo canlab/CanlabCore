@@ -100,7 +100,7 @@ function [model,delta] = getPredictors(stimList, HRF, varargin)
 %    error due to RT with decimal points. For 2), make two options for downsampling
 %   'dsrate' and 'dslen'.
 %
-%    1/2020: Tor modified to increase tolerance/flexibilty for fractional
+%    1/2020: Tor modified to increase tolerance/flexibility for fractional
 %    TRs, add better error reporting for length mismatch
 % ..
 

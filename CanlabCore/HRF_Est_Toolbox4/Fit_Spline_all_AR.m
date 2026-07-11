@@ -9,7 +9,7 @@ function [HRF, Fit, Resid, Parameters, Results, df] = Fit_Spline_all_AR(TC, TR, 
 % 
 % TC    - time course (voxel x time course)
 % TR    - time resolution
-% Runs  - expermental design
+% Runs  - experimental design
 % T     - length of estimated HRF
 % Z     - Nuisance covariates (time course x number of components)
 % ar_lag - Number of lags in the AR model for residuals

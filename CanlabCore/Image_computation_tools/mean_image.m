@@ -191,7 +191,7 @@ function OUT = mean_image(VP, Pout, w, varargin)
             vi(isnan(vi) | vi==0) = [];
             if isempty(vi), warning('Image is EXACTLY the median image.'); end
 
-            % get median deviation, and 5th and 95th prctiles
+            % get median deviation, and 5th and 95th percentiles
             medianDev(i,:) = prctile(vi, [50 5 20 80 95]);
 
             % get new weights based on distance from mean image

@@ -70,7 +70,20 @@ function image_eval_function_multisubj(imageNames, fhandle, varargin)
 
     [mask, preprochandle, outimagenames, connames, startslice, nout] = setup_inputs(varargin{:});
 
-    
+    % Handle gzipped (.gz) input images. SPM's spm_vol cannot read compressed
+    % NIfTI, so transparently gunzip any .gz inputs to .nii here, and remove
+    % the temporary .nii files when this function exits (onCleanup fires on
+    % normal return and on error). The original .gz files are left untouched.
+    created_nii_files = {};
+    for ii = 1:length(imageNames)
+        [imageNames{ii}, was_gz] = gunzip_image_names_if_gz(imageNames{ii}, 'verbose', false);
+        if any(was_gz)
+            unzipped_names = cellstr(imageNames{ii});
+            created_nii_files = [created_nii_files; unzipped_names(logical(was_gz))]; %#ok<AGROW>
+        end
+    end
+    cleanup_temp_nii = onCleanup(@() delete_temp_niftis(created_nii_files)); %#ok<NASGU>
+
     switch spm('Ver')
         case 'SPM2'
             % SPM2: spm_defaults is a script, not callable here
@@ -167,7 +180,7 @@ function image_eval_function_multisubj(imageNames, fhandle, varargin)
     %
     % each element in output is stored in an image volume
     % elements in the same output (out1, out2, etc.) are stored as volumes
-    % in the same .img file, indexed by .n fiels in the spm_vol structure
+    % in the same .img file, indexed by .n fields in the spm_vol structure
     % (these are stored during processing on 3rd dim of sliceoutput)
     %
     % to access a volume, try spm_vol('imagename.img, 3') for 3rd volume in
@@ -214,7 +227,7 @@ function image_eval_function_multisubj(imageNames, fhandle, varargin)
 
 
     % Create or get memory-mapped volumes for output images
-    % Vout is the spm_vol structure for each ouput image
+    % Vout is the spm_vol structure for each output image
     % ---------------------------------------------------------------------
     Vout = create_output_images(maskInfo, outimagenames, nimgs_this_output);
 
@@ -634,6 +647,23 @@ function write_output_slice(Vout, sliceoutputs, whslice)
         % % %             %iimg_reconstruct_3dvol(myslice(:), maskInfo, 'outname', outimagenames{i}{j}, 'slice', whslice);
         % % %
         % % %         end
+    end
+end
+
+
+% % -------------------------------------------------------------------
+% % Remove temporary .nii files created by gunzipping .gz inputs
+% % -------------------------------------------------------------------
+function delete_temp_niftis(files)
+
+    for i = 1:numel(files)
+        if exist(files{i}, 'file')
+            try
+                delete(files{i});
+            catch
+                % leave the file in place if it cannot be deleted
+            end
+        end
     end
 end
 

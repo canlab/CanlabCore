@@ -53,7 +53,7 @@ function [clusters, subcl] = cluster_barplot(P, clusters, varargin)
 % :Outputs:
 %
 %   **clusters:**
-%        clusters struture, with BARPLOT substructure added
+%        clusters structure, with BARPLOT substructure added
 %
 %   **subcl:**
 %        substructure contains data extracted and image file names

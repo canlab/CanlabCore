@@ -81,7 +81,7 @@ for i=1:min(cols,size(data,2))
     data{1,i} = strtrim(data{1,i});
     % replace bad characters with _
     data{1,i} = regexprep(data{1,i}, '\W', '_');
-    % if col name starts with a number, preprend an 'aa'
+    % if col name starts with a number, prepend an 'aa'
     if isstrprop(data{1,i}(1), 'digit'), data{1,i} = ['aa_' data{1,i}]; end
     
     cmd = ['MM.' data{1,i} ' = data(2:end,' num2str(i) ');'];

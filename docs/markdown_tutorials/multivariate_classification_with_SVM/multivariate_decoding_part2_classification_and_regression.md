@@ -43,6 +43,7 @@ concatenation, or label-building:
 hw_obj = load_image_set('DPSP_hotwarm', 'noverbose');
 
 % Regression: heat-evoked pain, continuous pain rating in .Y
+% 'bmrk3' is built from per-subject images that ship with CanlabCore; no download needed
 bmrk3  = load_image_set('bmrk3', 'noverbose');
 ```
 

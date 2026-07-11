@@ -89,7 +89,7 @@ function hdr = read_hdr(name,varargin)
 % ..
 %    Luis hernandez
 %    last edit 12-9-01 by tor wager
-%    Unzip .gz files before processing.         Editted 11/7/2023 by Michael Sun, Ph.D.
+%    Unzip .gz files before processing.         Edited 11/7/2023 by Michael Sun, Ph.D.
 % ..
 
 

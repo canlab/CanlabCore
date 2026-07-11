@@ -45,7 +45,7 @@ function cl = orthviews(image_obj, varargin)
 %        'unique' to force unique-valued colors.
 %
 %   **'input_handle':**
-%        followd by integer for which orthviews display to add to.
+%        followed by integer for which orthviews display to add to.
 %        spm_orthviews can display multiple linked orthviews sections. If
 %        you have initialized a display with multiple images, Enter 1 to
 %        add to the first one, 2 for the second, and so forth.

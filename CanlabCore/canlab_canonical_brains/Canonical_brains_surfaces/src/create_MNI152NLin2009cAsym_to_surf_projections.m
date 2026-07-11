@@ -77,7 +77,7 @@ freesurfer_sphere_rh.vertices = double(freesurfer_sphere_rh.vertices);
 % here was obtained from
 % https://github.com/Washington-University/HCPpipelines/tree/master/global/templates/standard_mesh_atlases
 % and is rotated relative to the standard HCP sphere for alignment with
-% fsaverage. Think of the standard HCP sphere as analagous to a subject
+% fsaverage. Think of the standard HCP sphere as analogous to a subject
 % specific *.sphere.* file from freesurfer recon-all outputs and the sphere
 % below as equivalent to *.sphere.reg.* outputs from recon-all.
 

@@ -78,7 +78,7 @@ function pmodel_obj = xval_regression_multisubject(fit_method, Y, X, varargin)
     % Feb 6, 2012: Minor bug fix in multisubject mode
     %
     % Nov 10, 2012: Tor Wager: Updated name of lasso to lasso_rocha.m for
-    % matlab compatibilty.  Forced double-format for vars to avoid
+    % matlab compatibility.  Forced double-format for vars to avoid
     % single-format problems.
     
     % Explicit parent-scope declarations for nested-function shared

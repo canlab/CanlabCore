@@ -63,7 +63,7 @@
 %   new_obj.volInfo = MC_Setup.volInfo;
 %   new_obj.dat = MC_Setup.unweighted_study_data(:, sym_cons);
 %
-% You can create an fmri_timeseries object with extacted image data.
+% You can create an fmri_timeseries object with extracted image data.
 % - Let "imgs" be a string array or cell array of image names
 % - This command creates an object with your (4-D) image data:
 % - fmri_dat = fmri_timeseries(imgs);

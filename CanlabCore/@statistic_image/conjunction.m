@@ -98,13 +98,13 @@ si2_neg = si2;
 neginds = si2.dat < 0;
 si2_neg.sig(~neginds) = 0;
 
-% the pos conjuction
+% the pos conjunction
 pos_conj = si1_pos;
 pos_conj.dat(pos_conj.dat > 0) = 1; % set all pos values to 1
 pos_conj.dat(pos_conj.dat < 0) = 0; % set all neg values to 0
 pos_conj.sig = si1_pos.sig & si2_pos.sig;
 
-% the neg conjuction
+% the neg conjunction
 neg_conj = si1_neg;
 neg_conj.dat(neg_conj.dat < 0) = -1; % set all neg values to -1
 neg_conj.dat(neg_conj.dat > 0) = 0; % set all pos values to 0

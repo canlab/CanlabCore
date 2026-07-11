@@ -67,7 +67,7 @@ function clusters = tor_ihb_GetClusters()
 %    01.08.01    last modified
 % ..
 
-dflFileName = ihb_FileFolderName('dfl'); % Check existance of figures used by spm_getSPM
+dflFileName = ihb_FileFolderName('dfl'); % Check existence of figures used by spm_getSPM
 load(dflFileName, 'ihbdfl_spm_fig_Interactive');
 load(dflFileName, 'ihbdfl_spm_fig_SelFileWin');
 load(dflFileName, 'ihbdfl_spm_fig_ConMan');

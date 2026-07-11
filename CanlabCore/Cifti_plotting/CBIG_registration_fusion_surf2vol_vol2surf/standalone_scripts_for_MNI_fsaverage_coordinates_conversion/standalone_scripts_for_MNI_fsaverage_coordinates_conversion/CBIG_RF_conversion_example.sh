@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Written by Wu Jianxiao and CBIG under MIT license: https://github.com/ThomasYeoLab/CBIG/blob/master/LICENSE.md
-# This warpper script runs CBIG_RF_MNICoord2fsaverageVertex.m and CBIG_RF_fsaverageVertex2MNICoord.m for an example
+# This wrapper script runs CBIG_RF_MNICoord2fsaverageVertex.m and CBIG_RF_fsaverageVertex2MNICoord.m for an example
 
 if [ "$(uname)" == "Linux" ]; then
   SCRIPT_DIR=$(dirname "$(readlink -f "$0")")

@@ -180,7 +180,7 @@ function [X, delta, delta_hires, hrf] = onsets2fmridesign(ons, TR, varargin)
 %    using TR with some decimal points (e.g., TR = 1.3)
 %    Modified 8/2015 by Tor to clean up documentation and change scaling of
 %    regressors overall in better range
-%    1/2020: Tor modified to increase tolerance/flexibilty for fractional
+%    1/2020: Tor modified to increase tolerance/flexibility for fractional
 %    TRs, add better error reporting for length mismatch
 % ..
 
@@ -299,7 +299,7 @@ if ~isempty(varargin) && ~isempty(varargin{1}) % pre-specified length
     len = ceil(len .* res);
     
 else
-    % No length entered; length is allowed to grow to accomodate onsets
+    % No length entered; length is allowed to grow to accommodate onsets
     
     len = round(max(cat(1, ons{:})) * res);
     len = ceil(ceil(len/(res*TR)) * res * TR); % modified by Wani to make this work for TR = 1.3
@@ -368,7 +368,7 @@ if donorm
     hrf = scale(hrf, 1);
     kk = size(hrf, 2);
     
-    % Orthogonalize "later" basis funtions wrt "earlier" (assumed to be more important) ones
+    % Orthogonalize "later" basis functions wrt "earlier" (assumed to be more important) ones
     if size(hrf, 2) > 1, hrf = spm_orth(hrf); end
     
     % Normalize to L2 norm
@@ -533,12 +533,14 @@ delta = cf2;
 if ~isempty(varargin)
     for i = 1:length(ons)
         
-        try
-            % 2019 internal matlab function
-            delta{i} = padarray(delta{i}, ceil(len./res./TR - length(delta{i})));
-        catch
-            % This is in CanlabCore/Misc_utilities
-            delta{i} = pad(delta{i}, ceil(len./res./TR - length(delta{i})));
+        % Zero-pad the TR-resolution onset indicator to the run length.
+        % (Was: padarray, falling back to CanlabCore's pad.m. pad.m was
+        % renamed to canlab_pad.m and 'pad' now resolves to MATLAB's builtin
+        % string pad -- which errors on numeric input in R2024b+ -- so append
+        % zeros explicitly, matching canlab_pad's one-sided behavior.)
+        npad = ceil(len ./ res ./ TR - length(delta{i}));
+        if npad > 0
+            delta{i} = [delta{i}; zeros(npad, 1)];
         end
         
     end

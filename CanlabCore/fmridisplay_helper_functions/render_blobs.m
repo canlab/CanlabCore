@@ -466,12 +466,14 @@ end
 % end
 % wh_slice(k) = 0;
 
-k = unique(wh_slice); k(k==0) = [];
-voxshown = sum(numvox(k)); %voxshown = sum(numvox(unique(wh_slice))); % (to here)
-
-if doverbose
-    fprintf('%s montage: %3.0f voxels displayed, %3.0f not displayed on these slices\n', myview, voxshown, sum(numvox) - voxshown);
-end
+% Per-slice voxel-count readout silenced by request (no longer needed). To
+% re-enable, uncomment the block below.
+% k = unique(wh_slice); k(k==0) = [];
+% voxshown = sum(numvox(k)); %voxshown = sum(numvox(unique(wh_slice))); % (to here)
+%
+% if doverbose
+%     fprintf('%s montage: %3.0f voxels displayed, %3.0f not displayed on these slices\n', myview, voxshown, sum(numvox) - voxshown);
+% end
 
 % -------------------------------------------------------------------------
 % SETUP smoothing, contours
@@ -496,25 +498,37 @@ if ~docontour
     end
     
     if ~customcolormap
-        cdat = define_cdat(sz, color);
+        cdat = define_cdat(sz, color);   % solid-colour fill (the '~docolormap' branch below)
     end
-    
-    if docolormap % colors are linear mixture of color and mincolor
-        
-        if ~customcolormap
-            cdat2 = define_cdat(sz, mincolor);
-        end
-        
-        if dosplitcolor
-            % cdat and cdat2 are for positive values
-            % cdatminneg and maxneg are for negative values
-            cdatminneg = define_cdat(sz, minnegcolor);
-            cdatmaxneg = define_cdat(sz, maxnegcolor);
-        end
-        
-    end
-    
+    % Value-mapped colours (single ramp / split +/-) are now produced by the
+    % central canlab_colormap (central_map_slice) rather than by per-colour cdat
+    % matrices, so the old cdat2 / cdatminneg / cdatmaxneg setup is gone.
+
 end % end if docontour
+
+% -----------------------------------------------------------
+% Central value->colour map (single source of truth shared with surfaces).
+% Built once from the parsed colours + cmaprange; used to colour blob voxels in
+% the slice loop below so montage slices, surfaces (render_on_surface), and
+% legends agree EXACTLY rather than each re-deriving the mapping. The split and
+% single ramps it produces are identical to the previous inline math (verified
+% pixel-for-pixel). Solid / customcolormap / indexmap keep their existing paths.
+% See canlab_colormap.
+if dosplitcolor
+    central_cm = canlab_colormap.split(minnegcolor, maxnegcolor, mincolor, color, cmaprange);
+elseif ~isempty(indexmap)
+    % Indexed / atlas map: each value is a ROW INDEX into the colormap matrix.
+    central_cm = canlab_colormap.indexed(indexmap);
+elseif customcolormap
+    % Continuous custom / perceptual LUT mapped across the value range.
+    central_cm = canlab_colormap.continuous(cm, cmaprange);
+elseif ~docolormap
+    % Solid single-colour blobs ('color' / 'onecolor').
+    central_cm = canlab_colormap.solid(color);
+else
+    % Single ramp mincolor -> maxcolor (docolormap, no split/index/custom).
+    central_cm = canlab_colormap.single(mincolor, color, cmaprange);
+end
 
 % -----------------------------------------------------------
 % Loop through slices to render blobs
@@ -668,59 +682,22 @@ for j = 1:length(wh_slice) % for j = 1:n - modified by Wani 7/28/12
                 % surface map method
                 % -----------------------------------------------------------
                 
-                if ~docolormap
-                    % single-color map
+                % Single source of truth: EVERY value-mapped mode (split, single
+                % ramp, solid, continuous LUT, indexed/atlas) is coloured by the
+                % central canlab_colormap, the SAME object surfaces use, so montage
+                % and surface agree exactly. central_cm is built once above from the
+                % parsed colours + cmaprange. Non-blob voxels come back NaN (or are
+                % alpha-masked below), so no explicit in-blob masking is needed here.
+                if ~isempty(central_cm)
+                    slicecdat = central_map_slice(central_cm, Z);
+
+                elseif ~docolormap
+                    % Fallback solid fill (central_cm somehow unavailable).
                     slicecdat = cdat .* repmat(double(abs(Z) > 0), [1 1 3]);
-                    
-                elseif ~dosplitcolor
-                    % color-mapped
-                    if isempty(indexmap) & ~customcolormap
-                        Zscaled = Z;
-                        Zscaled(Zscaled ~= 0 & Zscaled > max(cmaprange)) = max(cmaprange);
-                        Zscaled(Zscaled ~= 0 & Zscaled < min(cmaprange)) = min(cmaprange);
-                        Zscaled = (Zscaled - min(cmaprange)) ./ (max(cmaprange) - min(cmaprange));
 
-                        % If map is constant, scaling will not work; just use original Z
-                        if ~abs(cmaprange(1) - cmaprange(2))
-                            Zscaled = Z;
-                        end
-                    
-                        w = repmat(Zscaled, [1 1 3]);
-
-                        slicecdat = (w .* cdat) + (1 - w) .* cdat2;
-
-                    elseif customcolormap
-                        %w = repmat(Z, [1 1 3]);
-
-                        w = map_function(Z,cmaprange(1),cmaprange(2),1,size(cm,1));
-                        slicecdat = reshape(cm(round(w),:),[size(Z),3]);
-
-                    else
-                        w = repmat(Z, [1 1 3]);
-                        [Zi, Zj] = find(w > 0);
-                        slicecdat = nan(size(Z,1), size(Z,2) ,3);
-                        slicecdat(sub2ind(size(w),Zi,Zj)) = indexmap(Z(Z> 0),:); 
-% I'm pretty sure this is a bug since
-%                         indexmap is not selecting rows.... 2/11/2023 MS
-%                         slicecdat(sub2ind(size(w),Zi,Zj)) = indexmap(find(Z(Z > 0)),:);
-                    end
-                    
-                elseif dosplitcolor
-                    % split colormap around zero
-                    
-                    %                     if max(cmaprange) < 0, [dummy, wh] = max(cmaprange); cmaprange(wh) = abs(min(cmaprange)); end
-                    %                     if min(cmaprange) > 0, [dummy, wh] = min(cmaprange); cmaprange(wh) = -(max(cmaprange)); end
-                    
-                    % make into 4-element: min neg, max neg, min pos, max pos
-                    if length(cmaprange) == 2
-                        cmaprange = [min(cmaprange) 0 0 max(cmaprange)]; % just like before = all the way to 0
-                    end
-                    
-                    % Transform Z stats to r x c x 3 true colormap values, interpolating between max and min positive range for each
-                    % of pos and neg values. This determines the color of each voxel below,  set(h, 'CData', slicecdat)
-                    
-                    slicecdat = splitcolor_Z_to_slicecdat(Z, cmaprange, cdat, cdat2, cdatminneg, cdatmaxneg);
-                    
+                else
+                    error('render_blobs:noCentralColormap', ...
+                        'No central colormap was built for this colour mode.');
                 end
                 
                 if ~isa(slicecdat, 'double')
@@ -831,129 +808,24 @@ end
 
 
 
-function slicecdat = splitcolor_Z_to_slicecdat(Z, cmaprange, cdat, cdat2, cdatminneg, cdatmaxneg)
-% Transform Z stats to r x c x 3 true colormap values, interpolating between max and min positive range for each
-% of pos and neg values. This determines the color of each voxel below,  set(h, 'CData', slicecdat)
-
-Zscaled = double(Z); % cast as double to avoid weird bug
-
-% Zscaled must be transformed to weights from -1 to 1
-
-%                 Zscaled(Zscaled > 0 & Zscaled > max(cmaprange)) = max(cmaprange);
-%                 Zscaled(Zscaled < 0 & Zscaled < min(cmaprange)) = min(cmaprange);
-
-%Zscaled = Zscaled ./ max(abs(cmaprange)); % keep scale equal
-%Zscaled(Zscaled > 0) = Zscaled(Zscaled > 0) ./ max(cmaprange);
-%Zscaled(Zscaled < 0) = Zscaled(Zscaled < 0) ./ abs(min(cmaprange));
-
-% linear scaling into pos and neg range, respectively
-% allows for 4-element threshold input; e.g., [-6 -3 3 6] to display between 3 and 6
-
-% Move values that are below minimum thresholds to threshold
-posrange = cmaprange(4) - cmaprange(3);
-negrange = abs(cmaprange(1) - cmaprange(2));
-
-Zscaled(Zscaled > 0 & Zscaled < cmaprange(3)) = cmaprange(3) + 10000*eps; % .05 * posrange; %
-Zscaled(Zscaled < 0 & Zscaled > cmaprange(2)) = cmaprange(2) - 10000*eps; % .05 * negrange; %
-
-Zscaled(Zscaled > 0) = (Zscaled(Zscaled > 0) - cmaprange(3)) ./ posrange;
-Zscaled(Zscaled < 0) = (Zscaled(Zscaled < 0) - cmaprange(2)) ./ negrange;
-
-% If map is constant, scaling will not work; just use
-% extreme cmap values
-maprange = abs(cmaprange(1) - cmaprange(2));
-
-if ~isnan(maprange) && ~maprange
-    Zscaled(Zscaled < 0) = cmaprange(1);
+function slicecdat = central_map_slice(cm, Z)
+% Colour one [r x c] slice of values via the central canlab_colormap (the same
+% mapping surfaces use). Uncoloured voxels (NaN from map(), e.g. exactly zero in
+% a split map) -> 0; the per-voxel alpha mask hides them, so this matches the
+% previous inline behaviour. cm is a canlab_colormap (single or split here).
+rgb = cm.map(double(Z(:)));
+rgb(isnan(rgb)) = 0;
+slicecdat = reshape(rgb, [size(Z, 1), size(Z, 2), 3]);
 end
 
-maprange = abs(cmaprange(4) - cmaprange(3));
 
-if ~isnan(maprange) && ~maprange
-    Zscaled(Zscaled > 0) = cmaprange(4);
-end
-
-% pos only
-w = repmat(Zscaled, [1 1 3]);
-
-slicecdat = (w .* cdat) + (1 - w) .* cdat2; % interpolate from max color to min color
-
-to_keep = double(repmat(Z > 0, [1 1 3])); % was Zscaled, but sometimes this is exactly zero, so use Z
-slicecdat = slicecdat .* to_keep;
-
-% now do neg part, then add them
-%w = repmat(Zscaled, [1 1 3]);
-w = abs(w); % now values we care about are neg; care about magnitude
-slicecdat2 = (w .* cdatminneg) + (1 - w) .* cdatmaxneg;
-
-to_keep = double(repmat(Z < 0, [1 1 3]));
-slicecdat2 = slicecdat2 .* to_keep;
-
-slicecdat = slicecdat + slicecdat2;
-
-end % function
 
 function cmaprange = get_default_cmaprange(currentmap, varargin)
-
-    % Extract and preprocess map data
-    mapd = currentmap.mapdata(:);
-    mapd = mapd(mapd ~= 0 & ~isnan(mapd)); % Remove zeros and NaNs
-
-    % Handle edge case: empty mapd
-    if isempty(mapd)
-        warning('No valid data values in currentmap. Returning default colormap range.');
-        cmaprange = [0, 1]; % Default range for empty data
-        return;
-    end
-
-    % Handle edge case: Inf values
-    if any(isinf(mapd))
-        warning('Some image values are Inf. Replacing Inf with max finite value.');
-        whinf = isinf(mapd);
-        mapd(whinf) = sign(mapd(whinf)) .* max(abs(mapd(~whinf))); % Replace Inf with max finite value
-    end
-
-    % Handle edge case: constant or nearly constant mapd
-    if numel(unique(mapd)) == 1
-        % All values are constant
-        constant_value = unique(mapd);
-        % warning('All non-zero, non-NaN values in mapd are constant. Using default colormap range.');
-        cmaprange = [constant_value - 0.1, constant_value + 0.1]; % Default range for constant values
-        return;
-    end
-
-    % Default colormap range for non-splitcolor
-    cmaprange = double([prctile(mapd, 10), prctile(mapd, 90)]);
-
-    % Handle splitcolor logic
-    prct_splitcolor = 20; % Starting percentile range for splitcolor
-    if any(strcmp(varargin, 'splitcolor')) && ~any(strcmp(varargin, 'cmaprange'))
-
-        % Compute splitcolor colormap range
-        cmaprange = double([
-            safe_prctile(mapd(mapd < 0), prct_splitcolor), ...
-            safe_prctile(mapd(mapd < 0), 100 - prct_splitcolor), ...
-            safe_prctile(mapd(mapd > 0), prct_splitcolor), ...
-            safe_prctile(mapd(mapd > 0), 100 - prct_splitcolor)
-        ]);
-
-        % Handle edge case: insufficient variability in splitcolor
-        while numel(unique(cmaprange)) < 4
-            prct_splitcolor = prct_splitcolor - 5;
-            if prct_splitcolor <= 0
-                warning('Splitcolor logic failed due to insufficient data variability. Adjusting colormap range.');
-                cmaprange([2, 3]) = cmaprange([1, 4]) * 0.9; % Compress middle range
-                break;
-            end
-            % Recalculate cmaprange with reduced prct_splitcolor
-            cmaprange = double([
-                safe_prctile(mapd(mapd < 0), prct_splitcolor), ...
-                safe_prctile(mapd(mapd < 0), 100 - prct_splitcolor), ...
-                safe_prctile(mapd(mapd > 0), prct_splitcolor), ...
-                safe_prctile(mapd(mapd > 0), 100 - prct_splitcolor)
-            ]);
-        end
-    end
+    % Default value->colour range for a montage blob layer. Delegated to the
+    % shared canlab_default_cmaprange so montages, render_on_surface, and the
+    % fmridisplay surface path all use ONE uniform percentile-based default.
+    % (Behaviour is unchanged from the previous inline implementation.)
+    cmaprange = canlab_default_cmaprange(currentmap.mapdata(:), varargin{:});
 end
 
 % Safe percentile function to handle empty data
@@ -970,8 +842,8 @@ end
 function val = map_function(c,x1,x2,y1,y2)
     if x2 == x1
         % this occurs when we have a single value. We arbitrarily set it to
-        % the middle value
-        range_val = (y2-y1)/2;
+        % the middle value. Use ones(size(c)) to preserve the shape of c.
+        range_val = (y2-y1)/2 * ones(size(c));
     else
         % softmax here keeps negative values from extending below the colormap
         % range, which would otherwise make those values gray, since the lowest

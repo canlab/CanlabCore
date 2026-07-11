@@ -53,7 +53,7 @@ function [o2, dat, sig, pcl, ncl] = multi_threshold(dat, varargin)
 %
 %   **o2:**
 %       followed by an existing fmridisplay object
-%           - will remove blobs and re-use montages
+%           - will remove blobs and reuse montages
 %       Or enter any fmridisplay object, and it will be detected.
 %
 %   **writestats**

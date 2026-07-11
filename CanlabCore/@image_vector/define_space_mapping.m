@@ -151,7 +151,7 @@ function space_mapper_struct = define_space_mapping(obj, target_obj)
 % NOTE:
 % SPM does
 % Mslice  = spm_matrix([0 0 j]);      % Matrix specifying this slice
-% Mtrans  = Mto \ Mmap \ Mslice;          % Affine mappping mtx: Mask -> TOvol
+% Mtrans  = Mto \ Mmap \ Mslice;          % Affine mapping mtx: Mask -> TOvol
 % Mtrans = same as inv(Mto) * inv(Mmap) * Mslice
 %
 % v_query = inv(Mmap) * Mto * Mslice * target_pixels

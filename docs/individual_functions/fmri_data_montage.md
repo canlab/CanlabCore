@@ -6,7 +6,7 @@
 Render an `fmri_data` / `statistic_image` / `image_vector` as a slice
 montage with anatomical underlay and optional colorbar. The fastest way
 to look at a results map. Returns an `fmridisplay` object whose handles
-you can re-use to swap blob layers in and out without redrawing the
+you can reuse to swap blob layers in and out without redrawing the
 anatomy.
 
 ## Quick example

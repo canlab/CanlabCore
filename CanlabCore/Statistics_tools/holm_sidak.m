@@ -32,9 +32,9 @@ function [sig, pthr] = holm_sidak(pVector, alpha)
 
 sig = false(length(sortedP),1);
 
-pthr = 1 - (1-alpha)^(1/length(sortedP)); % max P-value for sig results. Anything below this is signficant.
+pthr = 1 - (1-alpha)^(1/length(sortedP)); % max P-value for sig results. Anything below this is significant.
 
-while sortedP(end) < 1 - (1-alpha)^(1/length(sortedP))
+while ~isempty(sortedP) && sortedP(end) < 1 - (1-alpha)^(1/length(sortedP))
 
     sig(argsort(end)) = true;
     sortedP(end) = [];

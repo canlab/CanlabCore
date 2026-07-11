@@ -64,7 +64,7 @@ function OUT = test_pattern_on_kragel_2018_n270_data(varargin)
 % :Outputs:
 %
 %   **OUT:**
-%        A structure with a summary table of sensivity, specificity, PPV,
+%        A structure with a summary table of sensitivity, specificity, PPV,
 %        and effect size for each classification (pain vs. other, cog
 %        control vs. other, negative emotion vs. other.
 %        Also includes roc_plot output for all three classifications, with
@@ -163,7 +163,7 @@ ispain=ispain(~wh_isnan);
 iscog=iscog(~wh_isnan);
 isemo=isemo(~wh_isnan);
 
-% Boostrap confidence intervals for effect size
+% Bootstrap confidence intervals for effect size
 fprintf('Bootstrapping CIs\n')
 
 bci_pain = bootci(5000, @cohens_d_2sample, vector_data, ispain);

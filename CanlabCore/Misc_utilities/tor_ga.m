@@ -647,7 +647,7 @@ function [newvec,b,best_params] = xover(paramvec,eff, paramtype)
     % ---------------------------------------------------
     if isempty(w) 
         
-        warning('Extremely homogenous sample!')
+        warning('Extremely homogeneous sample!')
         % add a little random noise to efficiency - 1% of var of efficiency
         eff = eff + randn(1,length(eff)) .* .01 * mean(eff);
         

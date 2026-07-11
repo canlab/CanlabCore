@@ -9,7 +9,7 @@ function [outputT_pos, outputT_neg, region_output] = print_publication_table(ima
 % (3) Atlas labels and heuristic names can have multiple values, separate
 % by commas
 %
-% This function works by concatenating the ouputs from
+% This function works by concatenating the outputs from
 % `autolabel_regions_using_atlas()` and `table()`
 % 
 % Zizhuang Miao, Michael Sun, 09/17/2024
@@ -64,7 +64,7 @@ function [outputT_pos, outputT_neg, region_output] = print_publication_table(ima
 %    'probability_maps_to_region_index' works in a winner-take-all way such
 %    that as long as a voxel is close to a significant voxel, it can 
 %    become parts of a significant region in the output table. It is not
-%    preferrable and should be avoided. Now a heuristic way is to resample
+%    preferable and should be avoided. Now a heuristic way is to resample
 %    the image vector as soon as possible (e.g., before running t tests).
 
 narginchk(1, Inf)
@@ -153,7 +153,7 @@ atlas_thr.labels_5 = sorted_nets;    % labels_5 should be a safe field name
 % create a new atlas object with the network labels
 atlas_net = atlas_thr.downsample_parcellation('labels_5');    
 
-% parcellate image_vec into (positve and negative) regions
+% parcellate image_vec into (positive and negative) regions
 if ~isa(image_vec, 'region')
     % check whether the space of the regions and atlas match
     if any(image_vec.volInfo.dim ~= atlas_thr.volInfo.dim) || ...

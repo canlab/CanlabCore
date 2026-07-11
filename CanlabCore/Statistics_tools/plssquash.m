@@ -58,7 +58,7 @@ Y = scale(Y);
 
 clear V  % V is voxel weights for each component 1:K
 clear S
-rY = Y; % Y values to successively predict; intialize to Y
+rY = Y; % Y values to successively predict; initialize to Y
 
 for i = 1:ndims  %ceil(length(Y)./2)
 

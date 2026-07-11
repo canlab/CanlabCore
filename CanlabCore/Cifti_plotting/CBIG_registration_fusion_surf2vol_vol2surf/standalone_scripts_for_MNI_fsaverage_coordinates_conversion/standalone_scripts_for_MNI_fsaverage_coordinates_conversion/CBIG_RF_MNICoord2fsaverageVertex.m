@@ -57,7 +57,7 @@ mask = MRIread(fullfile(dir_uti, 'liberal_cortex_masks_FS5.3', 'FSL_MNI152_FS4.5
 lh_vertex(mask.vol==0) = 0;
 rh_vertex(mask.vol==0) = 0;
 
-% Convert input RAS coordinates to matrix coordiantes
+% Convert input RAS coordinates to matrix coordinates
 mni_vox = convertRas2Vox(mni_coords, mask.vox2ras);
 mni_mat = [mni_vox(2, :)+1; mni_vox(1, :)+1; mni_vox(3, :)+1];
 

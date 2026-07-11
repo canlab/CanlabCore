@@ -75,6 +75,8 @@ require a graphics environment.
 | [`wedge_plot_by_atlas`](individual_functions/fmri_data_wedge_plot_by_atlas.md) | `@image_vector` | Polar/wedge plot by atlas region |
 | `plot_current_orthviews_coord` | `@image_vector` | Print MNI of current orthviews crosshair |
 
+**Interactive viewers (stand-alone functions, not class methods):** `canlab_orthviews(obj)` opens an enhanced SPM-style three-plane viewer in MATLAB (multiple blob layers, right-click menu, region tables, and an atlas region-name readout under the crosshair); [`canlab_niivue(obj)`](canlab_niivue_guide.md) writes a portable point-and-click **web** viewer (NiiVue) with the same crosshair atlas readout, embeddable in HTML reports.
+
 ## Resampling and interpolation
 
 Anything that changes the voxel grid or compares grids.

@@ -23,7 +23,7 @@ function [dat, sl_size] = searchlight_applymask(dat1, dat2, varargin)
 %
 %   **'parallel':**
 %        run subset of voxels to distribute on a cluster.  flag must
-%               be followed by array specifing id and total number of jobs
+%               be followed by array specifying id and total number of jobs
 %               (e.g., 'parallel',[1,10]);
 %
 % :Outputs:

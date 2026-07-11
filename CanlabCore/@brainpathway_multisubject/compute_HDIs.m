@@ -93,7 +93,7 @@ elseif isa(refgroup, 'brainpathway_multisubject')
     %% compute BCT measures on ref group  
     refgroup = bct_toolbox_undirected_graph_metrics(refgroup, thresh, varargin{:});
     
-    %% for each subject, regress on mean referece group to get an HDI (i.e., the slope)
+    %% for each subject, regress on mean reference group to get an HDI (i.e., the slope)
 
     for i=1:size(bs.connectivity.regions.r,3)
 

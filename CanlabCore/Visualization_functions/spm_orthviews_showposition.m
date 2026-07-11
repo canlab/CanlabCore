@@ -34,7 +34,7 @@ function h = spm_orthviews_showposition()
             % coronal
             h(2) = put_text(axish(2),['y = ' num2str(pos(2))]);
 
-            % saggital
+            % sagittal
             h(3) = put_text(axish(3),['x = ' num2str(pos(1))]);
 
         end
@@ -64,7 +64,7 @@ function h = spm_orthviews_showposition()
         % % axish(other_axes) = [];
         % % poss(other_axes,:) = [];
         % %
-        % % % sort into order:  axial, coronal, saggital
+        % % % sort into order:  axial, coronal, sagittal
         % % ssum = sum(poss(:,1:2),2);
         % % [ssum,ind] = sort(ssum);
         % % axish = axish(ind);
@@ -76,7 +76,7 @@ function h = spm_orthviews_showposition()
         % % % coronal
         % % h(2) = put_text(axish(2),['y = ' num2str(pos(2))]);
         % %
-        % % % saggital
+        % % % sagittal
         % % h(3) = put_text(axish(3),['x = ' num2str(pos(1))]);
 
 

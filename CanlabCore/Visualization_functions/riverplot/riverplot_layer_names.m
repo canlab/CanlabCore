@@ -32,7 +32,7 @@ function layerstruct = riverplot_layer_names(layerstruct, layernames, varargin)
 % :Inputs:
 %
 %   **layerstruct:**
-%        Structure with handles and decription of imrect class objects for
+%        Structure with handles and description of imrect class objects for
 %        a layer. Layerstruct is created with riverplot_draw_layer.
 %
 %   **layernames:**

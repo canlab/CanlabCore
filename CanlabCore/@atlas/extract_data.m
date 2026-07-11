@@ -77,7 +77,7 @@ function [parcel_means, parcel_pattern_expression, parcel_valence, rmsv_pos, rms
 %         respectively. This is useful for visualizing and assessing pattern
 %         weights, i.e., when the input data image is a weight pattern map.
 %         It can tell you how strong the contribution of each region is to
-%         prediction (high weight values) and how homogenous it is (pos vs.
+%         prediction (high weight values) and how homogeneous it is (pos vs.
 %         negative energy/rmsvs). 
 %         RMSVs are expressed in weights / cm^3 of brain tissue, and volume is
 %         regularized by adding 1 cm^3 to avoid unstable results with small

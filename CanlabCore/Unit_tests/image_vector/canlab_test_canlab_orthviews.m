@@ -52,9 +52,12 @@ assume_display(tc);
 tc.verifyWarningFree(@() canlab_orthviews);
 fh = expect_open_figure(tc);
 
-% Three axes in a 1x3 layout
+% Three panel axes in a 1x3 layout (ignore the tagged helper axes used
+% for the colorbar and the atlas-label readout strip).
 ax = findall(fh, 'Type','axes');
-tc.verifyEqual(numel(ax), 3, 'Expected 3 panels');
+tags = get(ax, 'Tag'); if ischar(tags), tags = {tags}; end
+is_panel = ~ismember(tags, {'canlab_orthviews_cbar', 'canlab_orthviews_label'});
+tc.verifyEqual(sum(is_panel), 3, 'Expected 3 panels');
 
 % Default position is the origin
 xyz = canlab_orthviews('position');
@@ -374,6 +377,113 @@ assume_display(tc);
 canlab_orthviews([], 'backgroundcolor', [0.2 0.4 0.6]);
 fh = expect_open_figure(tc);
 tc.verifyEqual(get(fh, 'Color'), [0.2 0.4 0.6], 'AbsTol', 1e-6);
+end
+
+
+% ---------- atlas region-name readout ----------------------------------
+
+function ax = expect_label_axis(tc, fh)
+ax = findall(fh, 'Type', 'axes', 'Tag', 'canlab_orthviews_label');
+tc.verifyNotEmpty(ax, 'Atlas-label readout axis should exist');
+ax = ax(1);
+end
+
+function str = label_string(fh)
+ax = findall(fh, 'Type', 'axes', 'Tag', 'canlab_orthviews_label');
+str = '';
+if isempty(ax), return; end
+t = findobj(ax(1), 'Type', 'text', 'Tag', 'canlab_orthviews_label_txt');
+if isempty(t), return; end
+str = get(t(1), 'String');
+end
+
+
+function test_label_strip_present_on_open(tc) %#ok<DEFNU>
+% Opening the viewer always shows the readout strip: either a region name
+% (default atlas attached) or a one-line hint on how to attach one.
+assume_display(tc);
+canlab_orthviews;
+fh = expect_open_figure(tc);
+expect_label_axis(tc, fh);
+str = label_string(fh);
+tc.verifyNotEmpty(str, 'Readout strip should carry a non-empty string');
+end
+
+
+function test_label_hint_when_no_atlas(tc) %#ok<DEFNU>
+% With the readout source forced empty, the strip explains how to attach
+% an atlas via the control surface.
+assume_display(tc);
+canlab_orthviews;
+fh = expect_open_figure(tc);
+state = getappdata(fh, 'canlab_orthviews_state');
+state.atlas_label = [];                    % simulate "no atlas available"
+setappdata(fh, 'canlab_orthviews_state', state);
+canlab_orthviews('redraw');
+str = label_string(fh);
+tc.verifySubstring(str, 'AddAtlasLabel', ...
+    'No-atlas readout should tell the user how to attach one');
+end
+
+
+function test_remove_atlas_label_hides_strip(tc) %#ok<DEFNU>
+assume_display(tc);
+canlab_orthviews;
+fh = expect_open_figure(tc);
+canlab_orthviews('RemoveAtlasLabel');
+ax = findall(fh, 'Type', 'axes', 'Tag', 'canlab_orthviews_label');
+tc.verifyEmpty(ax, 'RemoveAtlasLabel should delete the readout strip');
+end
+
+
+function test_atlas_label_lookup_matches(tc) %#ok<DEFNU>
+% Attach a real atlas and verify the readout names the region that the
+% atlas assigns to the voxel under the crosshair. Skipped when the atlas
+% cannot be loaded (Neuroimaging_Pattern_Masks not on the path).
+assume_display(tc);
+
+atl = [];
+try
+    atl = load_atlas('canlab2024');
+catch
+end
+tc.assumeNotEmpty(atl, 'canlab2024 atlas not available; skipping lookup test');
+
+atl = replace_empty(atl);
+% Pick the most common nonzero label and one of its voxels.
+d    = double(atl.dat(:, 1));
+code = mode(d(d > 0));
+vx   = find(d == code, 1);
+xyzv = atl.volInfo.xyzlist(vx, :);
+mm   = atl.volInfo.mat * [xyzv(:); 1];
+mm   = mm(1:3)';
+
+canlab_orthviews;
+fh = expect_open_figure(tc);
+canlab_orthviews('AddAtlasLabel', atl);
+canlab_orthviews('Reposition', mm);
+
+str = label_string(fh);
+tc.verifySubstring(str, atl.labels{code}, ...
+    'Readout should name the atlas region under the crosshair');
+end
+
+
+function test_atlas_object_display_attaches_label(tc) %#ok<DEFNU>
+% Displaying an atlas object should make it the readout source too.
+assume_display(tc);
+atl = [];
+try
+    atl = load_atlas('canlab2024');
+catch
+end
+tc.assumeNotEmpty(atl, 'canlab2024 atlas not available; skipping');
+
+canlab_orthviews(atl);
+fh = expect_open_figure(tc);
+state = getappdata(fh, 'canlab_orthviews_state');
+tc.verifyTrue(isstruct(state.atlas_label), ...
+    'Displaying an atlas should attach it as the readout source');
 end
 
 

@@ -221,7 +221,7 @@ wh = find(stats.permute.pvals <= .05 & stats.permute.pvals > .01);
 if ~isempty(wh), for i = 1:length(wh), text(wh(i), yval(wh(i)), '*', 'FontSize', 18); end, end
 
 %%
-disp('Added .permute field to stats output strucuture.');
+disp('Added .permute field to stats output structure.');
 stats.permute.nperms = nperms;
 stats.permute.r2meanp = r2meanp;
 stats.permute.r2mean_ub = prctile(stats.permute.r2meanp, 95);

@@ -187,7 +187,7 @@ target_obj=apply_mask(obj,target_mask);
 
 % Convert data into cell arrays for cross-validation
 % Each cell contains a Voxels x Images matrix for the corresponding fold
-% For 10-fold, images will be devided into 10 cells
+% For 10-fold, images will be divided into 10 cells
 
 
 for xval_i=1:max(indices)

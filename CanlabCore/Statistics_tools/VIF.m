@@ -373,6 +373,13 @@ if nargin > 1 && ~isempty(C)
         error('Contrast matrix must have same number of columns as X; Each row is a contrast vector');
     end
 
+    % If an intercept was added above (no all-ones intercept in the input),
+    % X now has an extra column; pad each contrast with a 0 weight for it so
+    % the contrast width matches the (augmented) design passed to cVIF.
+    if size(X, 2) > size(C, 2)
+        C = [C, zeros(size(C, 1), size(X, 2) - size(C, 2))];
+    end
+
     % Compute contrast-based VIFs using cVIF
     contrast_V = cVIF(X, C);
 

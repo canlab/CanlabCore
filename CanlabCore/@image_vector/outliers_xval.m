@@ -51,7 +51,7 @@ function [mad_similarity cos_similarity r_similarity] = outliers_xval(obj)
 %   it should agree if the individual test images are replicates of the same effect.
 %   The scale is also meaningful, as deviations in the values determine the variance estimate 
 %   of the test statistic. Any deviation is treated as error, even if it results from 
-%   mean shift or scale varation in the image as a whole.  
+%   mean shift or scale variation in the image as a whole.  
 %
 %
 % :Inputs:

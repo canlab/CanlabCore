@@ -119,9 +119,10 @@ function [image_obj, networknames, imagenames] = load_image_set(image_names_or_k
 %                      Object ready for SVM classification.
 %
 %       'bmrk3', 'pain' : 33 participants, with brain responses to six levels of heat
-%                         (non-painful and painful).
-%                         NOTE: requires access to bmrk3_6levels_pain_dataset.mat,
-%                         on figshare (see canlab.github.io/walkthroughs).
+%                         (non-painful and painful); 198 images = 33 subj x 6 levels.
+%                         Built directly from the per-subject images that ship in
+%                         CanlabCore/Sample_datasets/Woo_2015_PlosBio_BMRK3_pain_6levels,
+%                         so no download is required.
 %
 %       'kragel18_alldata' : 270 subject maps from Kragel 2018;
 %                            These are saved in
@@ -485,7 +486,7 @@ else
             
         case {'bmrk3', 'pain'}
             [image_obj, networknames, imagenames] = load_bmrk3;
-            
+
         case {'kragel270' 'kragel2018_alldata' 'kragel18_alldata' 'kragel18_testdata'}
             
             [image_obj, networknames, imagenames] = load_kragel18_alldata;
@@ -1514,26 +1515,63 @@ end % function
 
 function [image_obj, networknames, imagenames] = load_bmrk3 %#ok<*STOUT>
 
-% This code loads a dataset object saved in a mat file, and attempts to
-% download it if it cannot be found.
+% Builds the BMRK3 6-levels pain dataset object directly from the per-subject
+% images that ship in CanlabCore/Sample_datasets, so it no longer depends on
+% the separately-distributed bmrk3_6levels_pain_dataset.mat. The resulting
+% object is identical (voxel data, .Y, and .metadata_table) to that .mat file.
+%
+% 33 participants x 6 heat levels (44.3-49.3 C) = 198 images. Each subject has
+% one 4-D .nii.gz with 6 volumes (ascending temperature). The companion file
+% bmrk3_6levels_metadata.mat holds per-subject subject_id, temperatures,
+% ratings, and the image file names.
 
-fmri_data_file = which('bmrk3_6levels_pain_dataset.mat');
+metafile = which('bmrk3_6levels_metadata.mat');
 
-if isempty(fmri_data_file)
-    
-    % attempt to download
-    disp('Did not find data locally...downloading data file from figshare.com')
-    
-    fmri_data_file = websave('bmrk3_6levels_pain_dataset.mat', 'https://ndownloader.figshare.com/files/12708989');
-    
+if isempty(metafile)
+    error(['Cannot find bmrk3_6levels_metadata.mat on the path.\n' ...
+        'It ships in CanlabCore/Sample_datasets/Woo_2015_PlosBio_BMRK3_pain_6levels.\n' ...
+        'Make sure CanlabCore (with subfolders) is on your MATLAB path.']); %#ok<*SPERR>
 end
 
-sprintf('Loading: %s\n', fmri_data_file);
+md = load(metafile);
+datadir = fileparts(metafile);
 
-load(fmri_data_file); %#ok<*LOAD>
+% Resolve the per-subject image files in the local Sample_datasets folder.
+% The names stored in the metadata may carry an unrelated absolute-path
+% prefix, so keep only the file name and prepend the local folder.
+nsubj = numel(md.single_trial_image_names);
+names = cell(nsubj, 1);
+for i = 1:nsubj
+    [~, nm, ext] = fileparts(md.single_trial_image_names{i});
+    names{i} = fullfile(datadir, [nm ext]);
+end
+
+% Load all subjects (each a 4-D image with 6 volumes -> 198 images total)
+% within the standard brain mask, reproducing the original dataset object.
+image_obj = fmri_data(names, which('brainmask.nii'), 'noverbose');
+image_obj = remove_empty(image_obj);
+
+% Attach metadata, concatenating the per-subject cells in subject order
+subject_id   = cat(1, md.subject_id{:});
+temperatures = cat(1, md.temperatures{:});
+ratings      = cat(1, md.ratings{:});
+
+image_obj.Y = ratings;
+image_obj.metadata_table = table(subject_id, temperatures, ratings, ...
+    'VariableNames', {'subject_id', 'temperature', 'rating'});
+
+image_obj.additional_info = struct('subject_id', subject_id, 'temperatures', temperatures);
+image_obj.additional_info.references = { ...
+    'Wager, T.D., et al. (2013). An fMRI-Based Neurologic Signature of Physical Pain. New England Journal of Medicine, 368:1388-1397 (Study 2).', ...
+    'Woo, C.-W., Roy, M., Buhle, J. T. & Wager, T. D. (2015). Distinct brain systems mediate the effects of nociceptive input and self-regulation on pain. PLoS Biology, 13(1): e1002036.', ...
+    'Lindquist, M. A., et al. (2015). Group-Regularized Individual Prediction: Theory and Application to Pain. NeuroImage.'};
+
+image_obj.source_notes = 'BMRK3 dataset from CANlab, PI Tor Wager';
+image_obj.dat_descrip = ['.dat contains 6 images per participant, activation estimates during heat on L arm ' ...
+    'from level 1(44.3 degrees C) to level 6(49.3), in 1 degree increments.'];
 
 for i = 1:size(image_obj.dat, 2)
-    networknames{1, i} = sprintf('Subj%03d_%02dDegreesC', image_obj.additional_info.subject_id(i), image_obj.additional_info.temperatures(i)); %#ok<*AGROW>
+    networknames{1, i} = sprintf('Subj%03d_%02dDegreesC', subject_id(i), temperatures(i)); %#ok<*AGROW>
 end
 
 imagenames = networknames';

@@ -21,11 +21,19 @@ Getting help and additional information:
 ------------------------------------------------------------
 Sources of documentation for this toolbox:
 
-1. **[canlab.github.io](https://canlab.github.io/)** — top-level entry point with Setup, Repositories, Philosophy, and Batch system for 2nd-level analysis.
-2.  **[Walkthroughs](https://canlab.github.io/walkthroughs/)** — step-by-step analysis tutorials with code. "How to do stuff with Canlab tools".
-3. **[Tutorials](https://canlab.github.io/tutorials/)** — longer-form tutorials with more equations and theoretical explanation.
-4. **[Object methods reference](docs/Object_methods.md)** — the entry point for object help: a class-by-class index (`fmri_data`, `image_vector`, `statistic_image`, `atlas`, `region`, `predictive_model`, ...) of object methods with per-function code maps, runnable examples, and sample figures. The fastest way to learn the API.
-5. Function-by-function help documents and examples are provided in each function. In Matlab type >>help <function_name>
+### In this repository (`docs/`)
+
+- **[Object methods reference](docs/Object_methods.md)** — the entry point for object help: a class-by-class index (`fmri_data`, `image_vector`, `statistic_image`, `atlas`, `region`, `predictive_model`, ...) of object methods with per-function code maps, runnable examples, and sample figures. The fastest way to learn the API.
+- **[Visualization walkthrough](docs/visualization_walkthrough/index.md)** — a hands-on, multi-page guide to visualizing brain data and results: montages, 3-D surfaces, the interactive display controller, colormaps, and atlases. Each section pairs runnable code with the figure it produces.
+- **[Workflows](docs/Workflows.md)** — end-to-end recipes that chain several methods to accomplish a common analysis goal (ROI data extraction, first-/second-level GLM maps, ...). Each comes as a conceptual *roadmap* plus a runnable *walkthrough*.
+- **[Markdown tutorials](docs/markdown_tutorials/)** — longer-form, multi-part didactic tutorials with copy-pasteable code (e.g. [multivariate classification with SVM](docs/markdown_tutorials/multivariate_classification_with_SVM/multivariate_decoding_part1_classification_with_SVM.md)).
+- **Function-level help** — every function has help text and examples. In MATLAB, type `>> help <function_name>`.
+
+### Online
+
+- **[canlab.github.io](https://canlab.github.io/)** — top-level entry point with Setup, Repositories, Philosophy, and Batch system for 2nd-level analysis.
+- **[Walkthroughs](https://canlab.github.io/walkthroughs/)** — step-by-step analysis tutorials with code. "How to do stuff with Canlab tools".
+- **[Tutorials](https://canlab.github.io/tutorials/)** — longer-form tutorials with more equations and theoretical explanation.
 
 For more information on fMRI analysis generally, see <a href = "https://leanpub.com/principlesoffmri">Martin Lindquist and Tor Wager's online book</a> and our free Coursera videos and classes <a href = "https://www.coursera.org/learn/functional-mri">Principles of fMRI Part 1</a> and <a href = "https://www.coursera.org/learn/functional-mri-2">Part 2 </a>. New in 2026: Martin and Tor's expanded fMRI methods book <a href = "https://mitpress.mit.edu/9780262045049/elements-of-functional-magnetic-resonance-imaging/">Elements of fMRI</a>. 
 

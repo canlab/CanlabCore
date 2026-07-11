@@ -115,7 +115,7 @@ function ROC = roc_plot(input_values, binary_outcome, varargin)
 %    Tor Edited 3/20/2012 to fix AUC estimate and add/change output.
 %
 %    Tor Tested 3/20/12 against RScorePlus.  There are some consequences of
-%    binning for input to RScorePlus, inclding that the "response" criteria are inferred
+%    binning for input to RScorePlus, including that the "response" criteria are inferred
 %    in RScorePlus, but they are given if we are selecting arbitrary criteria based on
 %    continuous measures (e.g., brain activity). This influences the actual
 %    estimates of the mean and std. signal distributions, as well as the
@@ -595,7 +595,7 @@ if doplot
     ROC.line_handle = han;
 end
 
-% Boostrap, if asked for
+% Bootstrap, if asked for
 % -------------------------------------------------------------------------
 if doboot
     
@@ -822,7 +822,7 @@ end % main function
 % function [xvals, tpr, fpr] = roc_calc(input_vals, binary_outcome, xvals)
 % % Calculate Receiver Operating Characteristic plot (ROC) given P-values
 % %
-% %  function [xvals, tpr, fpr] = roc_calc(input_vals or input values, input_vals, [treshold vals to assess])
+% %  function [xvals, tpr, fpr] = roc_calc(input_vals or input values, input_vals, [threshold vals to assess])
 % %
 % % Modified from roc_calc.m in scnlab tools
 % % Tor Wager, 2012

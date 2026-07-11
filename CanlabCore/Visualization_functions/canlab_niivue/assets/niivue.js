@@ -40616,12 +40616,19 @@ var Niivue = class {
     if (hdr.intent_code === 1002 /* NIFTI_INTENT_LABEL */) {
       outline = this.opts.atlasOutline;
     }
+    // --- CANlab patch: configurable atlas-outline thickness ---
+    // The label-outline shader flags a voxel as a boundary when a neighbor at
+    // +/-(offset) voxels has a different label, so scaling the neighbor offset
+    // by opts.atlasOutlineWidth widens the outline band. Defaults to 1 (stock
+    // behavior) when unset, so losing this on a niivue re-download is harmless.
+    const canlabOutlineW = this.opts.atlasOutlineWidth || 1;
     this.gl.uniform4fv(orientShader.uniforms.xyzaFrac, [
-      1 / this.back.dims[1],
-      1 / this.back.dims[2],
-      1 / this.back.dims[3],
+      canlabOutlineW / this.back.dims[1],
+      canlabOutlineW / this.back.dims[2],
+      canlabOutlineW / this.back.dims[3],
       outline
     ]);
+    // --- end CANlab patch ---
     log.debug("back dims: ", this.back.dims);
     for (let i = 0; i < this.back.dims[3]; i++) {
       const coordZ = 1 / this.back.dims[3] * (i + 0.5);

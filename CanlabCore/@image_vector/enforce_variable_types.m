@@ -53,7 +53,7 @@ function obj = enforce_variable_types(obj)
 
 obj = remove_empty(obj);
 % EDITED: force the .dat field of a statistic_image to be double
-% to enbale more accurate estimates of p values
+% to enable more accurate estimates of p values
 % (Zizhuang Miao, 02/26/2026)
 if isa(obj, 'statistic_image') && strcmp(obj.type, 'T')
     obj.dat = double(obj.dat);

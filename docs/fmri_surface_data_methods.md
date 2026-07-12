@@ -74,8 +74,8 @@ differences from `fmri_data`:
 
 | Method | From | One-liner |
 |---|---|---|
-| `vol2surf` | `@image_vector` | Project a volumetric image (MNI152) onto the fsaverage-164k surface via the CBIG RF mapping (`interpn`) |
-| `surf2vol` | `@fmri_surface_data` | Project an fsaverage-164k object back to an MNI152 `fmri_data` volume (self-consistent inverse of `vol2surf`) |
+| `vol2surf` | `@image_vector` | Project a volumetric image (MNI152) onto the fsaverage-164k surface. **Is the CBIG RF-ANTs mapper natively** (Wu et al. 2018) — a reimplementation of `CBIG_RF_projectMNI2fsaverage` (`interpn`), no FreeSurfer needed |
+| `surf2vol` | `@fmri_surface_data` | Project an fsaverage-164k object back to an MNI152 `fmri_data` volume — native inverse using the same CBIG RF-ANTs warp (`accumarray` scatter) |
 
 ## Data operations
 

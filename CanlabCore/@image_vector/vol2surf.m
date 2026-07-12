@@ -7,14 +7,27 @@ function surf = vol2surf(obj, varargin)
 %     surf = vol2surf(fmri_data_obj, 'interp', 'nearest')
 %
 % Projects a volumetric image_vector / fmri_data (in an MNI152 space) onto the
-% fsaverage 164k cortical surface, returning an fmri_surface_data object. Uses
-% the vendored CBIG Registration-Fusion (RF-ANTs) MNI152->fsaverage mapping
-% (per-vertex MNI RAS coordinates) and samples the volume at those coordinates
-% with interpn. Fully native -- no FreeSurfer or Connectome Workbench required.
+% fsaverage 164k cortical surface, returning an fmri_surface_data object.
 %
-% This is the native v1 mapper. It is a fixed group-template MNI152<->fsaverage
-% correspondence (correct for group MNI maps; not a per-subject ribbon mapper),
-% and it targets fsaverage-164k (fsaverage<->fs_LR deformation is a later step).
+% THIS IS THE CBIG REGISTRATION-FUSION MAPPER, NATIVELY. It uses the vendored
+% CBIG Registration-Fusion (RF-ANTs) MNI152->fsaverage warp (Wu et al. 2018,
+% Human Brain Mapping; MIT-licensed) -- the per-vertex MNI152 RAS coordinates in
+% lh/rh.avgMapping_allSub_RF_ANTs_MNI152_orig_to_fsaverage.mat (resolved by
+% canlab_cbig_warp_path) -- and samples the volume at those coordinates with
+% interpn. This is a line-for-line native reimplementation of CBIG's
+% CBIG_RF_projectMNI2fsaverage.m (see CanlabCore/Cifti_plotting/
+% CBIG_registration_fusion_surf2vol_vol2surf/): identical warp data and identical
+% interpn sampling, but driven by SPM's volInfo.mat affine instead of FreeSurfer's
+% MRIread vox2ras, so NO FreeSurfer or Connectome Workbench is required.
+%
+% It is a fixed group-template MNI152<->fsaverage correspondence (correct for
+% group MNI maps; not a per-subject ribbon mapper), and it targets fsaverage-164k
+% (fsaverage<->fs_LR deformation is a later step). surf2vol is the inverse.
+%
+% :References:
+%   Wu J, Ngo GH, Greve DN, Li J, He T, Fischl B, Eickhoff SB, Yeo BTT (2018).
+%   Accurate nonlinear mapping between MNI volumetric and FreeSurfer surface
+%   coordinate systems. Human Brain Mapping 39(9):3793-3808.
 %
 % :Inputs:
 %   **obj:** an image_vector / fmri_data / statistic_image in an MNI152 volume

@@ -160,8 +160,12 @@ the mesh edge graph (`graph`/`conncomp`), subcortex via 26-connectivity
 
 #### `vol2surf(volume_obj, 'interp', 'linear')`  *(method on `image_vector` / `fmri_data`)*
 Project a volumetric image (MNI152) onto the **fsaverage-164k** cortical surface,
-returning an `fmri_surface_data`. Samples the CBIG RF-ANTs MNI→fsaverage
-per-vertex coordinates with `interpn`. Use `'interp','nearest'` for label maps.
+returning an `fmri_surface_data`. **This is the CBIG registration-fusion mapper,
+natively:** it samples the vendored CBIG RF-ANTs MNI→fsaverage per-vertex
+coordinates (Wu et al. 2018, *Hum Brain Mapp*) with `interpn` — a line-for-line
+reimplementation of CBIG's `CBIG_RF_projectMNI2fsaverage.m` using the identical
+warp, driven by SPM's `volInfo.mat` instead of FreeSurfer's `MRIread`, so no
+FreeSurfer/Workbench is required. Use `'interp','nearest'` for label maps.
 
 ```matlab
 ssurf = vol2surf(fmri_data('weights.nii'));        % fsaverage_164k object
@@ -384,9 +388,15 @@ matching bundled mesh in `canlab_canonical_brains/Canonical_brains_surfaces/`
 
 ## 7. Design notes & limitations
 
-- **Group-template mapping.** `vol2surf`/`surf2vol` use a fixed group MNI152↔
-  fsaverage correspondence (correct for group MNI maps; not a per-subject
-  ribbon-constrained mapper). Best-in-class per-subject mapping is a future step.
+- **Group-template mapping = CBIG registration fusion.** `vol2surf`/`surf2vol`
+  are native reimplementations of the CBIG RF-ANTs MNI152↔fsaverage mappers
+  (Wu et al. 2018), using the vendored warp under `Cifti_plotting/
+  CBIG_registration_fusion_surf2vol_vol2surf/` — `vol2surf` ≡
+  `CBIG_RF_projectMNI2fsaverage`. So you are already using CBIG registration
+  fusion, with no FreeSurfer/CBIG-toolbox dependency. It is a fixed group
+  correspondence (correct for group MNI maps; not a per-subject ribbon mapper).
+  CBIG's heavier `fsaverage2Vol` ribbon-fill needs FreeSurfer + the MARS toolbox +
+  external mask geometry (not bundled) and is intentionally not wired in.
 - **fs_LR ↔ fsaverage.** Not yet bridged; keep a workflow in one space, or go
   through a volume.
 - **Planned:** a colorbar/outline overlay on the native render, and surface-aware

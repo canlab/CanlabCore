@@ -107,8 +107,13 @@ size(r.volume)          % [X Y Z x 1] subcortical volume
 ## Section C — Volume → surface (and back)
 
 Project any volumetric `fmri_data` / `statistic_image` (in MNI152) onto the
-cortical surface with `vol2surf`. It samples the vendored CBIG registration-fusion
-MNI↔fsaverage mapping — fully native. Here we project a group t-map:
+cortical surface with `vol2surf`. **`vol2surf` *is* the CBIG registration-fusion
+mapper, natively** — it uses the vendored CBIG RF-ANTs MNI152↔fsaverage warp
+(Wu et al. 2018, *Human Brain Mapping*) and is a line-for-line reimplementation of
+CBIG's `CBIG_RF_projectMNI2fsaverage.m` (same warp data, same `interpn` sampling),
+driven by SPM's affine instead of FreeSurfer's `MRIread`, so **no FreeSurfer or
+Connectome Workbench is needed**. `surf2vol` is the native inverse using the same
+warp. Here we project a group t-map:
 
 ```matlab
 img   = load_image_set('emotionreg');      % 30 contrast images (fmri_data)
@@ -210,9 +215,15 @@ write(ssurf, 'emo_surface.func.gii');            % native GIFTI
 - **Spaces.** Native CIFTI is `fsLR_32k`; `vol2surf` produces `fsaverage_164k`.
   These have different mesh topologies and cannot be combined without resampling
   (an fsaverage↔fs_LR deformation is a planned enhancement).
-- **Group-template mapping.** `vol2surf`/`surf2vol` use a fixed group
-  MNI152↔fsaverage correspondence (correct for group MNI maps; not a per-subject
-  ribbon mapper).
+- **Group-template mapping (this is the CBIG RF mapper).** `vol2surf`/`surf2vol`
+  are native reimplementations of the CBIG Registration-Fusion (RF-ANTs) MNI152↔
+  fsaverage mappers (Wu et al. 2018) — `vol2surf` ≡ `CBIG_RF_projectMNI2fsaverage`,
+  using the identical vendored warp — so you are already using CBIG registration
+  fusion, no FreeSurfer/CBIG toolbox required. It is a fixed group MNI152↔fsaverage
+  correspondence (correct for group MNI maps; not a per-subject ribbon mapper).
+  CBIG's heavier `fsaverage2Vol` ribbon-fill script needs FreeSurfer + the CBIG
+  MARS toolbox + external mask geometry (not bundled), so it is not wired in; the
+  native `surf2vol` scatter is used instead.
 - **No external toolbox** is required at runtime (sole exception: `ica`, which
   needs the GIFT/`icatb` toolbox like the base `image_vector` method).
 

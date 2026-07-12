@@ -8,14 +8,31 @@ function vol = surf2vol(obj, varargin)
 %
 % Projects cortical-surface data on the fsaverage 164k surface into an MNI152
 % volume, returning an fmri_data object (which can then be written to .nii with
-% its write method, montaged, etc.). Uses the same vendored CBIG RF-ANTs
-% MNI152<->fsaverage per-vertex coordinates as vol2surf, scattering each vertex's
+% its write method, montaged, etc.).
+%
+% THIS IS THE CBIG REGISTRATION-FUSION MAPPER, NATIVELY (inverse direction). It
+% uses the same vendored CBIG RF-ANTs MNI152<->fsaverage per-vertex coordinates as
+% vol2surf (Wu et al. 2018, Human Brain Mapping; MIT-licensed; see
+% canlab_cbig_warp_path and CanlabCore/Cifti_plotting/
+% CBIG_registration_fusion_surf2vol_vol2surf/), scattering each fsaverage vertex's
 % value into its MNI voxel and averaging co-located vertices (accumarray). Fully
 % native -- no FreeSurfer / Connectome Workbench.
 %
-% This is the inverse of vol2surf and is self-consistent with it. It requires an
-% fsaverage_164k object (the CBIG warp is fsaverage-based). For the subcortical
-% (volumetric) part of a grayordinate object, use to_fmri_data instead.
+% Note: CBIG also ships a heavier fsaverage->volume script
+% (CBIG_RF_projectfsaverage2Vol_single.m) that fills the whole cortical ribbon via
+% a 256^3 conformed per-voxel mapping; that path requires FreeSurfer + the CBIG
+% MARS toolbox + external mask geometry (not bundled), so it is not used here. This
+% native inverse instead scatters the per-vertex coordinates, which is self-
+% consistent with vol2surf and adequate for group cortical maps.
+%
+% This is the inverse of vol2surf. It requires an fsaverage_164k object (the CBIG
+% warp is fsaverage-based). For the subcortical (volumetric) part of a
+% grayordinate object, use to_fmri_data instead.
+%
+% :References:
+%   Wu J, Ngo GH, Greve DN, Li J, He T, Fischl B, Eickhoff SB, Yeo BTT (2018).
+%   Accurate nonlinear mapping between MNI volumetric and FreeSurfer surface
+%   coordinate systems. Human Brain Mapping 39(9):3793-3808.
 %
 % :Inputs:
 %   **obj:** an fmri_surface_data object in surface_space 'fsaverage_164k'

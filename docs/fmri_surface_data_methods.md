@@ -111,22 +111,27 @@ section); `resample_surface(obj, 'list')` prints the keyword list. `vol2surf` /
 | `vol2surf` | `@image_vector` | Project a volumetric image (MNI152) onto the fsaverage-164k surface. **Is the CBIG RF-ANTs mapper natively** (Wu et al. 2018) — a reimplementation of `CBIG_RF_projectMNI2fsaverage` (`interpn`), no FreeSurfer needed |
 | `surf2vol` | `@fmri_surface_data` | Project an fsaverage-164k object back to an MNI152 `fmri_data` volume — native inverse using the same CBIG RF-ANTs warp (`accumarray` scatter) |
 
-**`resample_surface(obj, target_space[, 'interp', 'nearest'])`.** Target spaces:
-`fsaverage_164k` (aliases `fsaverage`, `fsavg`, `164k`), `fsaverage6`/`5`/`4`,
-`fs_LR_32k` (aliases `fsLR`, `hcp`, `32k`). fsaverage↔fs_LR uses the vendored HCP
-registration ("deformed") sphere so both meshes share one spherical frame and are
-resampled with barycentric (or nearest) interpolation; fsaverage down-sampling is
-the **exact nested icosahedral subset**. Barycentric weights depend only on
-geometry, so they are computed once and applied to every map as a sparse
-matrix-multiply (a 50-map object costs about the same as one map). Continuous data
-defaults to barycentric (`'linear'`); binary masks and `.dlabel` images default to
-`'nearest'`.
+**`resample_surface(obj, target[, 'interp', 'nearest'])`.** `target` is a space
+keyword — `fsaverage_164k` (aliases `fsaverage`, `fsavg`, `164k`), `fsaverage6`/`5`/`4`,
+`fs_LR_32k` (aliases `fsLR`, `hcp`, `32k`), `onavg_41k`/`onavg_10k` (aliases `onavg`) —
+**or an isosurface patch handle / mesh struct** (its space is resolved by vertex
+count, so rendering code can resample straight onto an `addbrain` patch).
+fsaverage↔fs_LR (and ↔onavg) uses a vendored HCP/onavg registration ("deformed")
+sphere so both meshes share one spherical frame and are resampled with barycentric
+(or nearest) interpolation; fsaverage down-sampling is the **exact nested
+icosahedral subset**. Barycentric weights depend only on geometry, so they are
+computed once and applied to every map as a sparse matrix-multiply (a 50-map object
+costs about the same as one map). Continuous data defaults to barycentric
+(`'linear'`); binary masks and `.dlabel` images default to `'nearest'`. onavg is
+resample-only (it has no `.dscalar` I/O here).
 
 ```matlab
 s   = vol2surf(ttest(load_image_set('emotionreg')));  % fsaverage_164k
 s32 = resample_surface(s, 'fsLR_32k');                % -> HCP fs_LR-32k
 s6  = resample_surface(s, 'fsaverage6');              % -> nested fsaverage6
+son = resample_surface(s, 'onavg');                   % -> onavg (equal-area)
 lab = resample_surface(atlas_surf, 'fsLR_32k', 'interp', 'nearest');  % labels
+sp  = resample_surface(s, addbrain('hcp inflated left'));   % onto a patch's space
 ```
 
 ## Data operations
@@ -195,9 +200,18 @@ hemisphere shows its own data (resolved by tag, falling back to vertex x-positio
 `addbrain` relabels the `foursurfaces` patches). The layer participates in
 `set_colormap` / `set_opacity` / `rethreshold` / `removeblobs` / the controller like a
 volume layer (`rethreshold` on a surface layer is a magnitude cutoff applied per
-vertex — no volume/`volInfo` needed). It is **skipped with a clear `spacemismatch`
-warning** on any registered surface whose mesh is a different surface space than the
-object (add the matching surfaces instead — `surface(obj)` does so automatically).
+vertex — no volume/`volInfo` needed).
+
+**Rendering onto a different surface space auto-resamples.** If the surface(s) you
+render onto are a *different* recognized standard mesh than the data (e.g. fs_LR
+data on an fsaverage `foursurfaces_freesurfer` surface, or vice versa), the data is
+**automatically resampled** to that mesh's space (`resample_surface`, nearest for
+render speed) and painted — no manual conversion. The resampled result is cached on
+the layer, so `set_colormap` / `rethreshold` / `set_opacity` re-renders are instant.
+Only a *non-standard* isosurface (an arbitrary vertex count, e.g. an MNI pial mesh
+from `addbrain('left')`) cannot be resampled and is skipped with a clear
+`spacemismatch` warning — project through a volume for those (`surf2vol` +
+`render_on_surface`).
 
 **Mixed grayordinate objects (cortex + subcortex).** For an object that also has
 subcortical voxels (a `91k`-style dscalar), `surface(obj)` adds a *second* managed

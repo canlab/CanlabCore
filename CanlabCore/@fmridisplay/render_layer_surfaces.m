@@ -198,27 +198,23 @@ if isfield(layer, 'cmaprange'), cmaprange = layer.cmaprange; end
 which_image = 1;
 if isfield(layer, 'which_image') && ~isempty(layer.which_image), which_image = layer.which_image; end
 
-% Dense per-hemisphere values (medial wall = NaN)
+% Native dense per-hemisphere values (medial wall = NaN), before thresholding.
 r = reconstruct_image(surf);
-Ldat = []; Rdat = [];
-if isfield(r, 'cortex_left'),  Ldat = r.cortex_left(:, which_image);  end
-if isfield(r, 'cortex_right'), Rdat = r.cortex_right(:, which_image); end
+L0 = []; R0 = [];
+if isfield(r, 'cortex_left'),  L0 = r.cortex_left(:, which_image);  end
+if isfield(r, 'cortex_right'), R0 = r.cortex_right(:, which_image); end
+native_nv = max([numel(L0), numel(R0)]);
 
-% Apply the layer's threshold (rethreshold stores it here for surface-native
-% layers, which have no volume to re-region). A scalar is a magnitude cutoff:
-% sub-threshold vertices become NaN -> uncoloured (fall back to anatomy). This is
-% applied at PAINT time so set_colormap / set_opacity, which re-paint, preserve
-% the threshold rather than resetting it.
+% Layer threshold (rethreshold stores it here; a scalar is a magnitude cutoff:
+% sub-threshold vertices -> NaN -> uncoloured). Applied at PAINT time, to whatever
+% hemisphere data is painted, so set_colormap / set_opacity preserve it.
 thr = [];
 if isfield(layer, 'applied_threshold'), thr = layer.applied_threshold; end
-if ~isempty(thr) && isscalar(thr) && isfinite(thr)
-    if ~isempty(Ldat), Ldat(abs(Ldat) < thr) = NaN; end
-    if ~isempty(Rdat), Rdat(abs(Rdat) < thr) = NaN; end
-end
 
-% Robust default colour range if none stored (matches the volume path policy)
+% Robust default colour range if none stored (from native, thresholded values).
 if isempty(cmaprange)
-    v = [Ldat; Rdat]; v = v(v ~= 0 & isfinite(v));
+    v = [local_apply_thr(L0, thr); local_apply_thr(R0, thr)];
+    v = v(v ~= 0 & isfinite(v));
     if ~isempty(v)
         sf = {}; if any(strcmp(args, 'splitcolor')), sf = {'splitcolor'}; end
         cmaprange = canlab_default_cmaprange(v, sf{:});
@@ -233,16 +229,20 @@ wh_tv = find(strcmp(args, 'transvalue'), 1);
 if ~isempty(wh_tv) && isnumeric(args{wh_tv + 1}), alpha = args{wh_tv + 1}; end
 alpha = max(0, min(1, alpha));
 
-% Vertex counts this object's data could paint (per hemisphere). A cortical patch
-% is paintable only if its vertex count matches -- i.e. it is the SAME surface
-% space. This is how we detect a cross-space mismatch (e.g. fs_LR data asked to
-% paint onto fsaverage 'foursurfaces_freesurfer' meshes) and warn instead of
-% drawing something wrong.
-data_nv = unique([numel(Ldat), numel(Rdat)]);
-data_nv = data_nv(data_nv > 0);
+% Hemisphere data by mesh vertex count (post-threshold), computed on demand. A
+% patch in the object's OWN space is painted directly. A patch that is a DIFFERENT
+% recognized standard cortical mesh (e.g. fs_LR data on an fsaverage surface) is
+% handled by an automatic native resample of the source object onto that mesh's
+% space (resample_surface, nearest for render speed), CACHED on the layer so
+% re-renders (set_colormap / rethreshold / opacity) reuse it. A non-standard mesh
+% (arbitrary vertex count) cannot be resampled and is skipped.
+if ~isfield(layer, 'resampled') || ~isstruct(layer.resampled), layer.resampled = struct(); end
+hemiL = containers.Map('KeyType', 'double', 'ValueType', 'any');
+hemiR = containers.Map('KeyType', 'double', 'ValueType', 'any');
+hemiL(native_nv) = local_apply_thr(L0, thr);
+hemiR(native_nv) = local_apply_thr(R0, thr);
 
-n_cortex = 0;      % cortical patches considered across the requested surfaces
-n_painted = 0;     % of those, how many matched the data space and were painted
+n_painted = 0; n_unknown = 0;
 for i = wh_surface
     if i < 1 || i > numel(obj.surface), continue; end
     surfh = obj.surface{i}.object_handle;
@@ -253,15 +253,33 @@ for i = wh_surface
         nv  = size(V, 1);
         tag = lower(get(hh, 'Tag'));
         if iscell(tag), tag = strjoin(tag, ' '); end
-        if ismember(nv, data_nv), n_cortex = n_cortex + 1; end
 
-        % Which hemisphere is this patch? Prefer an explicit 'left'/'right' tag
-        % (e.g. addbrain 'hcp inflated left'). But addbrain RELABELS the
-        % foursurfaces_* patches with the group keyword, erasing that tag, so
-        % fall back to geometry: the left hemisphere sits at negative x, the
-        % right at positive x in world coordinates (verified: fs_LR left
-        % centroid ~ -30, right ~ +32). Without this, both hemispheres would be
-        % painted with the same hemisphere's data.
+        % Ensure hemisphere data exists for this mesh's vertex count (resample if
+        % it is a recognized standard space different from the object's own).
+        if ~isKey(hemiL, nv)
+            tgt = local_std_space_name(nv);
+            if isempty(tgt), n_unknown = n_unknown + 1; continue; end   % non-standard mesh
+            key = sprintf('nv%d', nv);
+            if ~isfield(layer.resampled, key)
+                try
+                    layer.resampled.(key) = resample_surface(surf, tgt, 'interp', 'nearest');
+                catch
+                    n_unknown = n_unknown + 1; continue;
+                end
+                obj.activation_maps{k}.resampled = layer.resampled;     % persist for re-renders
+            end
+            rr = reconstruct_image(layer.resampled.(key));
+            Lr = []; Rr = [];
+            if isfield(rr, 'cortex_left'),  Lr = rr.cortex_left(:, which_image);  end
+            if isfield(rr, 'cortex_right'), Rr = rr.cortex_right(:, which_image); end
+            hemiL(nv) = local_apply_thr(Lr, thr);
+            hemiR(nv) = local_apply_thr(Rr, thr);
+        end
+        Ld_use = hemiL(nv); Rd_use = hemiR(nv);
+
+        % Which hemisphere is this patch? Prefer an explicit 'left'/'right' tag;
+        % else fall back to x-centroid sign (left < 0 < right), because addbrain
+        % relabels foursurfaces_* patches and erases the L/R tag.
         is_left  = contains(tag, 'left');
         is_right = contains(tag, 'right');
         if ~is_left && ~is_right
@@ -269,20 +287,17 @@ for i = wh_surface
         end
 
         vals = [];
-        if ~isempty(Rdat) && nv == numel(Rdat) && is_right
-            vals = Rdat;
-        elseif ~isempty(Ldat) && nv == numel(Ldat) && is_left
-            vals = Ldat;
+        if ~isempty(Rd_use) && nv == numel(Rd_use) && is_right
+            vals = Rd_use;
+        elseif ~isempty(Ld_use) && nv == numel(Ld_use) && is_left
+            vals = Ld_use;
         end
-        if isempty(vals), continue; end        % non-matching mesh / other hemi: skip
+        if isempty(vals), continue; end
 
         base = local_base_rgb(hh, nv);
 
         % Save the anatomy (gray) on first paint so composite_surfaces can reset
-        % this patch to gray before recompositing. Without this, set_opacity /
-        % set_colormap re-paint on TOP of the layer's own colours (base == the
-        % painted colour), so opacity blends a colour with itself and does
-        % nothing. addbrain('eraseblobs') restores this saved FaceVertexCData.
+        % this patch to gray before recompositing (see set_opacity / set_colormap).
         if isempty(get(hh, 'UserData'))
             set(hh, 'UserData', base);
         end
@@ -296,21 +311,34 @@ for i = wh_surface
     end
 end
 
-% Nothing matched: the requested surfaces are a DIFFERENT surface space than the
-% data (e.g. fsaverage meshes for fs_LR data). Say so clearly rather than leave
-% the anatomy silently unpainted. A surface object has no volume representation,
-% so it cannot be resampled onto a foreign mesh; the fix is to add the matching
-% surfaces (surface(obj) does this automatically, or use the matching
-% foursurfaces_* keyword for the object's space).
-if n_painted == 0 && ~isempty(wh_surface) && ~isempty(data_nv)
-    match_kw = 'foursurfaces_hcp';
-    if any(data_nv == 163842), match_kw = 'foursurfaces_freesurfer'; end
+% Only truly non-standard meshes (that cannot be resampled) go unpainted.
+if n_painted == 0 && n_unknown > 0
     warning('fmridisplay:render_layer_surfaces:spacemismatch', ...
-        ['Surface data (%s, %d verts/hemi) cannot be painted onto the requested ' ...
-         'surface(s), which are a different surface space. A surface object has no ' ...
-         'volume representation, so it cannot be resampled onto a foreign mesh. ' ...
-         'Use surface(obj) (adds the matching surfaces automatically) or the ' ...
-         'matching keyword ''%s''.'], surf.surface_space, max(data_nv), match_kw);
+        ['Surface data (%s) could not be painted: the target surface(s) are not a ' ...
+         'recognized standard cortical mesh, so the data cannot be resampled onto ' ...
+         'them. Use surface(obj), a standard fsaverage / fs_LR surface, or project ' ...
+         'via a volume (surf2vol + render_on_surface).'], surf.surface_space);
+end
+end
+
+
+function x = local_apply_thr(x, thr)
+% Magnitude-cutoff threshold: |value| < thr becomes NaN (uncoloured).
+if ~isempty(x) && ~isempty(thr) && isscalar(thr) && isfinite(thr)
+    x(abs(x) < thr) = NaN;
+end
+end
+
+
+function name = local_std_space_name(nv)
+% Standard cortical surface space for a per-hemisphere vertex count ('' if none).
+switch nv
+    case 32492,  name = 'fs_LR_32k';
+    case 163842, name = 'fsaverage_164k';
+    case 40962,  name = 'fsaverage6';
+    case 10242,  name = 'fsaverage5';
+    case 2562,   name = 'fsaverage4';
+    otherwise,   name = '';
 end
 end
 

@@ -77,6 +77,13 @@ for i = 1:2:numel(varargin)
     end
 end
 
+% ---- A patch handle or mesh struct target: resolve its space by vertex count.
+% This lets rendering code resample onto an arbitrary isosurface (e.g. an addbrain
+% patch) by passing the patch itself, not a keyword.
+if ~(ischar(target_space) || isstring(target_space))
+    target_space = local_space_from_patch(target_space);
+end
+
 % ---- Resolve source / target spaces ----
 [tgt_name, tgt_N] = local_resolve_space(target_space);
 [src_name, src_N] = local_resolve_space(obj.surface_space);
@@ -285,6 +292,37 @@ switch name
     case 'onavg_41k',      n = 40962;
     case 'onavg_10k',      n = 10242;
     otherwise, error('resample_surface:space', 'Unknown space %s.', name);
+end
+end
+
+
+function name = local_space_from_patch(target)
+% Resolve a surface space from an isosurface patch handle or a mesh struct, by
+% its per-hemisphere vertex count (a single patch is one hemisphere).
+if isstruct(target) && isfield(target, 'vertices')
+    nv = size(target.vertices, 1);
+elseif all(ishandle(target(:))) && strcmp(get(target(1), 'Type'), 'patch')
+    nv = size(get(target(1), 'Vertices'), 1);
+else
+    error('resample_surface:target', ...
+        ['Target must be a surface-space keyword, a patch handle, or a struct with ' ...
+         '.vertices. Run resample_surface(obj, ''list'').']);
+end
+% Standard cortical meshes are recognized by vertex count. Ambiguous counts
+% (40962/10242/2562 could be fsaverage or onavg) resolve to the FreeSurfer
+% fsaverage mesh, which is what addbrain surfaces use.
+switch nv
+    case 32492,  name = 'fs_LR_32k';
+    case 163842, name = 'fsaverage_164k';
+    case 40962,  name = 'fsaverage6';
+    case 10242,  name = 'fsaverage5';
+    case 2562,   name = 'fsaverage4';
+    otherwise
+        error('resample_surface:unknownmesh', ...
+            ['The target surface has %d vertices/hemisphere, which is not a recognized ' ...
+             'standard cortical mesh, so the data cannot be resampled onto it. Render ' ...
+             'onto a standard fsaverage or fs_LR surface, or project via a volume ' ...
+             '(surf2vol + render_on_surface).'], nv);
 end
 end
 

@@ -127,23 +127,22 @@ end
 
 
 % -------------------------------------------------------------------------
-function test_explicit_space_mismatch_warns(t)
-% surface(o2, obj, 'foursurfaces_freesurfer') with fs_LR data cannot map onto the
-% fsaverage meshes: a clear one-time warning, and the fsaverage patches are NOT
-% painted with fs_LR data.
+function test_autoresample_onto_mismatched_surface(t)
+% Rendering fs_LR data onto fsaverage surfaces AUTO-RESAMPLES (resample_surface)
+% and paints, instead of warning about a space mismatch. (t.TestData.s is fs_LR.)
 o2 = fmridisplay;
-lastwarn('');
 w = warning('off', 'all'); c = onCleanup(@() warning(w));
-o2 = surface(o2, t.TestData.s, 'foursurfaces_freesurfer');
-[~, wid] = lastwarn;
-verifyEqual(t, wid, 'fmridisplay:render_layer_surfaces:spacemismatch', ...
-    'A cross-space mismatch must warn clearly.');
-% No fsaverage (163842) patch should be painted per-vertex with the fs_LR data.
-for hh = cortex_patches(o2, 163842)
+o2 = surface(o2, t.TestData.s, 'foursurfaces_freesurfer');   % fsaverage meshes
+p = cortex_patches(o2, 163842);
+verifyNotEmpty(t, p, 'fsaverage cortical patches should exist.');
+anypainted = false;
+for hh = p
     cc = get(hh, 'FaceVertexCData');
-    verifyTrue(t, ~isequal(size(cc), [163842 3]) || all(all(abs(cc-0.5) < 1e-6)), ...
-        'fsaverage mesh must not be painted with fs_LR data.');
+    if isequal(size(cc), [163842 3]) && nnz(~all(abs(cc - 0.5) < 1e-6, 2)) > 1000
+        anypainted = true;
+    end
 end
+verifyTrue(t, anypainted, 'fs_LR data must auto-resample and paint onto fsaverage surfaces.');
 close all force
 end
 

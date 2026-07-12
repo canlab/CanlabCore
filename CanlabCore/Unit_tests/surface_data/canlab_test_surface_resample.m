@@ -113,6 +113,18 @@ end
 
 
 % -------------------------------------------------------------------------
+function test_patch_target_resolves_by_count(t)
+% A mesh struct / patch target resolves the target space by its vertex count.
+mesh32k = struct('vertices', zeros(32492, 3), 'faces', []);
+out = resample_surface(t.TestData.obj, mesh32k);        % fsaverage -> fs_LR by count
+verifyEqual(t, out.surface_space, 'fs_LR_32k');
+% A non-standard vertex count errors clearly (cannot resample onto an arbitrary mesh).
+badmesh = struct('vertices', zeros(12345, 3));
+verifyError(t, @() resample_surface(t.TestData.obj, badmesh), 'resample_surface:unknownmesh');
+end
+
+
+% -------------------------------------------------------------------------
 function test_onavg_space(t)
 % onavg (equal-area) template: resample to onavg and back via the fs_LR frame.
 if isempty(which('onavg_sphere_fsLR_lh_41k.mat'))

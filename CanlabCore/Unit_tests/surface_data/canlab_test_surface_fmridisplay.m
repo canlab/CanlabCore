@@ -318,6 +318,36 @@ end
 
 
 % -------------------------------------------------------------------------
+function test_color_mode_and_unique_solid(t)
+% canlab_color_mode (single source of truth) + surface 'unique'/'solid'/auto.
+verifyEqual(t, canlab_color_mode([0; 1; 0; 1]),        'solid');    % binary mask
+verifyEqual(t, canlab_color_mode((0:6)'),              'unique');   % few integer labels
+verifyEqual(t, canlab_color_mode(randn(500, 1) + 0.5), 'colormap'); % continuous
+
+% Continuous data (myelin) auto-selects a colormap (no indexmap/solid).
+o = surface(t.TestData.s);
+ra = o.activation_maps{1}.render_args;
+verifyFalse(t, any(strcmp(ra, 'indexmap')) || any(strcmp(ra, 'color')), 'continuous -> colormap');
+
+% Explicit 'solid'.
+o2 = surface(t.TestData.s, 'solid');
+verifyTrue(t, any(strcmp(o2.activation_maps{1}.render_args, 'color')), '''solid'' -> solid color');
+
+% A label object auto-selects 'unique' (indexed colormap).
+sc = t.TestData.s;
+sc.dat = single(mod((1:size(sc.dat, 1))', 7) + 1);
+sc.imagetype = 'dlabel';
+verifyEqual(t, canlab_color_mode(sc), 'unique', '.dlabel is always unique.');
+o3 = surface(sc);
+verifyTrue(t, any(strcmp(o3.activation_maps{1}.render_args, 'indexmap')), 'dlabel auto -> unique');
+% Explicit 'unique' too.
+o4 = surface(t.TestData.s, 'unique');
+verifyTrue(t, any(strcmp(o4.activation_maps{1}.render_args, 'indexmap')), '''unique'' -> indexed');
+close all force
+end
+
+
+% -------------------------------------------------------------------------
 function p = cortex_patches(o2, nv)
 % Cortical patches (vertex count nv) across all managed surface views.
 p = gobjects(0);

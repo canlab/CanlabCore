@@ -76,6 +76,9 @@ while i <= numel(varargin)
         case 'which_image',     which_image = varargin{i+1}; i = i + 2;
         case {'existingsurface','surface_handles'}, existing = varargin{i+1}; i = i + 2;
         case 'mni_surface',     mni_surface = varargin{i+1}; i = i + 2;
+        case {'unique','solid'}                 % value-less colour-mode flags
+            coloropts = [coloropts, varargin(i)]; %#ok<AGROW>
+            i = i + 1;
         otherwise
             % Any other option (clim, colormap, cmaprange, pos_colormap /
             % neg_colormap, splitcolor, maxcolor / mincolor, color, ...) is

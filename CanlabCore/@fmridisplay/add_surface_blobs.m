@@ -49,6 +49,33 @@ function obj = add_surface_blobs(obj, surf_obj, varargin)
 % fell through to the default split map. ----
 varargin = normalize_color_args(varargin);
 
+% ---- color MODE: explicit 'unique' / 'solid', else auto-select ('unique' for a
+% few integer labels, 'solid' for a binary mask, 'colormap' otherwise) via the
+% shared canlab_color_mode cutoff. 'unique' -> one solid colour per region
+% (scn_standard_colors as an indexed colormap); 'solid' -> one colour for all
+% in-data vertices. Only applied when no explicit colour spec was given. ----
+colorkeys = {'colormap', 'pos_colormap', 'neg_colormap', 'splitcolor', ...
+    'maxcolor', 'mincolor', 'color', 'indexmap'};
+has_explicit = any(cellfun(@(a) (ischar(a) || isstring(a)) && any(strcmpi(a, colorkeys)), varargin));
+wu = find(strcmpi(varargin, 'unique'), 1);
+ws = find(strcmpi(varargin, 'solid'), 1);
+color_mode = '';
+if ~isempty(wu),      color_mode = 'unique'; varargin(wu) = [];
+elseif ~isempty(ws),  color_mode = 'solid';  varargin(ws) = [];
+elseif ~has_explicit, color_mode = canlab_color_mode(surf_obj);
+end
+switch color_mode
+    case 'unique'
+        wi = find(strcmp(varargin, 'which_image'), 1); wimg = 1;
+        if ~isempty(wi), wimg = varargin{wi + 1}; end
+        nlab = max(1, round(max(double(surf_obj.dat(:, min(wimg, size(surf_obj.dat, 2)))))));
+        cm = cell2mat(scn_standard_colors(nlab)');
+        varargin = [varargin, {'indexmap', cm}];
+    case 'solid'
+        varargin = [varargin, {'color', [1 0.4 0]}];   % default solid (override with 'color')
+    % 'colormap' / '' : leave the default (split) colour pipeline.
+end
+
 % ---- which_image (a single layer shows one map) ----
 which_image = 1;
 wh = find(strcmp(varargin, 'which_image'), 1);

@@ -115,11 +115,14 @@ if any(is_surf)
     color_keys = {'which_image', 'clim', 'cmaprange', 'colormap', 'colormapname', ...
         'pos_colormap', 'neg_colormap', 'splitcolor', 'maxcolor', 'mincolor', ...
         'color', 'transvalue', 'wh_surface', 'wh_surfaces'};
+    color_flags = {'unique', 'solid'};      % value-less colour-mode flags
     surf_args = {}; color_args = {};
     j = 1;
     while j <= numel(rest)
         a = rest{j};
-        if ischar(a) && any(strcmpi(a, color_keys))
+        if ischar(a) && any(strcmpi(a, color_flags))
+            color_args = [color_args, rest(j)]; j = j + 1; %#ok<AGROW>
+        elseif ischar(a) && any(strcmpi(a, color_keys))
             color_args = [color_args, rest(j:j+1)]; j = j + 2; %#ok<AGROW>
         else
             surf_args{end + 1} = a; j = j + 1; %#ok<AGROW>

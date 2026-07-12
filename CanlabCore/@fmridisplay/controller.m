@@ -33,7 +33,7 @@ function fig = controller(obj, varargin)
 % ..
 
 % ===> Controller window background colour. Tweak this RGB triplet manually. <===
-FIG_COLOR = [1 0.5 0];
+FIG_COLOR = [0.125 0.698 0.667];   % light sea green
 
 vname        = inputname(1);     % caller's variable name, for echoed code + title
 nlayers      = numel(obj.activation_maps);

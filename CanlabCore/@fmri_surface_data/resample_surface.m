@@ -99,13 +99,17 @@ else
 end
 
 % ---- Ensure the interpolation engine is on the path ----
+p_anchor = which('fsavg_sphere_lh.mat');
 if isempty(which('spherical_icosahedral_interpolation'))
-    p = which('fsavg_sphere_lh.mat');
-    if ~isempty(p), addpath(fullfile(fileparts(p), 'src')); end
+    if ~isempty(p_anchor), addpath(fullfile(fileparts(p_anchor), 'src')); end
     if isempty(which('spherical_icosahedral_interpolation'))
         error('resample_surface:engine', ['Cannot find spherical_icosahedral_interpolation ' ...
             '(bundled under canlab_canonical_brains/Canonical_brains_surfaces/src).']);
     end
+end
+% onavg spheres live in an 'onavg' subfolder that may not be on the path yet.
+if isempty(which('onavg_sphere_fsLR_lh_41k.mat')) && ~isempty(p_anchor)
+    addpath(fullfile(fileparts(p_anchor), 'onavg'));
 end
 
 % ---- Dense cortical hemisphere data (medial wall -> 0 for interpolation) ----
@@ -216,8 +220,24 @@ switch space
         else
             FL = convhulln(double(VL)); FR = convhulln(double(VR));   % ic6/5/4 faces
         end
+    case {'onavg_41k', 'onavg_10k'}
+        % onavg vertices in the fs_LR-aligned frame (TemplateFlow tpl-onavg
+        % space-fsLR registration spheres), so they resample in the common frame.
+        d = local_onavg_density(space);
+        L = local_load_sphere(sprintf('onavg_sphere_fsLR_lh_%s.mat', d));
+        R = local_load_sphere(sprintf('onavg_sphere_fsLR_rh_%s.mat', d));
+        VL = L.vertices; FL = L.faces; VR = R.vertices; FR = R.faces;
     otherwise
         error('resample_surface:space', 'No sphere geometry for space %s.', space);
+end
+end
+
+
+function d = local_onavg_density(space)
+switch space
+    case 'onavg_41k', d = '41k';
+    case 'onavg_10k', d = '10k';
+    otherwise, error('resample_surface:onavg', 'Unknown onavg density %s.', space);
 end
 end
 
@@ -244,6 +264,8 @@ switch kw
     case {'fsaverage6', 'fsavg6', 'ico6'}, name = 'fsaverage6';
     case {'fsaverage5', 'fsavg5', 'ico5'}, name = 'fsaverage5';
     case {'fsaverage4', 'fsavg4', 'ico4'}, name = 'fsaverage4';
+    case {'onavg', 'onavg_41k', 'onavg41k', 'onavg_ico6'}, name = 'onavg_41k';
+    case {'onavg_10k', 'onavg10k', 'onavg_ico5'}, name = 'onavg_10k';
     otherwise
         error('resample_surface:unknownspace', ...
             ['Unknown surface space "%s". Run resample_surface(obj, ''list'') for the ' ...
@@ -260,13 +282,19 @@ switch name
     case 'fsaverage6',     n = 40962;
     case 'fsaverage5',     n = 10242;
     case 'fsaverage4',     n = 2562;
+    case 'onavg_41k',      n = 40962;
+    case 'onavg_10k',      n = 10242;
     otherwise, error('resample_surface:space', 'Unknown space %s.', name);
 end
 end
 
 
 function fam = local_family(name)
-if strcmp(name, 'fs_LR_32k'), fam = 'fsLR'; else, fam = 'fsaverage'; end
+% Families gate the exact nested-subset fast path (fsaverage-only). onavg is a
+% different (uniform-area) tessellation, so it always uses interpolation.
+if strcmp(name, 'fs_LR_32k'), fam = 'fsLR';
+elseif strncmp(name, 'onavg', 5), fam = 'onavg';
+else, fam = 'fsaverage'; end
 end
 
 
@@ -285,18 +313,21 @@ end
 
 % =========================================================================
 function t = local_print_spaces()
-kw   = {'fsaverage_164k'; 'fsaverage6'; 'fsaverage5'; 'fsaverage4'; 'fs_LR_32k'};
-nver = {163842; 40962; 10242; 2562; 32492};
+kw   = {'fsaverage_164k'; 'fsaverage6'; 'fsaverage5'; 'fsaverage4'; 'fs_LR_32k'; 'onavg_41k'; 'onavg_10k'};
+nver = {163842; 40962; 10242; 2562; 32492; 40962; 10242};
 desc = { ...
     'FreeSurfer fsaverage, 7th-order icosahedron (vol2surf output)'; ...
     'FreeSurfer fsaverage6 (6th-order icosahedron; nested subset of 164k)'; ...
     'FreeSurfer fsaverage5 (5th-order icosahedron; nested subset)'; ...
     'FreeSurfer fsaverage4 (4th-order icosahedron; nested subset)'; ...
-    'HCP fs_LR-32k (native CIFTI grayordinate cortex; Van Essen 2012)'};
+    'HCP fs_LR-32k (native CIFTI grayordinate cortex; Van Essen 2012)'; ...
+    'onavg equal-area template, den-41k (Feilong et al. 2024; CC0)'; ...
+    'onavg equal-area template, den-10k'};
 alias = { ...
     'fsaverage, fsavg, fsaverage7, 164k'; ...
     'fsavg6, ico6'; 'fsavg5, ico5'; 'fsavg4, ico4'; ...
-    'fsLR, fs_LR, hcp, 32k, 91k'};
+    'fsLR, fs_LR, hcp, 32k, 91k'; ...
+    'onavg, onavg41k'; 'onavg10k'};
 t = table(kw, nver, desc, alias, 'VariableNames', {'space', 'verts_per_hemi', 'description', 'aliases'});
 fprintf('\n==== resample_surface: available target spaces ====\n');
 disp(t);

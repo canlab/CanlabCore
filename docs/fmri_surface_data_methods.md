@@ -47,6 +47,8 @@ live on. The supported spaces, their resolutions, and their sources:
 | `fsaverage5` | 10,242 | fsaverage 5th-order icosahedron (nested subset). | Fischl et al. 1999 |
 | `fsaverage4` | 2,562 | fsaverage 4th-order icosahedron (nested subset). | Fischl et al. 1999 |
 | `fsLR_32k` | 32,492 | **HCP fs_LR-32k** — the left/right-symmetric grayordinate cortical mesh used by CIFTI `.dscalar`/`.dtseries`/`.dlabel` files. | Van Essen et al. 2012 |
+| `onavg_41k` | 40,962 | **onavg** (OpenNeuro Average) equal-area template, den-41k — vertices placed so cortical regions are sampled at uniform resolution. Resample-only (via its `space-fsLR` registration sphere). | Feilong et al. 2024 (CC0) |
+| `onavg_10k` | 10,242 | onavg equal-area template, den-10k. | Feilong et al. 2024 (CC0) |
 
 **Grayordinate objects (the "91k" CIFTI model).** A native CIFTI file combines
 the `fsLR_32k` cortex (59,412 vertices = 32,492 × 2 minus the medial wall) with
@@ -63,7 +65,8 @@ section); `resample_surface(obj, 'list')` prints the keyword list. `vol2surf` /
 *References.* Fischl B, Sereno MI, Tootell RBH, Dale AM (1999), *Hum Brain Mapp*
 8(4):272–284. Van Essen DC, Glasser MF, Dierker DL, Harwell J, Coalson T (2012),
 *Cereb Cortex* 22(10):2241–2262. Glasser MF et al. (2013), *NeuroImage*
-80:105–124.
+80:105–124. Feilong M, Guo J, Gobbini MI, Haxby JV (2024), *Nat Methods*
+21:2069–2078 (onavg; TemplateFlow `tpl-onavg`, CC0).
 
 ## Properties
 

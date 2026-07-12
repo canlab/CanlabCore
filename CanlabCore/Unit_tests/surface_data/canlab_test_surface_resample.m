@@ -37,9 +37,9 @@ end
 function test_list_returns_table(t)
 tbl = resample_surface(fmri_surface_data, 'list');
 verifyClass(t, tbl, 'table');
-verifyEqual(t, height(tbl), 5, 'Expected 5 available spaces.');
-verifyTrue(t, all(ismember({'fsaverage_164k', 'fs_LR_32k'}, tbl.space)), ...
-    'List must include fsaverage_164k and fs_LR_32k.');
+verifyGreaterThanOrEqual(t, height(tbl), 5, 'Expected at least the 5 core spaces.');
+verifyTrue(t, all(ismember({'fsaverage_164k', 'fs_LR_32k', 'onavg_41k'}, tbl.space)), ...
+    'List must include fsaverage_164k, fs_LR_32k, and onavg_41k.');
 end
 
 
@@ -109,6 +109,25 @@ verifyEqual(t, size(out.dat, 2), 3);
 % Column 2 = 2x column 1; column 3 = -column 1 (linear operator applied per map)
 verifyEqual(t, double(out.dat(:, 2)), 2 * double(out.dat(:, 1)), 'AbsTol', 1e-4);
 verifyEqual(t, double(out.dat(:, 3)), -double(out.dat(:, 1)), 'AbsTol', 1e-4);
+end
+
+
+% -------------------------------------------------------------------------
+function test_onavg_space(t)
+% onavg (equal-area) template: resample to onavg and back via the fs_LR frame.
+if isempty(which('onavg_sphere_fsLR_lh_41k.mat'))
+    t.assumeFail('onavg registration spheres not on path.');
+end
+son = resample_surface(t.TestData.obj, 'onavg');       % fsaverage_164k -> onavg_41k
+verifyEqual(t, son.surface_space, 'onavg_41k');
+verifyEqual(t, size(son.dat, 1), 2 * 40962, 'onavg den-41k cortex = 2 x 40962.');
+sback = resample_surface(son, 'fsaverage_164k');
+a = double(t.TestData.obj.dat(:, 1)); b = double(sback.dat(:, 1));
+m = isfinite(a) & isfinite(b);
+verifyGreaterThan(t, corr(a(m), b(m)), 0.99, 'onavg round-trip should recover a smooth map.');
+% den-10k alias
+s10 = resample_surface(t.TestData.obj, 'onavg_10k');
+verifyEqual(t, size(s10.dat, 1), 2 * 10242);
 end
 
 

@@ -35,6 +35,15 @@ function fig = controller(obj, varargin)
 % ===> Controller window background colour. Tweak this RGB triplet manually. <===
 FIG_COLOR = [0.125 0.698 0.667];   % light sea green
 
+% Opening OR rebuilding the controller must never change the caller's current
+% figure: the controller is a uifigure, and if it becomes gcf the next
+% montage/surface slice-drawing (which uses gca/gcf) can land in the controller
+% window or the wrong axes -- an intermittent bug when a display is (re)built while
+% the controller auto-launches/updates. Capture the current figure now and restore
+% it on every exit path (onCleanup covers the early update-in-place return too).
+prevfig = get(groot, 'CurrentFigure');
+restore_currentfig = onCleanup(@() local_restore_currentfig(prevfig)); %#ok<NASGU>
+
 vname        = inputname(1);     % caller's variable name, for echoed code + title
 nlayers      = numel(obj.activation_maps);
 cmap_options = colormap_options();
@@ -686,5 +695,14 @@ if ~isempty(bh)
 end
 if ~isempty(obj.surface)
     composite_surfaces(obj);
+end
+end
+
+
+function local_restore_currentfig(prevfig)
+% Restore the current figure captured before the controller was opened/rebuilt,
+% so the controller uifigure never becomes gcf for later montage/surface drawing.
+if ~isempty(prevfig) && isgraphics(prevfig)
+    try, set(groot, 'CurrentFigure', prevfig); catch, end
 end
 end

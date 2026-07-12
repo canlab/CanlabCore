@@ -156,7 +156,25 @@ the mesh edge graph (`graph`/`conncomp`), subcortex via 26-connectivity
 [obj, ncl] = reparse_contiguous(threshold(s, 1.0, 'positive'));
 ```
 
-### Volume ↔ surface mapping
+### Surface resampling and volume ↔ surface mapping
+
+#### `resample_surface(obj, target_space, 'interp', 'linear')`
+Resample the **cortical** data to another surface space, natively. Target-space
+keywords (also `resample_surface(obj,'list')`): `fsaverage_164k` (aliases
+`fsaverage`, `164k`), `fsaverage6`/`fsaverage5`/`fsaverage4`, `fs_LR_32k` (aliases
+`fsLR`, `hcp`, `32k`). fsaverage↔fs_LR uses the vendored HCP registration
+("deformed") sphere so both meshes share one spherical frame and are resampled by
+barycentric (or nearest) interpolation; fsaverage down-sampling is the exact nested
+icosahedral subset. Interpolation weights depend only on geometry, so they are
+built once and applied to all maps (a sparse matrix-multiply) — a 50-map object
+costs ~the same as one map. Continuous data defaults to barycentric (`'linear'`);
+binary masks and `.dlabel` images default to `'nearest'`. Subcortical voxels are
+carried through unchanged.
+
+```matlab
+s32 = resample_surface(vol2surf(t), 'fsLR_32k');   % fsaverage -> HCP fs_LR-32k
+s6  = resample_surface(vol2surf(t), 'fsaverage6'); % nested downsample (exact)
+```
 
 #### `vol2surf(volume_obj, 'interp', 'linear')`  *(method on `image_vector` / `fmri_data`)*
 Project a volumetric image (MNI152) onto the **fsaverage-164k** cortical surface,

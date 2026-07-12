@@ -35,6 +35,36 @@ differences from `fmri_data`:
 - **No empty-squeezing:** grayordinate data is already compact, so `.dat` is
   *always* the full set; `remove_empty` / `replace_empty` are no-ops.
 
+## Surface spaces
+
+Every object carries a `surface_space` tag naming the cortical mesh its vertices
+live on. The supported spaces, their resolutions, and their sources:
+
+| `surface_space` | Verts/hemi | What it is | Source |
+|---|---|---|---|
+| `fsaverage_164k` | 163,842 | **FreeSurfer fsaverage** average-subject spherical surface, 7th-order icosahedron. The output of `vol2surf`. | Fischl et al. 1999 |
+| `fsaverage6` | 40,962 | fsaverage 6th-order icosahedron — a **nested subset** (first N vertices) of fsaverage-164k. | Fischl et al. 1999 |
+| `fsaverage5` | 10,242 | fsaverage 5th-order icosahedron (nested subset). | Fischl et al. 1999 |
+| `fsaverage4` | 2,562 | fsaverage 4th-order icosahedron (nested subset). | Fischl et al. 1999 |
+| `fsLR_32k` | 32,492 | **HCP fs_LR-32k** — the left/right-symmetric grayordinate cortical mesh used by CIFTI `.dscalar`/`.dtseries`/`.dlabel` files. | Van Essen et al. 2012 |
+
+**Grayordinate objects (the "91k" CIFTI model).** A native CIFTI file combines
+the `fsLR_32k` cortex (59,412 vertices = 32,492 × 2 minus the medial wall) with
+**31,870 subcortical/cerebellar voxels**, for 91,282 grayordinates — cortex on the
+surface, subcortex in a volume. The cortex uses `fsLR_32k`; the subcortical block
+is a standard MNI152 volume (extract it with `to_fmri_data`). See Glasser et al.
+2013 for the grayordinate model.
+
+**Moving between spaces.** `resample_surface(obj, target_space)` resamples the
+cortical data between any of these spaces natively (see the [Surface resampling](#surface-resampling-and-volume--surface-mapping)
+section); `resample_surface(obj, 'list')` prints the keyword list. `vol2surf` /
+`surf2vol` convert between an MNI152 **volume** and `fsaverage_164k`.
+
+*References.* Fischl B, Sereno MI, Tootell RBH, Dale AM (1999), *Hum Brain Mapp*
+8(4):272–284. Van Essen DC, Glasser MF, Dierker DL, Harwell J, Coalson T (2012),
+*Cereb Cortex* 22(10):2241–2262. Glasser MF et al. (2013), *NeuroImage*
+80:105–124.
+
 ## Properties
 
 `fmri_surface_data` inherits the `image_vector` properties (`dat`, `volInfo`,
@@ -44,11 +74,11 @@ differences from `fmri_data`:
 | Property | Description |
 |---|---|
 | `brain_model` | Geometry source of truth (mirrors CIFTI BrainModels). `.models{i}`: `.struct`, `.type` (`surf`/`vox`), `.start`, `.count`, `.numvert`, `.vertlist` (0-based), `.voxlist`; plus `.vol` (`.dims`, `.sform`), `.grayordinate_type`, `.cluster`. |
-| `geom` | Cortical mesh cache (faces/vertices) used for rendering. |
+| `geom` | **Attached CUSTOM mesh geometry only** (`.vertices`/`.faces`), set when the object is built from a `.surf.gii` that carries geometry. It is **empty for a data-only CIFTI** (e.g. a `.dscalar`) — that is expected, not a bug. Standard-space meshes are **not** stored here: for a known `surface_space` (fs_LR-32k, fsaverage-164k, …) `surface()` and resampling load the mesh on demand from the bundled assets (`private/load_surface_geom`, `canlab_canonical_brains/Canonical_brains_surfaces`). Use `.geom` only to carry a non-standard mesh no `surface_space` keyword can reproduce. |
 | `imagetype` | `dscalar` / `dtseries` / `dlabel` / `func` / `shape` / `label`. |
 | `series_info` | For `.dtseries`: `.start`/`.step`/`.unit`/`.exponent`. |
 | `label_table` | For `.dlabel`/`.label`: a MATLAB table with variables `key`, `name`, `rgba` (Nx4). |
-| `surface_space` | e.g. `fsLR_32k`, `fsaverage_164k`. Gatekeeps `compare_space`; drives mesh/warp choice. |
+| `surface_space` | The cortical mesh the vertices live on — one of `fsaverage_164k`, `fsaverage6`, `fsaverage5`, `fsaverage4`, `fsLR_32k` (see [Surface spaces](#surface-spaces)). Gatekeeps `compare_space`; drives mesh/warp choice and `resample_surface`. |
 | `mask` | Optional `[nGray × 1]` logical (or same-space object) for `apply_mask`. |
 | `X` / `Y` / `covariates` / `images_per_session` / `metadata_table` / … | Per-map annotations, same names/roles as `fmri_data`. |
 | `additional_info` | Free-form struct; also holds `.statistic` (from `ttest`/`regress`) and the source CIFTI xml/hdr. |
@@ -70,12 +100,31 @@ differences from `fmri_data`:
 | `reparse_contiguous` | `@fmri_surface_data` | Label contiguous clusters (cortex = mesh edge graph; subcortex = 26-connectivity) into `brain_model.cluster` |
 | `rebuild_like` | `@fmri_surface_data` | Wrap new `[nGray × K]` data into an object carrying this geometry (used internally) |
 
-## Volume ↔ surface mapping
+## Surface resampling and volume ↔ surface mapping
 
 | Method | From | One-liner |
 |---|---|---|
+| `resample_surface` | `@fmri_surface_data` | Resample the cortex to another **surface** space — `fsaverage_164k` ↔ `fsLR_32k` (HCP CIFTI) and nested `fsaverage6`/`5`/`4`. Barycentric by default (weights built once, reused across maps), nearest for binary/label maps; subcortex carried through. `resample_surface(obj,'list')` prints the spaces |
 | `vol2surf` | `@image_vector` | Project a volumetric image (MNI152) onto the fsaverage-164k surface. **Is the CBIG RF-ANTs mapper natively** (Wu et al. 2018) — a reimplementation of `CBIG_RF_projectMNI2fsaverage` (`interpn`), no FreeSurfer needed |
 | `surf2vol` | `@fmri_surface_data` | Project an fsaverage-164k object back to an MNI152 `fmri_data` volume — native inverse using the same CBIG RF-ANTs warp (`accumarray` scatter) |
+
+**`resample_surface(obj, target_space[, 'interp', 'nearest'])`.** Target spaces:
+`fsaverage_164k` (aliases `fsaverage`, `fsavg`, `164k`), `fsaverage6`/`5`/`4`,
+`fs_LR_32k` (aliases `fsLR`, `hcp`, `32k`). fsaverage↔fs_LR uses the vendored HCP
+registration ("deformed") sphere so both meshes share one spherical frame and are
+resampled with barycentric (or nearest) interpolation; fsaverage down-sampling is
+the **exact nested icosahedral subset**. Barycentric weights depend only on
+geometry, so they are computed once and applied to every map as a sparse
+matrix-multiply (a 50-map object costs about the same as one map). Continuous data
+defaults to barycentric (`'linear'`); binary masks and `.dlabel` images default to
+`'nearest'`.
+
+```matlab
+s   = vol2surf(ttest(load_image_set('emotionreg')));  % fsaverage_164k
+s32 = resample_surface(s, 'fsLR_32k');                % -> HCP fs_LR-32k
+s6  = resample_surface(s, 'fsaverage6');              % -> nested fsaverage6
+lab = resample_surface(atlas_surf, 'fsLR_32k', 'interp', 'nearest');  % labels
+```
 
 ## Data operations
 

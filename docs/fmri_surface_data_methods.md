@@ -110,6 +110,7 @@ section); `resample_surface(obj, 'list')` prints the keyword list. `vol2surf` /
 | `resample_surface` | `@fmri_surface_data` | Resample the cortex to another **surface** space — `fsaverage_164k` ↔ `fsLR_32k` (HCP CIFTI) and nested `fsaverage6`/`5`/`4`. Barycentric by default (weights built once, reused across maps), nearest for binary/label maps; subcortex carried through. `resample_surface(obj,'list')` prints the spaces |
 | `vol2surf` | `@image_vector` | Project a volumetric image (MNI152) onto the fsaverage-164k surface. **Is the CBIG RF-ANTs mapper natively** (Wu et al. 2018) — a reimplementation of `CBIG_RF_projectMNI2fsaverage` (`interpn`), no FreeSurfer needed |
 | `surf2vol` | `@fmri_surface_data` | Project an fsaverage-164k object back to an MNI152 `fmri_data` volume — native inverse using the same CBIG RF-ANTs warp (`accumarray` scatter) |
+| `to_display_volume` | `@fmri_surface_data` | Project the object (any space) to an MNI `fmri_data` for rendering on an **arbitrary** MNI isosurface: cortex resampled to fsaverage + `surf2vol`, merged with subcortex (`to_fmri_data`). Used by `render_on_surface` / the managed painter |
 
 **`resample_surface(obj, target[, 'interp', 'nearest'])`.** `target` is a space
 keyword — `fsaverage_164k` (aliases `fsaverage`, `fsavg`, `164k`), `fsaverage6`/`5`/`4`,
@@ -202,16 +203,19 @@ hemisphere shows its own data (resolved by tag, falling back to vertex x-positio
 volume layer (`rethreshold` on a surface layer is a magnitude cutoff applied per
 vertex — no volume/`volInfo` needed).
 
-**Rendering onto a different surface space auto-resamples.** If the surface(s) you
-render onto are a *different* recognized standard mesh than the data (e.g. fs_LR
-data on an fsaverage `foursurfaces_freesurfer` surface, or vice versa), the data is
-**automatically resampled** to that mesh's space (`resample_surface`, nearest for
-render speed) and painted — no manual conversion. The resampled result is cached on
-the layer, so `set_colormap` / `rethreshold` / `set_opacity` re-renders are instant.
-Only a *non-standard* isosurface (an arbitrary vertex count, e.g. an MNI pial mesh
-from `addbrain('left')`) cannot be resampled and is skipped with a clear
-`spacemismatch` warning — project through a volume for those (`surf2vol` +
-`render_on_surface`).
+**Rendering onto any surface just works.** If the surface(s) you render onto are a
+*different* recognized standard mesh than the data (e.g. fs_LR data on an fsaverage
+`foursurfaces_freesurfer` surface, or vice versa), the data is **automatically
+resampled** to that mesh's space (`resample_surface`, nearest for render speed) and
+painted. If the surface is an *arbitrary* MNI isosurface with no spherical
+registration (e.g. `addbrain('hires left')`, `'cutaway'`, or a pial mesh), the data
+is instead **projected to a volume** (`to_display_volume`: cortex resampled to
+fsaverage + `surf2vol`, merged with any subcortex) and the mesh is coloured by
+sampling that volume at its vertices — cortex *and* subcortex show up. Both the
+resampled data and the projected volume are **cached on the layer**, so
+`set_colormap` / `rethreshold` / `set_opacity` re-renders stay fast. A surface is
+only left unpainted (with a `spacemismatch` warning) if the projection genuinely
+fails.
 
 **Mixed grayordinate objects (cortex + subcortex).** For an object that also has
 subcortical voxels (a `91k`-style dscalar), `surface(obj)` adds a *second* managed

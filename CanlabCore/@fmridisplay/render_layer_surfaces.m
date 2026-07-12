@@ -258,7 +258,36 @@ for i = wh_surface
         % it is a recognized standard space different from the object's own).
         if ~isKey(hemiL, nv)
             tgt = local_std_space_name(nv);
-            if isempty(tgt), n_unknown = n_unknown + 1; continue; end   % non-standard mesh
+            if isempty(tgt)
+                % Non-standard MNI isosurface (e.g. addbrain 'hires left',
+                % 'cutaway'): no spherical registration exists, so paint it by
+                % projecting the data to a volume and sampling that volume at the
+                % patch's vertices (image_vector.render_on_surface). The volume is
+                % cached on the layer so re-renders stay fast.
+                if ~isfield(layer, 'display_volume') || isempty(layer.display_volume)
+                    try
+                        layer.display_volume = to_display_volume(surf);
+                        obj.activation_maps{k}.display_volume = layer.display_volume;
+                    catch
+                        n_unknown = n_unknown + 1; continue;
+                    end
+                end
+                vimg = layer.display_volume;
+                if size(vimg.dat, 2) > 1, vimg = get_wh_image(vimg, which_image); end
+                if ~isempty(thr) && isscalar(thr) && isfinite(thr) && ~strcmp(tc_map.type, 'indexed')
+                    vimg.dat(abs(vimg.dat) < thr) = 0;     % apply the layer threshold
+                end
+                cargs = {'truecolor', tc_map, 'truecolor_alpha', alpha, 'nolegend'};
+                if ~isempty(cmaprange), cargs = [cargs, {'cmaprange', cmaprange}]; end %#ok<AGROW>
+                if strcmp(tc_map.type, 'indexed'), cargs = [cargs, {'interp', 'nearest'}]; end %#ok<AGROW>
+                try
+                    render_on_surface(vimg, hh, cargs{:});
+                    n_painted = n_painted + 1;
+                catch
+                    n_unknown = n_unknown + 1;
+                end
+                continue
+            end
             key = sprintf('nv%d', nv);
             if ~isfield(layer.resampled, key)
                 try

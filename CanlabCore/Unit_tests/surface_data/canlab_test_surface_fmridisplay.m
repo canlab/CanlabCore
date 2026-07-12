@@ -275,6 +275,49 @@ end
 
 
 % -------------------------------------------------------------------------
+function test_to_display_volume(t)
+% Surface data projects to an MNI volume (for rendering on arbitrary meshes):
+% fs_LR cortex is resampled to fsaverage and surf2vol'd.
+vol = to_display_volume(t.TestData.s);         % t.TestData.s is fs_LR cortex
+verifyTrue(t, isa(vol, 'fmri_data'), 'to_display_volume returns an fmri_data.');
+verifyGreaterThan(t, size(vol.dat, 1), 1000, 'Projected volume must have cortical voxels.');
+end
+
+
+% -------------------------------------------------------------------------
+function test_render_onto_arbitrary_mni_mesh(t)
+% Rendering onto a NON-standard MNI isosurface (addbrain 'hires left') projects
+% the data to a volume and paints it, instead of skipping with a warning.
+o2 = surface(t.TestData.s);                    % fs_LR data, managed display
+n0 = numel(o2.surface);
+w = warning('off', 'all'); c = onCleanup(@() warning(w));
+try
+    o2 = surface(o2, 'hires left');            % arbitrary MNI cortical mesh
+catch
+    t.assumeFail('addbrain ''hires left'' surface unavailable.');
+end
+painted = false; sawmesh = false;
+for i = (n0 + 1):numel(o2.surface)
+    h = o2.surface{i}.object_handle; h = h(ishandle(h));
+    for jj = 1:numel(h)
+        hh = h(jj);
+        if ~strcmp(get(hh, 'Type'), 'patch'), continue; end
+        nv = size(get(hh, 'Vertices'), 1);
+        if ismember(nv, [32492 163842 40962 10242 2562]), continue; end   % standard
+        sawmesh = true;
+        cc = get(hh, 'FaceVertexCData');
+        if size(cc, 1) == nv && nnz(~all(abs(double(cc) - 0.5) < 1e-3, 2)) > 100
+            painted = true;
+        end
+    end
+end
+if ~sawmesh, t.assumeFail('No non-standard mesh was added.'); end
+verifyTrue(t, painted, 'A non-standard MNI mesh must be painted via volume projection.');
+close all force
+end
+
+
+% -------------------------------------------------------------------------
 function p = cortex_patches(o2, nv)
 % Cortical patches (vertex count nv) across all managed surface views.
 p = gobjects(0);

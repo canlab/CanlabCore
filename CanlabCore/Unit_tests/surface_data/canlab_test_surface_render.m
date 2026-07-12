@@ -157,6 +157,28 @@ end
 
 
 % -------------------------------------------------------------------------
+function test_atlas_surface_unique(t)
+% A volumetric atlas rendered on surfaces uses UNIQUE per-region solid colours
+% (via an indexed colormap), and surface(atl,'unique') is accepted (no warning).
+% A continuous statistic map keeps its colormap (no false auto-unique).
+if isempty(which('load_atlas')), t.assumeFail('load_atlas not on path.'); end
+atl = [];
+try, atl = load_atlas('julich_fmriprep20', 'noverbose'); catch, end
+if isempty(atl), t.assumeFail('julich atlas not available.'); end
+
+verifyEqual(t, canlab_color_mode(atl), 'unique', 'An atlas is a unique-colour map.');
+
+w = warning('off', 'all'); c = onCleanup(@() warning(w));
+lastwarn('');
+h = surface(atl, 'unique');                       % explicit flag, must not error/warn-unknown
+[~, wid] = lastwarn;
+verifyNotEqual(t, wid, 'MATLAB:UndefinedFunction', 'surface(atl,''unique'') must run.');
+verifyNotEmpty(t, h, 'surface(atl,''unique'') returns surface handles.');
+close all force;
+end
+
+
+% -------------------------------------------------------------------------
 function test_reparse_contiguous(t)
 st = threshold(t.TestData.s, 1.0, 'positive');
 [st, ncl] = reparse_contiguous(st, 'which_image', 1);

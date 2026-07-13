@@ -475,13 +475,40 @@ end
 
 
 function kw = surface_default_keyword(surf_data)
-% Multi-surface keyword whose meshes MATCH the object's surface space, so the
-% data paints directly (no cross-space resampling). Used when surface(o2,
-% surf_obj) is called with no explicit surface directive.
-switch surf_data.surface_space
-    case 'fsLR_32k',       kw = 'foursurfaces_hcp';          % 32492 verts/hemi
-    case 'fsaverage_164k', kw = 'foursurfaces_freesurfer';   % 163842 verts/hemi
-    otherwise,             kw = 'foursurfaces_hcp';          % best-effort default
+% Default four-surface view (L/R lateral + medial) whose meshes MATCH -- or best
+% match -- the object's surface space, so the data paints at full fidelity with
+% no (or a cheap, cached) resample. Used when surface(o2, surf_obj) is called
+% with no explicit surface directive.
+%
+% Two spaces have native display meshes bundled with CanlabCore:
+%   fsLR_32k       (32492 verts/hemi)  -> foursurfaces_hcp        (native paint)
+%   fsaverage_164k (163842 verts/hemi) -> foursurfaces_freesurfer (native paint)
+%
+% The other supported spaces have no bundled display mesh, so they render on the
+% four-surface view of their PARENT / aligned display space (a fast, cached
+% nearest-neighbour resample handled by render_layer_surfaces):
+%   fsaverage6/5/4 (nested icosahedra) -> foursurfaces_freesurfer (resample up to 164k)
+%   onavg_41k/10k  (equal-area, fs_LR-aligned) -> foursurfaces_hcp (resample to fs_LR-32k)
+switch local_space_family(surf_data.surface_space)
+    case 'fslr',      kw = 'foursurfaces_hcp';          % fs_LR-32k (native)
+    case 'fsaverage', kw = 'foursurfaces_freesurfer';   % fsaverage-164k (native for 164k; 6/5/4 resample up)
+    case 'onavg',     kw = 'foursurfaces_hcp';          % onavg is fs_LR-aligned -> render on fs_LR
+    otherwise,        kw = 'foursurfaces_hcp';          % best-effort default
+end
+end
+
+
+function fam = local_space_family(space)
+% Coarse family of a surface_space string ('fslr' | 'fsaverage' | 'onavg' | '').
+s = lower(char(space));
+if contains(s, 'onavg')
+    fam = 'onavg';
+elseif contains(s, 'fsaverage') || contains(s, 'fsavg')
+    fam = 'fsaverage';
+elseif contains(s, 'fslr') || contains(s, 'fs_lr')
+    fam = 'fslr';
+else
+    fam = '';
 end
 end
 

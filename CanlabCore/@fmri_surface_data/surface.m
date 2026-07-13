@@ -13,13 +13,15 @@ function han = surface(obj, varargin)
 % image_vector.surface. Three modes:
 %
 %   1. NATIVE (default): builds a managed, stateful fmridisplay whose surface
-%      views are the mesh set that matches the object's surface_space (fs_LR-32k
-%      -> 'foursurfaces_hcp', fsaverage-164k -> 'foursurfaces_freesurfer'), then
-%      paints the data as a MANAGED surface-native layer (colored DIRECTLY from
-%      the per-vertex data -- no resampling; medial wall and zeros render gray).
-%      Because the returned object is a stateful fmridisplay under a controller,
-%      set_colormap / set_opacity / rethreshold / removeblobs / refresh act on
-%      the surfaces (this is why the colormap is now changeable after the fact).
+%      views are the four-surface set that MATCHES the object's surface_space
+%      (see "Surface spaces" below), then paints the data as a MANAGED
+%      surface-native layer (colored DIRECTLY from the per-vertex data -- no
+%      resampling when the mesh is the object's own space; medial wall and zeros
+%      render gray). Because the returned object is a stateful fmridisplay under
+%      a controller, set_colormap / set_opacity / rethreshold / removeblobs /
+%      refresh act on the surfaces (this is why the colormap is changeable after
+%      the fact). With NO explicit surface argument, the default view is chosen
+%      to match the object's space (below); passing a surface keyword overrides it.
 %
 %   2. EXISTING SURFACE ('existingsurface', han): colors patch handles you
 %      already have (e.g. from addbrain or a prior surface call). Matching-space
@@ -30,11 +32,40 @@ function han = surface(obj, varargin)
 %      'left', 'right', 'hcp inflated') and renders onto it, projecting to a
 %      volume when the surface is not the object's native mesh.
 %
+% :Surface spaces and their default display meshes:
+%
+%   The object's .surface_space determines the default four-surface view. Two
+%   spaces have NATIVE display meshes bundled with CanlabCore and paint directly;
+%   the rest render on the four-surface view of their parent / aligned space via
+%   a fast, cached nearest-neighbour resample (a one-line message prints when
+%   that happens). All mesh files live under
+%   canlab_canonical_brains/Canonical_brains_surfaces/.
+%
+%   ======================================================================================
+%   surface_space   verts/hemi  default view              display mesh files
+%   ======================================================================================
+%   fsLR_32k        32492       foursurfaces_hcp          S12000.L/R.inflated_MSMAll.32k_fsl_LR.mat   (native)
+%   fsaverage_164k  163842      foursurfaces_freesurfer   surf_freesurf_inflated_Left/Right.mat        (native)
+%   fsaverage6      40962       foursurfaces_freesurfer   (resampled up to fsaverage-164k, then above)
+%   fsaverage5      10242       foursurfaces_freesurfer   (resampled up to fsaverage-164k, then above)
+%   fsaverage4      2562        foursurfaces_freesurfer   (resampled up to fsaverage-164k, then above)
+%   onavg_41k       40962       foursurfaces_hcp          (onavg is fs_LR-aligned -> resampled to fs_LR)
+%   onavg_10k       10242       foursurfaces_hcp          (onavg is fs_LR-aligned -> resampled to fs_LR)
+%   ======================================================================================
+%
+%   Other fs_LR surftypes (fsLR_32k only): 'midthickness' uses
+%   S1200.L/R.midthickness_MSMAll.32k_fs_LR.surf.gii and 'sphere' uses
+%   S1200.L/R.sphere.32k_fs_LR.mat (see 'surftype' below). fsaverage-164k has an
+%   inflated mesh only. To render in a space with no bundled mesh at true native
+%   fidelity, resample first with resample_surface (see :See also).
+%
 % :Optional Inputs:
-%   **'surftype':**     'inflated' (default), 'midthickness', 'sphere' (fs_LR).
+%   **'surftype':**     'inflated' (default), 'midthickness', 'sphere' (fs_LR only).
 %   **'which_image':**  map (column) to render. Default 1.
 %   **'existingsurface':** vector of patch handles to color.
 %   **'mni_surface':**  an addbrain keyword (string).
+%   Any addbrain surface keyword given as a bare token (e.g. 'foursurfaces_hcp',
+%   'hcp inflated left') overrides the space-matched default view.
 %
 %   Color options (harmonized with the volume pipeline; forwarded to
 %   render_on_surface -- see there for details):
@@ -54,24 +85,60 @@ function han = surface(obj, varargin)
 %
 % :Examples:
 % ::
+%     % ---- Native four-surface render, one example per surface space ----
+%     % Each object's space picks its matching four-surface view automatically.
+%
+%     % fs_LR-32k (HCP CIFTI grayordinates)  -> foursurfaces_hcp
 %     s = fmri_surface_data(which('S1200.MyelinMap_MSMAll.32k_fs_LR.dscalar.nii'));
-%     surface(s, 'which_image', 1);
+%     surface(s);
 %
-%     v = ttest(load_image_set('emotionreg'));   % a volumetric statistic_image
-%     surface(vol2surf(v));                      % native fsaverage render
-%     surface(vol2surf(v), 'mni_surface', 'left'); % on an addbrain MNI surface
+%     % fsaverage-164k (from a volume via CBIG registration fusion) -> foursurfaces_freesurfer
+%     v  = ttest(load_image_set('emotionreg'));    % a volumetric statistic_image
+%     sf = vol2surf(v);                            % fsaverage-164k object
+%     surface(sf, 'clim', [-4 4]);
 %
-% :See also: render_on_surface, load_surface_geom, addbrain, fmri_surface_data
+%     % Nested fsaverage6 (resamples up onto the fsaverage-164k four-surface view)
+%     s6 = resample_surface(s, 'fsaverage6');
+%     surface(s6);
+%
+%     % onavg (equal-area; fs_LR-aligned, so it renders on the fs_LR view)
+%     son = resample_surface(s, 'onavg_41k');
+%     surface(son);
+%
+%     % Other fs_LR surftypes (fsLR_32k meshes only)
+%     surface(s, 'surftype', 'midthickness');
+%     surface(s, 'surftype', 'sphere');
+%
+%     % ---- Rendering onto a specific existing / MNI surface ----
+%     surface(s, 'foursurfaces_hcp');              % explicit view (overrides default)
+%     surface(sf, 'mni_surface', 'left');          % an addbrain MNI pial surface (via volume)
+%     hp = addbrain('hcp inflated left');          % a native fs_LR patch
+%     surface(s, 'existingsurface', hp);           % color it directly (no resampling)
+%
+% :See also: render_on_surface, resample_surface, load_surface_geom, addbrain, fmri_surface_data
 
 surftype = 'inflated';
 which_image = 1;
 existing = [];
 mni_surface = '';
-coloropts = {};             % forwarded to render_on_surface (harmonized colors)
+coloropts = {};             % colour opts -> render_on_surface / the managed layer
+surf_args = {};             % surface directives (which view) -> @fmridisplay/surface
+
+% Colour options that take a VALUE (consume a pair). Everything else that is not
+% a recognized mode keyword is a surface directive forwarded to the native
+% managed path -- either a bare addbrain/foursurfaces keyword (single token) or a
+% 'direction'/'orientation'/'axes' pair -- so surface(obj, 'foursurfaces_hcp'),
+% surface(obj, 'hcp inflated left'), etc. override the space-matched default view.
+color_value_keys = {'clim', 'cmaprange', 'colormap', 'colormapname', ...
+    'pos_colormap', 'neg_colormap', 'splitcolor', 'maxcolor', 'mincolor', ...
+    'color', 'transvalue'};
+surf_pair_keys = {'direction', 'orientation', 'axes'};
 
 i = 1;
 while i <= numel(varargin)
-    switch lower(char(varargin{i}))
+    tok = varargin{i};
+    key = ''; if ischar(tok) || isstring(tok), key = lower(char(tok)); end
+    switch key
         case 'surftype',        surftype = varargin{i+1};    i = i + 2;
         case 'which_image',     which_image = varargin{i+1}; i = i + 2;
         case {'existingsurface','surface_handles'}, existing = varargin{i+1}; i = i + 2;
@@ -80,12 +147,16 @@ while i <= numel(varargin)
             coloropts = [coloropts, varargin(i)]; %#ok<AGROW>
             i = i + 1;
         otherwise
-            % Any other option (clim, colormap, cmaprange, pos_colormap /
-            % neg_colormap, splitcolor, maxcolor / mincolor, color, ...) is
-            % forwarded to render_on_surface, which harmonizes them with the
-            % volume visualization color pipeline.
-            coloropts = [coloropts, varargin(i:i+1)]; %#ok<AGROW>
-            i = i + 2;
+            if any(strcmp(key, color_value_keys))
+                coloropts = [coloropts, varargin(i:i+1)]; %#ok<AGROW>
+                i = i + 2;
+            elseif any(strcmp(key, surf_pair_keys))
+                surf_args = [surf_args, varargin(i:i+1)]; %#ok<AGROW>
+                i = i + 2;
+            else
+                surf_args = [surf_args, varargin(i)]; %#ok<AGROW>   % bare surface directive
+                i = i + 1;
+            end
     end
 end
 
@@ -113,9 +184,12 @@ end
 % on the returned object). The heavy lifting -- pick the matching surfaces, add
 % them, paint at full fidelity -- is done by @fmridisplay/surface's
 % fmri_surface_data path, so there is a single code path for surface(obj) and
-% surface(o2, obj).
+% surface(o2, obj). A surf_args entry (e.g. 'foursurfaces_hcp', a bare addbrain
+% keyword, or a direction/orientation/axes pair) overrides the space-matched
+% default view; with none, @fmridisplay/surface picks the matching four-surface
+% set (see surface_default_keyword).
 o2 = fmridisplay;
-o2 = surface(o2, obj, ropts{:});
+o2 = surface(o2, obj, ropts{:}, surf_args{:});
 
 % Honor a non-default surftype (midthickness / sphere) by swapping the managed
 % patches' geometry to the requested mesh. The foursurfaces keyword draws

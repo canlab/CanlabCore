@@ -31,6 +31,25 @@ function p = addbrain(varargin)
 % 'transparent_surface' 'foursurfaces' 'foursurfaces_hcp' 'flat left'  'flat right' ...
 % 'bigbrain' {'hires surface left', 'bigbrain left'}
 % ['fsavg_left' or 'inflated left'], 'fsavg_right' or 'inflated right', uses freesurfer inflated brain with Thomas Yeo group's RF_ANTs mapping from MNI to Freesurfer. (https://doi.org/10.1002/hbm.24213)
+% 'hcp inflated', 'hcp inflated left', 'hcp inflated right', uses the HCP fs_LR-32k inflated mesh.
+%
+% % Standard-mesh surfaces and fmri_surface_data
+% % -----------------------------------------------------------------------
+% Some of the cortical surfaces above are EXACT standard meshes (same vertex
+% count and vertex ordering as a template space), so per-vertex surface data can
+% be mapped onto them DIRECTLY, with no resampling:
+%   'hcp inflated' (and 'hcp inflated left'/'right')  -> HCP fs_LR-32k template
+%                                                        (32,492 vertices/hemisphere)
+%   'inflated' / 'fsavg_left' / 'fsavg_right'          -> FreeSurfer fsaverage template
+%                                                        (163,842 vertices/hemisphere)
+% These match the surface_space of an fmri_surface_data object ('fsLR_32k' and
+% 'fsaverage_164k' respectively). The fmri_surface_data/surface and
+% render_on_surface methods use exactly these meshes for native-space rendering,
+% and will color any patch whose vertex count matches a hemisphere directly. By
+% contrast, the MNI cortical surfaces ('left'/'right', 'hires ...') are NOT
+% standard meshes; rendering surface data on them requires projecting through a
+% volume (handled automatically by fmri_surface_data/render_on_surface).
+% See docs/fmri_surface_data_methods.md.
 %
 % % Macro subcortical surfaces
 % % -----------------------------------------------------------------------

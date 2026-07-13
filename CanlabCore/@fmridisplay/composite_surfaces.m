@@ -24,13 +24,20 @@ if isempty(obj.surface), return, end
 if nargin < 2 || isempty(wh_surface), wh_surface = 1:numel(obj.surface); end
 if nargin < 3 || isempty(show_legend), show_legend = false; end  % colorbars off by default
 
-% Reset each target surface to its saved anatomy gray
+% Reset each target surface to its saved anatomy gray. Erase when ANY patch in
+% the view carries saved anatomy (UserData) -- not just the first handle -- so a
+% mixed view (e.g. surface-native cortex patches alongside subcortical patches)
+% is reliably reset regardless of handle order.
 for s = wh_surface
     if s < 1 || s > numel(obj.surface), continue, end
     h = obj.surface{s}.object_handle;
     h = h(ishandle(h));
     if isempty(h), continue, end
-    if ~isempty(get(h(1), 'UserData'))
+    has_saved = false;
+    for hh = h(:)'
+        if ~isempty(get(hh, 'UserData')), has_saved = true; break; end
+    end
+    if has_saved
         addbrain('eraseblobs', h);
     end
 end

@@ -28,6 +28,26 @@ tc.verifyEqual(map(cm, -10), [1 0 0], 'AbsTol', 1e-12);    % below -> min
 tc.verifyEqual(map(cm,  99), [1 1 0], 'AbsTol', 1e-12);    % above -> max
 end
 
+function test_single_and_continuous_collapse_split_range(tc)
+% A 4-element (split) cmaprange must collapse to its FULL span [r(1) r(4)] for a
+% single / continuous map, not use the negative arm [r(1) r(2)]. Regression: a
+% split-range layer recoloured to a continuous colormap (e.g. set_colormap(o,
+% 'colormap', hot)) painted almost everything the max colour (white for hot),
+% because the map used only the negative arm as [lo hi].
+splitrange = [-0.5 -0.1 0.9 1.5];
+cm = canlab_colormap.single([1 0 0], [1 1 0], splitrange);
+tc.verifyEqual(cm.range, [-0.5 1.5], 'AbsTol', 1e-12, 'single: 4-el range -> full span');
+tc.verifyEqual(map(cm, -0.5), [1 0 0], 'AbsTol', 1e-12);   % min at r(1)
+tc.verifyEqual(map(cm,  1.5), [1 1 0], 'AbsTol', 1e-12);   % max at r(4)
+tc.verifyEqual(map(cm,  0.5), [1 .5 0], 'AbsTol', 1e-12);  % midpoint of full span
+
+lut = [0 0 0; 1 1 1];
+cc = canlab_colormap.continuous(lut, splitrange);
+tc.verifyEqual(cc.range, [-0.5 1.5], 'AbsTol', 1e-12, 'continuous: 4-el range -> full span');
+tc.verifyEqual(map(cc, 1.5), [1 1 1], 'AbsTol', 1e-12);    % top of LUT at r(4)
+tc.verifyEqual(map(cc, -0.5), [0 0 0], 'AbsTol', 1e-12);   % bottom of LUT at r(1)
+end
+
 function test_single_matches_render_blobs_formula(tc)
 % render_blobs single map: w = clamp((v-lo)/(hi-lo)); rgb = w*maxcol + (1-w)*mincol.
 mn = [1 0 0]; mx = [0 1 1]; rng = [-2 6];

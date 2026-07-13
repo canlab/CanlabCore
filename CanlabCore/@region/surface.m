@@ -166,12 +166,15 @@ for i = 1:length(varargin)
                 
             case 'noverbose'
                 
-            case addbrain_allowable_args 
+            case addbrain_allowable_args
                 % do nothing, handle later
-                
+
             case render_on_surface_allowable_args
                 % do nothing, will pass in to render_on_surface
-                
+
+            case {'unique', 'solid'}
+                % colour-mode flags, translated to an indexed / solid colormap below
+
             otherwise, warning(['Unknown input string option:' varargin{i}]);
         end
     end
@@ -218,6 +221,29 @@ end
 if isempty(surface_handles)
     disp('No surface handles to display on. Returning')
     return
+end
+
+% Colour MODE: 'unique' (one solid colour per region, like region/montage),
+% 'solid', or auto-selected via the shared canlab_color_mode when the caller gave
+% no explicit colour spec. region2imagevec stores region indices in obj.dat, so
+% 'unique' -> an indexed colormap (scn_standard_colors); render_on_surface uses
+% nearest-neighbour automatically for an indexmap. Without this, an atlas rendered
+% its integer region indices through a CONTINUOUS colormap (blended at borders).
+explicit_color_keys = {'colormap', 'colormapname', 'color', 'pos_colormap', 'neg_colormap', 'indexmap'};
+has_explicit_color = any(cellfun(@(a) (ischar(a) || isstring(a)) && any(strcmpi(a, explicit_color_keys)), varargin));
+wu = find(strcmpi(varargin, 'unique'), 1);
+ws = find(strcmpi(varargin, 'solid'), 1);
+color_mode = '';
+if ~isempty(wu),          color_mode = 'unique'; varargin(wu) = [];
+elseif ~isempty(ws),      color_mode = 'solid';  varargin(ws) = [];
+elseif ~has_explicit_color, color_mode = canlab_color_mode(obj);
+end
+switch color_mode
+    case 'unique'
+        nlab = max(1, round(max(double(obj.dat(:)))));
+        varargin = [varargin, {'colormap', cell2mat(scn_standard_colors(nlab)'), 'indexmap', 'nolegend'}];
+    case 'solid'
+        varargin = [varargin, {'color', [1 0.4 0]}];
 end
 
 render_on_surface(obj, surface_handles, varargin{:});

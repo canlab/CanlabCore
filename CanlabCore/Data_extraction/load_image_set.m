@@ -22,6 +22,24 @@ function [image_obj, networknames, imagenames] = load_image_set(image_names_or_k
 % (unlisted) datasets can be loaded if you have a load_<dataset>.m file
 % in your path (this is intended for extensions in other libraries).
 %
+% Most keywords return an **fmri_data** object; surface / grayordinate
+% (CIFTI) map sets return an **fmri_surface_data** object.
+%
+% ----------------------------------------------------------------------
+% TIP: To see everything you can load, run:
+%
+%     load_image_set('list')
+%
+% This prints a series of categorized tables to the screen -- multivariate
+% signatures, person-level datasets, network/ICA/topic maps, surface (CIFTI)
+% map sets, gradient/basis maps, and meta-analysis/receptor maps -- each
+% under a descriptive title. It also RETURNS a struct whose fields are those
+% tables, so you can query them programmatically:
+%
+%     tmp = load_image_set('list');   % tmp.signatures, tmp.datasets,
+%                                     % tmp.networks, tmp.surface, ...
+% ----------------------------------------------------------------------
+%
 % ..
 %     Author and copyright information:
 %
@@ -200,6 +218,20 @@ function [image_obj, networknames, imagenames] = load_image_set(image_names_or_k
 %                          Example:
 %                          [transcriptomic_grads transcriptomic_names] = ...
 %                              load_image_set('transcriptomic_gradients');
+%
+%       'mito_maps' or 'mito' :
+%                          Mitochondrial energetic-capacity maps (CI, CII,
+%                          CIV, MitoD, MRC, TRC) from Mosharov/Picard et al.
+%                          (2025) Nature. Returns an fmri_data (6 maps).
+%
+%     Surface / grayordinate (CIFTI) map sets  -> fmri_surface_data
+%     --------------------------------------------------------------------
+%       'hcp_ica15' / 'hcp_ica25' / 'hcp_ica50'  (aliases 'hcp15' etc.) :
+%                          HCP resting-state group-ICA components in fs_LR-32k
+%                          + subcortex grayordinate space (15, 25, or 50 maps).
+%                          Example:  o = load_image_set('hcp_ica25');
+%       'spectral_bases' : 200 spectral (Laplacian eigenmap) basis functions
+%                          in HCP 91k grayordinate space.
 %
 %     'Signature' patterns and predictive models
 %     --------------------------------------------------------------------
@@ -534,16 +566,34 @@ else
 
             [image_obj, networknames, imagenames] = load_selfother;
 
+        % ---- Surface / grayordinate (CIFTI) map sets -> fmri_surface_data ----
+        case {'hcp_ica15', 'hcp15', 'hcpica15'}
+            [image_obj, networknames, imagenames] = load_hcp_groupica(15);
+
+        case {'hcp_ica25', 'hcp25', 'hcpica25'}
+            [image_obj, networknames, imagenames] = load_hcp_groupica(25);
+
+        case {'hcp_ica50', 'hcp50', 'hcpica50'}
+            [image_obj, networknames, imagenames] = load_hcp_groupica(50);
+
+        case {'spectral_bases', 'hcp_bases', 'spectralbases'}
+            [image_obj, networknames, imagenames] = load_spectral_bases;
+
+        % ---- Volumetric map set -> fmri_data ----
+        case {'mito_maps', 'mito', 'mitomaps'}
+            [image_obj, networknames, imagenames] = load_mito_maps;
+
         case 'list'
-            
+
             [networknames, imagenames] = deal({});
 
-            table_list = list_signatures;
-            disp(table_list);
-            
-            image_obj = table_list; % return as 1st output
+            % Build and PRINT a set of categorized tables (signatures first, then
+            % person-level datasets, network/ICA/topic maps, surface/CIFTI sets,
+            % gradient/basis maps, and meta-analysis/receptor maps). Returns a
+            % struct whose fields are the individual tables.
+            image_obj = list_image_sets('print');
             return
-            
+
         otherwise
             % Try to load if we have a function name
             % This will be true for the single trial data (Bogdan Petre
@@ -1432,6 +1482,65 @@ end % function
 
 
 % ------------------------------------------------------------------------
+% Surface / grayordinate (CIFTI) map sets -> fmri_surface_data
+% ------------------------------------------------------------------------
+
+function [image_obj, networknames, imagenames] = load_hcp_groupica(ncomp)
+% HCP group-ICA resting-state components (fs_LR-32k + subcortex grayordinates).
+% ncomp is 15, 25, or 50. Returns an fmri_surface_data with one map per component.
+fname = sprintf('hcp_d%d_ICs.dscalar.nii', ncomp);
+fullname = which(fname);
+if isempty(fullname)
+    error('load_image_set:hcpica', ['Cannot find %s on the path. Add the ' ...
+        'Neuroimaging_Pattern_Masks repo (spatial_basis_functions/hcp_groupICAs).'], fname);
+end
+image_obj = fmri_surface_data(fullname);
+n = size(image_obj.dat, 2);
+networknames = arrayfun(@(k) sprintf('IC%d', k), 1:n, 'UniformOutput', false);
+imagenames = {fullname};
+end % function
+
+
+function [image_obj, networknames, imagenames] = load_spectral_bases
+% 200 spectral (Laplacian eigenmap) basis functions in HCP 91k grayordinate space.
+fname = 'spectral_bases_200.dscalar.nii';
+fullname = which(fname);
+if isempty(fullname)
+    error('load_image_set:spectralbases', ['Cannot find %s on the path. Add the ' ...
+        'Neuroimaging_Pattern_Masks repo (spatial_basis_functions/hcp_91k).'], fname);
+end
+image_obj = fmri_surface_data(fullname);
+n = size(image_obj.dat, 2);
+networknames = arrayfun(@(k) sprintf('Basis%d', k), 1:n, 'UniformOutput', false);
+imagenames = {fullname};
+end % function
+
+
+% ------------------------------------------------------------------------
+% Mitochondrial profile maps (volumetric) -> fmri_data
+% ------------------------------------------------------------------------
+
+function [image_obj, networknames, imagenames] = load_mito_maps
+% Mitochondrial energetic-capacity maps (Mosharov/Picard 2025 Nature): six maps
+% (CI, CII, CIV, MitoD, MRC, TRC). Loaded from the bundled fmri_data object.
+fname = 'mito_maps.mat';
+fullname = which(fname);
+if isempty(fullname)
+    error('load_image_set:mitomaps', ['Cannot find %s on the path. Add the ' ...
+        'Neuroimaging_Pattern_Masks repo (spatial_basis_functions/mitochondrial_profile_maps).'], fname);
+end
+S = load(fullname);
+image_obj = S.obj;                       % fmri_data with 6 maps
+if isfield(S, 'names') && ~isempty(S.names)
+    networknames = S.names(:)';
+else
+    networknames = {'CI' 'CII' 'CIV' 'MitoD' 'MRC' 'TRC'};
+end
+imagenames = {fullname};
+end % function
+
+
+% ------------------------------------------------------------------------
 % NEUROSYNTH
 % ------------------------------------------------------------------------
 
@@ -1728,6 +1837,95 @@ end
 end % load kragel18_alldata
 
 
+% ------------------------------------------------------------------------
+% Categorized listing of everything load_image_set can load
+% ------------------------------------------------------------------------
+
+function S = list_image_sets(mode)
+% Build a struct of categorized tables of loadable keywords. With mode 'print'
+% (default) each table is printed to the screen under a descriptive title. The
+% struct is also returned so callers can query it (e.g. tmp = load_image_set('list')).
+%
+% Categories: signatures, datasets (person-level), networks (network/ICA/topic),
+% surface (CIFTI grayordinate), gradients (gradient/basis), metaanalysis.
+
+if nargin < 1, mode = 'print'; end
+
+S = struct();
+
+% 1) Multivariate signatures (keeps the historical domain-flag table).
+S.signatures = list_signatures;
+
+% 2) Person-level / subject-level sample datasets (many images per person).
+S.datasets = local_imageset_table({ ...
+    'emotionreg',            'Wager 2008 emotion-regulation sample (reappraise-vs-look contrasts, ~30 subjects)', 'fmri_data'; ...
+    'bmrk3 (or pain)',       'BMRK3 thermal-pain dataset (subjects x temperatures, with ratings)',                'fmri_data'; ...
+    'kragel270',             'Kragel 2018 270-subject multi-study dataset (pain/cognition/emotion)',              'fmri_data'; ...
+    'dpsp_hotwarm',          'Dartmouth DPSP hot-vs-warm pain contrasts',                                         'fmri_data'; ...
+    'dpsp_rejectorfriend',   'Dartmouth DPSP rejecter-vs-friend contrasts',                                       'fmri_data'; ...
+    'guilt',                 'Guilt-behavior contrast images',                                                    'fmri_data'; ...
+    'stroop',                'Stroop cognitive-control task images',                                              'fmri_data'});
+
+% 3) Network / ICA / topic maps (a map per network, component, or topic).
+S.networks = local_imageset_table({ ...
+    'bucknerlab',                    'Yeo/Buckner 7 resting-state cortical networks',                     'fmri_data'; ...
+    'bucknerlab_wholebrain',         'Yeo/Buckner 7 networks incl. subcortex',                            'fmri_data'; ...
+    'bucknerlab_wholebrain_plus',    'Yeo/Buckner 7 networks + extra subcortical structures',             'fmri_data'; ...
+    'bgloops (or pauli)',            'Pauli 2016 basal-ganglia cortico-striatal loop networks',           'fmri_data'; ...
+    'neurosynth',                    'Yarkoni 2013 Neurosynth feature set 1',                             'fmri_data'; ...
+    'neurosynth_topics_fi',          'Neurosynth 100 topic maps, forward inference (p(activation|topic))','fmri_data'; ...
+    'neurosynth_topics_ri',          'Neurosynth 100 topic maps, reverse inference (p(topic|activation))','fmri_data'; ...
+    'hcp_ica15 / hcp_ica25 / hcp_ica50', 'HCP resting-state group-ICA components (surface; see below)',  'fmri_surface_data'; ...
+    'allengenetics',                 'Allen Human Brain Atlas gene-expression components',                'fmri_data'});
+
+% 4) Surface / grayordinate (CIFTI) map sets -> fmri_surface_data.
+S.surface = local_imageset_table({ ...
+    'hcp_ica15 (or hcp15)',  'HCP group-ICA, 15 components (fs_LR-32k + subcortex, 91k grayordinates)',  'fmri_surface_data'; ...
+    'hcp_ica25 (or hcp25)',  'HCP group-ICA, 25 components (91k grayordinates)',                         'fmri_surface_data'; ...
+    'hcp_ica50 (or hcp50)',  'HCP group-ICA, 50 components (91k grayordinates)',                         'fmri_surface_data'; ...
+    'spectral_bases',        '200 spectral (Laplacian eigenmap) basis functions (91k grayordinates)',    'fmri_surface_data'});
+
+% 5) Gradients and spatial-basis maps.
+S.gradients = local_imageset_table({ ...
+    'transcriptomic_gradients',        'Allen gene-expression principal gradients PC1-PC3 (volumetric)',   'fmri_data'; ...
+    'marg (or principalgradient)',     'Margulies 2016 principal functional connectivity gradient',        'fmri_data'; ...
+    'margfsl',                         'Margulies principal gradient in MNI152NLin6Asym (FSL) space',       'fmri_data'; ...
+    'spectral_bases',                  '200 spectral basis functions (surface; also under Surface)',        'fmri_surface_data'; ...
+    'mito_maps (or mito)',             'Mitochondrial energetic-capacity maps: CI, CII, CIV, MitoD, MRC, TRC', 'fmri_data'});
+
+% 6) Meta-analysis, receptor, and curated-domain map sets.
+S.metaanalysis = local_imageset_table({ ...
+    'emometa',               'Wager/Kang 2015 discrete-emotion meta-analysis (anger, disgust, fear, happy, sad)', 'fmri_data'; ...
+    'pet (or hansen22)',     'Hansen 2022 PET neurotransmitter-receptor density maps',                            'fmri_data'; ...
+    'kragelemotion',         'Kragel 2016 emotion-category classification patterns (7 emotions)',                 'fmri_data'; ...
+    'kragelschemas',         'Kragel 2019 emotion-schema patterns (22 emotions)',                                 'fmri_data'; ...
+    'multiaversive (or mpa2)','Ceko 2022 multimodal aversive patterns (general + 4 modalities)',                  'fmri_data'});
+
+if strcmp(lower(char(mode)), 'print')
+    local_print_titled(S.signatures,   'MULTIVARIATE SIGNATURES (apply with apply_mask / dot-product; domain flags shown)');
+    local_print_titled(S.datasets,     'PERSON-LEVEL DATASETS (subject-level images; ready for ttest / predict)');
+    local_print_titled(S.networks,     'NETWORK, ICA & TOPIC MAPS (for similarity / dual-regression against your data)');
+    local_print_titled(S.surface,      'SURFACE / GRAYORDINATE (CIFTI) MAP SETS -> fmri_surface_data');
+    local_print_titled(S.gradients,    'GRADIENTS & SPATIAL-BASIS MAPS');
+    local_print_titled(S.metaanalysis, 'META-ANALYSIS, RECEPTOR & CURATED-DOMAIN MAP SETS');
+    fprintf('\nLoad any of the above with: obj = load_image_set(''<keyword>'');\n');
+    fprintf('Signatures are also queryable in the struct returned by load_image_set(''list'').\n\n');
+end
+
+end % list_image_sets
+
+
+function t = local_imageset_table(rows)
+% rows: N x 3 cell {keyword, description, returns} -> a 3-column table.
+t = cell2table(rows, 'VariableNames', {'keyword', 'description', 'returns'});
+end
+
+
+function local_print_titled(t, titlestr)
+% Print a descriptive title and then the table.
+fprintf('\n==== %s ====\n', titlestr);
+disp(t);
+end
 
 
 function table_list = list_signatures

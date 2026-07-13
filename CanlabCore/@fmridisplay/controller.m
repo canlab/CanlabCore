@@ -33,7 +33,16 @@ function fig = controller(obj, varargin)
 % ..
 
 % ===> Controller window background colour. Tweak this RGB triplet manually. <===
-FIG_COLOR = [1 0.5 0];
+FIG_COLOR = [0.125 0.698 0.667];   % light sea green
+
+% Opening OR rebuilding the controller must never change the caller's current
+% figure: the controller is a uifigure, and if it becomes gcf the next
+% montage/surface slice-drawing (which uses gca/gcf) can land in the controller
+% window or the wrong axes -- an intermittent bug when a display is (re)built while
+% the controller auto-launches/updates. Capture the current figure now and restore
+% it on every exit path (onCleanup covers the early update-in-place return too).
+prevfig = get(groot, 'CurrentFigure');
+restore_currentfig = onCleanup(@() local_restore_currentfig(prevfig)); %#ok<NASGU>
 
 vname        = inputname(1);     % caller's variable name, for echoed code + title
 nlayers      = numel(obj.activation_maps);
@@ -102,7 +111,7 @@ function opts = colormap_options()
 opts = {'split (hot/cool)', 'split (mango)', 'seafire', 'warm (red-yellow)', ...
         'cool (blue-cyan)', 'winter (blue-green)', ...
         'viridis', 'inferno', 'magma', 'plasma', 'turbo', 'parula', ...
-        'indexed (atlas)', 'solid colour…'};
+        'unique (per region)', 'solid colour…'};
 end
 
 function names = perceptual_names()
@@ -548,8 +557,30 @@ switch choice
         % Perceptual / continuous LUT colormaps (viridis, inferno, turbo, ...).
         set_colormap(obj, 'colormap', canlab_perceptual_colormap(choice), 'layers', k);
         echo_code(vname, sprintf('set_colormap(%s, ''colormap'', canlab_perceptual_colormap(''%s''), ''layers'', %d)', vname, choice, k));
+    case 'unique (per region)'
+        % One solid colour per region: scn_standard_colors as an indexed colormap.
+        nlab = local_layer_maxlabel(obj, k);
+        cm = cell2mat(scn_standard_colors(nlab)');
+        set_colormap(obj, 'indexmap', cm, 'layers', k);
+        echo_code(vname, sprintf('set_colormap(%s, ''indexmap'', cell2mat(scn_standard_colors(%d)''), ''layers'', %d)', vname, nlab, k));
     case 'solid colour…'
         pick_solid_colour(obj, k, vname);
+end
+end
+
+
+function n = local_layer_maxlabel(obj, k)
+% Number of colours for a 'unique' indexed colormap = the largest region index in
+% the layer's source data (surface-native or volume). Falls back to 100.
+n = 100;
+lay = obj.activation_maps{k};
+src = [];
+if isfield(lay, 'source_surface') && ~isempty(lay.source_surface), src = lay.source_surface;
+elseif isfield(lay, 'source_object') && ~isempty(lay.source_object), src = lay.source_object;
+end
+if ~isempty(src) && isprop(src, 'dat') && ~isempty(src.dat)
+    m = max(double(src.dat(:)));
+    if isfinite(m) && m >= 1, n = round(m); end
 end
 end
 
@@ -632,7 +663,7 @@ end
 
 function lbl = current_colormap_label(args, opts) %#ok<INUSD>
 if any(strcmp(args, 'indexmap'))
-    lbl = 'indexed (atlas)';
+    lbl = 'unique (per region)';
 elseif any(strcmp(args, 'splitcolor'))
     sc = args{find(strcmp(args, 'splitcolor'), 1) + 1};
     if iscell(sc) && numel(sc) == 4 && isequal(sc, {[.5 0 1] [0 .8 .3] [1 .2 1] [1 1 .3]})
@@ -686,5 +717,14 @@ if ~isempty(bh)
 end
 if ~isempty(obj.surface)
     composite_surfaces(obj);
+end
+end
+
+
+function local_restore_currentfig(prevfig)
+% Restore the current figure captured before the controller was opened/rebuilt,
+% so the controller uifigure never becomes gcf for later montage/surface drawing.
+if ~isempty(prevfig) && isgraphics(prevfig)
+    try, set(groot, 'CurrentFigure', prevfig); catch, end
 end
 end

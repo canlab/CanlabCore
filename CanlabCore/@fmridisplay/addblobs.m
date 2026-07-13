@@ -176,6 +176,15 @@ if nargin < 2
          '   o2 = addblobs(o2, region(t)); %% add the blobs from t']);
 end
 
+% Surface / grayordinate data: an fmri_surface_data is an image_vector but has no
+% single 3-D volume, so it is added as a SURFACE-NATIVE layer (painted directly on
+% matching cortical meshes) rather than converted to a volume region. Handled by a
+% dedicated method so the rest of addblobs (volume/region machinery) is untouched.
+if isa(cl, 'fmri_surface_data')
+    obj = add_surface_blobs(obj, cl, varargin{:});
+    return
+end
+
 % Multi-image objects: a single blob layer shows one image, so if an
 % image_vector with more than one image (column) is passed, use only the FIRST
 % image (with a note). This keeps addblobs(o2, multi_image_obj) from erroring or
@@ -266,6 +275,21 @@ whs = strcmp(varargin, 'wh_surfaces') | strcmp(varargin, 'wh_surface') | strcmp(
 if any(whs)
     whs = find(whs);
     wh_surface = varargin{whs(1) + 1};
+end
+
+% The montage/surface view selectors are consumed above; strip them so they are
+% not forwarded to render_blobs (which warns "Unknown input string option") and
+% not stored in render_args (where refresh would forward them again on every
+% re-render). Do this AFTER the parsing above, which needs them in varargin.
+view_keys = {'wh_surfaces', 'wh_surface', 'which_surfaces', 'which surfaces', ...
+    'wh_montages', 'wh_montage', 'which_montages', 'which montages'};
+vi = 1;
+while vi <= numel(varargin)
+    if ischar(varargin{vi}) && any(strcmp(varargin{vi}, view_keys))
+        varargin(vi:vi + 1) = [];
+    else
+        vi = vi + 1;
+    end
 end
 
 % Default color values

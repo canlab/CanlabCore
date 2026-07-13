@@ -81,6 +81,18 @@ for k = wh_layers
     if k < 1 || k > numel(obj.activation_maps), continue, end
 
     layer = obj.activation_maps{k};
+
+    % Surface-native layer (fmri_surface_data source): it has no volume, so it
+    % cannot be re-regioned. Store the threshold as a magnitude cutoff that
+    % paint_surface_native_layer applies at paint time; refresh below redraws the
+    % surfaces with it. This avoids threshold()/region() on a cortical surface
+    % object (which has no matching volInfo) and the "Illegal size for mask.dat"
+    % / "Mask has multiple images" warnings that came from that path.
+    if isfield(layer, 'source_surface') && isa(layer.source_surface, 'fmri_surface_data')
+        obj.activation_maps{k}.applied_threshold = abs(double(input_threshold(1)));
+        continue
+    end
+
     if ~isfield(layer, 'source_object') || isempty(layer.source_object)
         warning('fmridisplay:rethreshold', ...
             'Layer %d retained no source; cannot rethreshold. Re-add via addblobs.', k);

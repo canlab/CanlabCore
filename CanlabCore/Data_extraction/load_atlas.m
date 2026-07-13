@@ -20,6 +20,17 @@ function atlas_obj = load_atlas(atlas_file_name_or_keyword, varargin)
 % .nii file) or an fmri_data object together with a list of labels
 % into the atlas() constructor method.
 %
+% ----------------------------------------------------------------------
+% TIP: To see the available atlases grouped by category, run:
+%
+%     load_atlas('list')
+%
+% This prints categorized tables of keywords (combined, cortex, subcortical,
+% thalamus/hypothalamus, brainstem/cerebellum, networks) and returns a struct
+% of those tables. Most keywords accept a space/resolution suffix ('_fsl6',
+% '_1mm'/'_2mm'); see :Available Keywords: below for the full grid.
+% ----------------------------------------------------------------------
+%
 % :Inputs:
 %
 %   **atlas_file_name_or_keyword:**
@@ -194,7 +205,13 @@ function atlas_obj = load_atlas(atlas_file_name_or_keyword, varargin)
 %     'tian_3t_[fmriprep20|fsl6]'
 %         Subcortical atlas at four different resolutions and two
 %         different reference spaces. Use atlas/get_coarser_parcellation
-%         to select low-resolution versions.
+%         to select low-resolution versions. 'tian_3t' loads the finest
+%         scale (S4, 54 regions).
+%
+%     'tian_s1' | 'tian_s2' | 'tian_s3' | 'tian_s4'  (append '_fsl6' for
+%         MNI152NLin6Asym; default is fmriprep20 / MNI152NLin2009cAsym)
+%         Tian 3T subcortical atlas at an explicit granularity scale:
+%         S1=16, S2=32, S3=50, S4=54 subcortical regions.
 %
 %     'delavega'
 %         delaVega2017_neurosynth_atlas_object.
@@ -274,8 +291,15 @@ for i = 1:length(varargin)
     end
 end
 
+% 'list' prints a categorized table of atlas keywords and returns it (parallels
+% load_image_set('list')). Handled before the main dispatch so no file is loaded.
+if ischar(atlas_file_name_or_keyword) && strcmpi(atlas_file_name_or_keyword, 'list')
+    atlas_obj = list_atlases('print');
+    return
+end
+
 switch lower(atlas_file_name_or_keyword)
-    
+
     case {'thalamus', 'morel'}
         warning('This atlas is deprecated. Please specify thalamus_[fsl6|fmriprep20] instead.');
         savefile = which('Thalamus_combined_atlas_object.mat');
@@ -376,10 +400,7 @@ switch lower(atlas_file_name_or_keyword)
         warning('This is Shen in MNIColin27v1998 space, a subject specific space of the original paper. Consider shen_[fmriprep20|fsl6] instead.')
         savefile = which('Shen_atlas_object.mat');
         varname = 'atlas_obj';
-        
-        %          case 'schaefer400'
-        %              savefile = which('Schaefer2018Cortex_atlas_regions.mat');
-        %              varname = 'atlas_obj';
+
     case 'shen_fmriprep20'
         savefile = which('Shen_MNI152NLin2009cAsym_atlas_object.mat');
         varname = 'atlas_obj';
@@ -431,7 +452,39 @@ switch lower(atlas_file_name_or_keyword)
     case {'tian_3t_fsl6'}
         savefile ='tian_3t_fsl6_atlas_object.mat';
         varname = 'atlas_obj';
-        
+
+    % Tian 3T subcortical atlas at explicit granularity scales S1-S4
+    % (16 / 32 / 50 / 54 subcortical regions). Default space is fmriprep20
+    % (MNI152NLin2009cAsym); the _fsl6 variants are in MNI152NLin6Asym.
+    % Note: 'tian_3t' / 'tian_3t_fsl6' above load the finest scale (S4).
+    case {'tian_s1', 'tian_3t_s1', 'tian_3t_s1_fmriprep20'}
+        savefile = 'tian_3t_s1_fmriprep20_atlas_object.mat';
+        varname = 'atlas_obj';
+    case {'tian_s1_fsl6', 'tian_3t_s1_fsl6'}
+        savefile = 'tian_3t_s1_fsl6_atlas_object.mat';
+        varname = 'atlas_obj';
+
+    case {'tian_s2', 'tian_3t_s2', 'tian_3t_s2_fmriprep20'}
+        savefile = 'tian_3t_s2_fmriprep20_atlas_object.mat';
+        varname = 'atlas_obj';
+    case {'tian_s2_fsl6', 'tian_3t_s2_fsl6'}
+        savefile = 'tian_3t_s2_fsl6_atlas_object.mat';
+        varname = 'atlas_obj';
+
+    case {'tian_s3', 'tian_3t_s3', 'tian_3t_s3_fmriprep20'}
+        savefile = 'tian_3t_s3_fmriprep20_atlas_object.mat';
+        varname = 'atlas_obj';
+    case {'tian_s3_fsl6', 'tian_3t_s3_fsl6'}
+        savefile = 'tian_3t_s3_fsl6_atlas_object.mat';
+        varname = 'atlas_obj';
+
+    case {'tian_s4', 'tian_3t_s4', 'tian_3t_s4_fmriprep20'}
+        savefile = 'tian_3t_s4_fmriprep20_atlas_object.mat';
+        varname = 'atlas_obj';
+    case {'tian_s4_fsl6', 'tian_3t_s4_fsl6'}
+        savefile = 'tian_3t_s4_fsl6_atlas_object.mat';
+        varname = 'atlas_obj';
+
     case {'julich','julich_fmriprep20'}
         savefile = 'julich_fmriprep20_atlas_object.mat';
         varname = 'juAtlas';
@@ -723,11 +776,95 @@ else
     if ~isfield(atlas_obj, varname), fprintf('Cannot find variable: %s\n', varname); return, end
     
     atlas_obj = atlas_obj.(varname);
-    
+
 end
 
 
 end % subfunction
+
+
+% -------------------------------------------------------------------------
+function S = list_atlases(mode)
+% Categorized listing of load_atlas keywords. With mode 'print' (default) each
+% table is printed under a descriptive title; the struct of tables is returned.
+% Most atlases also accept a space/resolution suffix: append '_fsl6' for
+% MNI152NLin6Asym (default is fmriprep20 / MNI152NLin2009cAsym), and '_1mm'/'_2mm'
+% where available. See the help text (help load_atlas) for the full option grid.
+
+if nargin < 1, mode = 'print'; end
+
+S = struct();
+
+S.combined = cell2table({ ...
+    'canlab2024',   'CANlab combined whole-brain atlas (default). Suffixes: _fine/_coarse, _fsl6, _1mm/_2mm'; ...
+    'canlab2023',   'Frozen predecessor of canlab2024 (often more stable)'; ...
+    'canlab2018',   'Earlier CANlab combined atlas (also canlab2018_2mm)'; ...
+    'opencanlab2024','canlab2024 restricted to open-license source atlases'}, ...
+    'VariableNames', {'keyword','description'});
+
+S.cortex = cell2table({ ...
+    'glasser',           'Glasser 2016 HCP multi-modal cortical parcellation (360 regions)'; ...
+    'yeo17networks',     'Schaefer/Yeo 17-network cortical parcellation'; ...
+    'shen',              'Shen 268-region whole-brain parcellation'; ...
+    'desikan_killiany',  'Desikan-Killiany gyral cortical labeling'; ...
+    'dkt',               'Desikan-Killiany-Tourville cortical labeling'; ...
+    'destrieux',         'Destrieux gyral/sulcal cortical labeling'; ...
+    'julich',            'Julich-Brain cytoarchitectonic atlas'}, ...
+    'VariableNames', {'keyword','description'});
+
+S.subcortical = cell2table({ ...
+    'tian_3t',        'Tian 3T subcortical atlas, finest scale (S4, 54 regions)'; ...
+    'tian_s1..s4',    'Tian 3T subcortex at explicit scales S1/S2/S3/S4 (16/32/50/54 regions)'; ...
+    'cit168',         'CIT168 subcortical nuclei'; ...
+    'cit168_amygdala','CIT168 amygdala nuclei'; ...
+    'basal_ganglia',  'Combined basal-ganglia atlas (alias bg)'; ...
+    'striatum',       'Pauli 2016 striatal parcellation (alias pauli_bg)'; ...
+    'cartmell_nac',   'Nucleus accumbens core/shell'; ...
+    'brainnetome',    'Brainnetome 246-region atlas'; ...
+    'keuken',         'Keuken 7T subcortical atlas'}, ...
+    'VariableNames', {'keyword','description'});
+
+S.thalamus_hypothalamus = cell2table({ ...
+    'morel',            'Morel thalamic nuclei (alias thalamus_detail)'; ...
+    'iglesias_thal',    'Iglesias/FreeSurfer thalamic nuclei'; ...
+    'iglesias_hypothal','Iglesias hypothalamic subunits'}, ...
+    'VariableNames', {'keyword','description'});
+
+S.brainstem_cerebellum = cell2table({ ...
+    'brainstem',              'Combined brainstem atlas'; ...
+    'harvard_aan',            'Harvard Ascending Arousal Network brainstem nuclei'; ...
+    'bianciardi',             'Bianciardi Brainstem Navigator nuclei'; ...
+    'limbic_brainstem_atlas', 'Levinson-Bari limbic brainstem nuclei'; ...
+    'kragel2019pag',          'Kragel 2019 periaqueductal gray'; ...
+    'cerebellum',             'SUIT cerebellar atlas (alias suit)'}, ...
+    'VariableNames', {'keyword','description'});
+
+S.networks_specialized = cell2table({ ...
+    'buckner',       'Buckner/Yeo resting-state networks'; ...
+    'painpathways',  'CANlab pain-pathways atlas (also painpathways2024)'; ...
+    'delavega',      'de la Vega 2017 Neurosynth cortical parcellation'; ...
+    'insula',        'Faillenot insular parcellation'}, ...
+    'VariableNames', {'keyword','description'});
+
+if strcmpi(char(mode), 'print')
+    local_print_atlas_table(S.combined,              'CANLAB COMBINED WHOLE-BRAIN ATLASES');
+    local_print_atlas_table(S.cortex,                'CORTICAL PARCELLATIONS');
+    local_print_atlas_table(S.subcortical,           'SUBCORTICAL / BASAL-GANGLIA ATLASES');
+    local_print_atlas_table(S.thalamus_hypothalamus, 'THALAMUS & HYPOTHALAMUS');
+    local_print_atlas_table(S.brainstem_cerebellum,  'BRAINSTEM & CEREBELLUM');
+    local_print_atlas_table(S.networks_specialized,  'NETWORKS & SPECIALIZED ATLASES');
+    fprintf(['\nMost keywords accept a space/resolution suffix: append ''_fsl6'' for ' ...
+        'MNI152NLin6Asym\n(default is fmriprep20 / MNI152NLin2009cAsym), and ''_1mm''/''_2mm'' ' ...
+        'where available.\nLoad with: atl = load_atlas(''<keyword>'');  Full grid: help load_atlas\n\n']);
+end
+
+end % list_atlases
+
+
+function local_print_atlas_table(t, titlestr)
+fprintf('\n==== %s ====\n', titlestr);
+disp(t);
+end
 
 
 

@@ -1,6 +1,15 @@
 function [handles, r, subctx_fmri_data_obj] = render_cifti_on_brain(cifti_filename, varargin)
 % render_cifti_on_brain renders an image from a cifti file onto surfaces and brain slices.
 %
+% NOTE (2026): This function depends on external HCP/Workbench CIFTI tools
+% (cifti_read / Washington-University CIFTI tools). For new code, prefer the
+% self-contained fmri_surface_data object, which reads CIFTI/GIFTI natively (no
+% external toolbox) and renders with its surface() method:
+%     s = fmri_surface_data('yourdata.dscalar.nii');
+%     surface(s);                 % native cortical-surface render
+%     surface(s, 'mni_surface', 'left');   % on an addbrain MNI surface
+% See docs/fmri_surface_data_methods.md.
+%
 % :Usage:
 % ::
 %     render_cifti_on_brain(cifti_filename OR cifti_struct, [optional inputs])

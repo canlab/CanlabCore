@@ -42,6 +42,15 @@ end
 
 layer = obj.activation_maps{k};
 
+% Surface-native layer (fmri_surface_data source): paint matching cortical meshes
+% directly from the per-vertex data, at full fidelity, using the same central
+% canlab_colormap value->colour map as montages. See add_surface_blobs.
+if isfield(layer, 'source_surface') && isa(layer.source_surface, 'fmri_surface_data')
+    if nargin < 3 || isempty(wh_surface), wh_surface = 1:numel(obj.surface); end
+    obj = paint_surface_native_layer(obj, k, wh_surface);
+    return
+end
+
 if ~isfield(layer, 'source_region') || isempty(layer.source_region)
     return   % legacy layer with no retained source; nothing to render from
 end
@@ -125,6 +134,19 @@ for i = wh_surface
     surfh = surfh(ishandle(surfh));        % skip handles whose figure was closed
     if isempty(surfh), continue, end
 
+    % A subcortical-volume layer (added alongside a cortical surface-native layer
+    % for a mixed grayordinate object) must NOT paint the cortical meshes -- the
+    % cortex belongs to the surface-native layer, and projecting the subcortical
+    % volume onto the cortical surface would bleed onto medial-wall vertices that
+    % sit next to subcortical structures. Skip patches whose vertex count is a
+    % cortical mesh (see fmridisplay.surface, which sets skip_cortex_nv).
+    if isfield(layer, 'skip_cortex_nv') && ~isempty(layer.skip_cortex_nv)
+        keep = arrayfun(@(h) ~(strcmp(get(h, 'Type'), 'patch') && ...
+            ismember(size(get(h, 'Vertices'), 1), layer.skip_cortex_nv)), surfh);
+        surfh = surfh(keep);
+        if isempty(surfh), continue, end
+    end
+
     % NOTE: this paints layer k onto the CURRENT surface colours (no erase), so a
     % new layer composites on top of lower layers (true-colour, top wins per
     % vertex). The anatomy gray is saved once (render_on_surface) so removeblobs/
@@ -158,6 +180,211 @@ for i = wh_surface
 
 end
 
+end
+
+
+function obj = paint_surface_native_layer(obj, k, wh_surface)
+% Paint a surface-native layer (fmri_surface_data source) directly onto matching
+% cortical meshes, blending by the layer opacity, using the central canlab_colormap
+% so colours match montages. Meshes whose vertex count does not match the object's
+% space are skipped (a layer has no volume, so it cannot be sampled onto them).
+layer = obj.activation_maps{k};
+surf  = layer.source_surface;
+
+args = {};
+if isfield(layer, 'render_args') && ~isempty(layer.render_args), args = layer.render_args; end
+cmaprange = [];
+if isfield(layer, 'cmaprange'), cmaprange = layer.cmaprange; end
+which_image = 1;
+if isfield(layer, 'which_image') && ~isempty(layer.which_image), which_image = layer.which_image; end
+
+% Native dense per-hemisphere values (medial wall = NaN), before thresholding.
+r = reconstruct_image(surf);
+L0 = []; R0 = [];
+if isfield(r, 'cortex_left'),  L0 = r.cortex_left(:, which_image);  end
+if isfield(r, 'cortex_right'), R0 = r.cortex_right(:, which_image); end
+native_nv = max([numel(L0), numel(R0)]);
+
+% Layer threshold (rethreshold stores it here; a scalar is a magnitude cutoff:
+% sub-threshold vertices -> NaN -> uncoloured). Applied at PAINT time, to whatever
+% hemisphere data is painted, so set_colormap / set_opacity preserve it.
+thr = [];
+if isfield(layer, 'applied_threshold'), thr = layer.applied_threshold; end
+
+% Robust default colour range if none stored (from native, thresholded values).
+if isempty(cmaprange)
+    v = [local_apply_thr(L0, thr); local_apply_thr(R0, thr)];
+    v = v(v ~= 0 & isfinite(v));
+    if ~isempty(v)
+        sf = {}; if any(strcmp(args, 'splitcolor')), sf = {'splitcolor'}; end
+        cmaprange = canlab_default_cmaprange(v, sf{:});
+    end
+end
+
+tc_map = canlab_colormap.from_render_args(args, cmaprange);
+
+% Layer opacity (set_opacity / controller) blends this layer with what's underneath
+alpha = 1;
+wh_tv = find(strcmp(args, 'transvalue'), 1);
+if ~isempty(wh_tv) && isnumeric(args{wh_tv + 1}), alpha = args{wh_tv + 1}; end
+alpha = max(0, min(1, alpha));
+
+% Hemisphere data by mesh vertex count (post-threshold), computed on demand. A
+% patch in the object's OWN space is painted directly. A patch that is a DIFFERENT
+% recognized standard cortical mesh (e.g. fs_LR data on an fsaverage surface) is
+% handled by an automatic native resample of the source object onto that mesh's
+% space (resample_surface, nearest for render speed), CACHED on the layer so
+% re-renders (set_colormap / rethreshold / opacity) reuse it. A non-standard mesh
+% (arbitrary vertex count) cannot be resampled and is skipped.
+if ~isfield(layer, 'resampled') || ~isstruct(layer.resampled), layer.resampled = struct(); end
+hemiL = containers.Map('KeyType', 'double', 'ValueType', 'any');
+hemiR = containers.Map('KeyType', 'double', 'ValueType', 'any');
+hemiL(native_nv) = local_apply_thr(L0, thr);
+hemiR(native_nv) = local_apply_thr(R0, thr);
+
+n_painted = 0; n_unknown = 0;
+for i = wh_surface
+    if i < 1 || i > numel(obj.surface), continue; end
+    surfh = obj.surface{i}.object_handle;
+    surfh = surfh(ishandle(surfh));
+    for hh = surfh(:)'
+        if ~strcmp(get(hh, 'Type'), 'patch'), continue; end
+        V   = get(hh, 'Vertices');
+        nv  = size(V, 1);
+        tag = lower(get(hh, 'Tag'));
+        if iscell(tag), tag = strjoin(tag, ' '); end
+
+        % Ensure hemisphere data exists for this mesh's vertex count (resample if
+        % it is a recognized standard space different from the object's own).
+        if ~isKey(hemiL, nv)
+            tgt = local_std_space_name(nv);
+            if isempty(tgt)
+                % Non-standard MNI isosurface (e.g. addbrain 'hires left',
+                % 'cutaway'): no spherical registration exists, so paint it by
+                % projecting the data to a volume and sampling that volume at the
+                % patch's vertices (image_vector.render_on_surface). The volume is
+                % cached on the layer so re-renders stay fast.
+                if ~isfield(layer, 'display_volume') || isempty(layer.display_volume)
+                    try
+                        layer.display_volume = to_display_volume(surf);
+                        obj.activation_maps{k}.display_volume = layer.display_volume;
+                    catch
+                        n_unknown = n_unknown + 1; continue;
+                    end
+                end
+                vimg = layer.display_volume;
+                if size(vimg.dat, 2) > 1, vimg = get_wh_image(vimg, which_image); end
+                if ~isempty(thr) && isscalar(thr) && isfinite(thr) && ~strcmp(tc_map.type, 'indexed')
+                    vimg.dat(abs(vimg.dat) < thr) = 0;     % apply the layer threshold
+                end
+                cargs = {'truecolor', tc_map, 'truecolor_alpha', alpha, 'nolegend'};
+                if ~isempty(cmaprange), cargs = [cargs, {'cmaprange', cmaprange}]; end %#ok<AGROW>
+                if strcmp(tc_map.type, 'indexed'), cargs = [cargs, {'interp', 'nearest'}]; end %#ok<AGROW>
+                try
+                    render_on_surface(vimg, hh, cargs{:});
+                    n_painted = n_painted + 1;
+                catch
+                    n_unknown = n_unknown + 1;
+                end
+                continue
+            end
+            key = sprintf('nv%d', nv);
+            if ~isfield(layer.resampled, key)
+                try
+                    layer.resampled.(key) = resample_surface(surf, tgt, 'interp', 'nearest');
+                catch
+                    n_unknown = n_unknown + 1; continue;
+                end
+                obj.activation_maps{k}.resampled = layer.resampled;     % persist for re-renders
+            end
+            rr = reconstruct_image(layer.resampled.(key));
+            Lr = []; Rr = [];
+            if isfield(rr, 'cortex_left'),  Lr = rr.cortex_left(:, which_image);  end
+            if isfield(rr, 'cortex_right'), Rr = rr.cortex_right(:, which_image); end
+            hemiL(nv) = local_apply_thr(Lr, thr);
+            hemiR(nv) = local_apply_thr(Rr, thr);
+        end
+        Ld_use = hemiL(nv); Rd_use = hemiR(nv);
+
+        % Which hemisphere is this patch? Prefer an explicit 'left'/'right' tag;
+        % else fall back to x-centroid sign (left < 0 < right), because addbrain
+        % relabels foursurfaces_* patches and erases the L/R tag.
+        is_left  = contains(tag, 'left');
+        is_right = contains(tag, 'right');
+        if ~is_left && ~is_right
+            if mean(V(:, 1)) < 0, is_left = true; else, is_right = true; end
+        end
+
+        vals = [];
+        if ~isempty(Rd_use) && nv == numel(Rd_use) && is_right
+            vals = Rd_use;
+        elseif ~isempty(Ld_use) && nv == numel(Ld_use) && is_left
+            vals = Ld_use;
+        end
+        if isempty(vals), continue; end
+
+        base = local_base_rgb(hh, nv);
+
+        % Save the anatomy (gray) on first paint so composite_surfaces can reset
+        % this patch to gray before recompositing (see set_opacity / set_colormap).
+        if isempty(get(hh, 'UserData'))
+            set(hh, 'UserData', base);
+        end
+
+        rgb  = tc_map.map(double(vals));        % N x 3, NaN rows = uncoloured
+        col  = ~any(isnan(rgb), 2);
+        out  = base;
+        out(col, :) = alpha * rgb(col, :) + (1 - alpha) * base(col, :);
+        set(hh, 'FaceVertexCData', out, 'FaceColor', 'interp', 'EdgeColor', 'none');
+        n_painted = n_painted + 1;
+    end
+end
+
+% Only truly non-standard meshes (that cannot be resampled) go unpainted.
+if n_painted == 0 && n_unknown > 0
+    warning('fmridisplay:render_layer_surfaces:spacemismatch', ...
+        ['Surface data (%s) could not be painted: the target surface(s) are not a ' ...
+         'recognized standard cortical mesh, so the data cannot be resampled onto ' ...
+         'them. Use surface(obj), a standard fsaverage / fs_LR surface, or project ' ...
+         'via a volume (surf2vol + render_on_surface).'], surf.surface_space);
+end
+end
+
+
+function x = local_apply_thr(x, thr)
+% Magnitude-cutoff threshold: |value| < thr becomes NaN (uncoloured).
+if ~isempty(x) && ~isempty(thr) && isscalar(thr) && isfinite(thr)
+    x(abs(x) < thr) = NaN;
+end
+end
+
+
+function name = local_std_space_name(nv)
+% Standard cortical surface space for a per-hemisphere vertex count ('' if none).
+switch nv
+    case 32492,  name = 'fs_LR_32k';
+    case 163842, name = 'fsaverage_164k';
+    case 40962,  name = 'fsaverage6';
+    case 10242,  name = 'fsaverage5';
+    case 2562,   name = 'fsaverage4';
+    otherwise,   name = '';
+end
+end
+
+
+function base = local_base_rgb(hh, nv)
+% Current vertex colours to blend onto (running composite), else the patch's gray.
+c = get(hh, 'FaceVertexCData');
+if isequal(size(c), [nv 3])
+    base = c;
+else
+    fc = get(hh, 'FaceColor');
+    if isnumeric(fc) && numel(fc) == 3
+        base = repmat(fc(:)', nv, 1);
+    else
+        base = repmat([.5 .5 .5], nv, 1);
+    end
+end
 end
 
 

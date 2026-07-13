@@ -92,6 +92,90 @@ if ~any(strcmp(varargin, 'axes'))
     if ~isempty(cf) && is_uifigure(cf), figure; end
 end
 
+% An fmri_surface_data argument: add its native surface(s) AND paint it as a
+% managed surface-native layer. surface(o2, surf_obj, ...) then behaves like
+% surface(surf_obj) but on the stateful display -- the surfaces are registered
+% views under the controller, and the data is a real layer (set_colormap /
+% set_opacity / removeblobs / refresh act on it). With no surface keyword, the
+% set that MATCHES the object's space is added automatically (foursurfaces_hcp
+% for fs_LR, foursurfaces_freesurfer for fsaverage), so the data always renders
+% at full fidelity. An explicit non-matching surface (e.g. fsaverage meshes for
+% fs_LR data) is added but cannot be painted, and add_surface_blobs warns.
+% See add_surface_blobs, fmri_surface_data.surface.
+is_surf = cellfun(@(a) isa(a, 'fmri_surface_data'), varargin);
+if any(is_surf)
+    surf_data = varargin{find(is_surf, 1)};
+    rest = varargin(~is_surf);
+
+    % Split the remaining args into surface directives (WHICH surfaces to draw)
+    % and colour options (HOW to paint the layer). Colour options are the
+    % value-bearing keys add_surface_blobs / canlab_colormap understand; every
+    % other token (foursurfaces*, direction/orientation/axes pairs, a bare
+    % addbrain surface keyword) is a surface directive.
+    color_keys = {'which_image', 'clim', 'cmaprange', 'colormap', 'colormapname', ...
+        'pos_colormap', 'neg_colormap', 'splitcolor', 'maxcolor', 'mincolor', ...
+        'color', 'transvalue', 'wh_surface', 'wh_surfaces'};
+    color_flags = {'unique', 'solid'};      % value-less colour-mode flags
+    surf_args = {}; color_args = {};
+    j = 1;
+    while j <= numel(rest)
+        a = rest{j};
+        if ischar(a) && any(strcmpi(a, color_flags))
+            color_args = [color_args, rest(j)]; j = j + 1; %#ok<AGROW>
+        elseif ischar(a) && any(strcmpi(a, color_keys))
+            color_args = [color_args, rest(j:j+1)]; j = j + 2; %#ok<AGROW>
+        else
+            surf_args{end + 1} = a; j = j + 1; %#ok<AGROW>
+        end
+    end
+
+    if isempty(surf_args)
+        surf_args = {surface_default_keyword(surf_data)};   % matching space
+    end
+
+    % Shared colour range across cortex and subcortex, so both layers use ONE
+    % scale (unless the caller passed clim/cmaprange). Computed from all
+    % grayordinates via the standard robust policy.
+    which_img = 1;
+    whi = find(strcmpi(color_args, 'which_image'), 1);
+    if ~isempty(whi), which_img = color_args{whi + 1}; end
+    if ~any(strcmpi(color_args, 'cmaprange')) && ~any(strcmpi(color_args, 'clim'))
+        vv = double(surf_data.dat(:, min(which_img, size(surf_data.dat, 2))));
+        vv = vv(vv ~= 0 & isfinite(vv));
+        if ~isempty(vv)
+            sf = {}; if any(strcmpi(color_args, 'splitcolor')), sf = {'splitcolor'}; end
+            color_args = [color_args, {'cmaprange', canlab_default_cmaprange(vv, sf{:})}];
+        end
+    end
+
+    n0 = numel(obj.surface);
+    obj = surface(obj, surf_args{:});                       % add the view(s)
+    new_idx = (n0 + 1):numel(obj.surface);
+    if isempty(new_idx), new_idx = 1:numel(obj.surface); end
+
+    % Cortex: surface-native layer painted directly on matching meshes.
+    obj = add_surface_blobs(obj, surf_data, color_args{:}, 'wh_surface', new_idx);
+
+    % Subcortex (if present): its grayordinate voxels have no surface, so render
+    % them as a standard volume layer. On these surface views that paints the
+    % subcortical anatomical meshes (thalamus, brainstem, cerebellum, ...) that
+    % the foursurfaces set draws, via the volume->surface projection; on a montage
+    % it shows the slices. It is a normal volume layer, so rethreshold / opacity /
+    % set_colormap / the controller all drive it too.
+    if surface_has_volume(surf_data)
+        subvol = get_wh_image(to_fmri_data(surf_data), which_img);
+        vol_color = volume_color_args(color_args);
+        obj = addblobs(obj, subvol, vol_color{:}, 'wh_surface', new_idx);
+        % Confine this layer to the subcortical meshes: it must not repaint the
+        % cortical surfaces (owned by the surface-native layer above). Recomposite
+        % so the cortex is restored to the surface-native colouring / medial-wall
+        % gray after addblobs' incremental paint.
+        obj.activation_maps{end}.skip_cortex_nv = cortex_vertex_counts(surf_data);
+        obj = composite_surfaces(obj, new_idx);
+    end
+    return
+end
+
 % Multi-surface keywords (e.g. 'foursurfaces', 'foursurfaces_hcp') add a SET
 % of surface views to THIS SAME object, laid out in the current figure. Each
 % becomes its own registered view, so blobs/refresh act on all of them
@@ -231,6 +315,11 @@ for k = 1:numel(obj.activation_maps)
     obj = render_layer_surfaces(obj, k, new_surf_idx);
 end
 
+% Keep an already-open controller bound to THIS object (no new controller is
+% created; update_controller is a no-op if none is open). This ensures adding a
+% surface view leaves the existing controller in sync rather than stale.
+obj = update_controller(obj);
+
 end % main function
 
 
@@ -325,6 +414,9 @@ end
 set(findobj(layout_fig, 'Type', 'axes'), 'Visible', 'off');
 canlab_hide_axes_toolbar(layout_fig);   % hide the "..." toolbar on all surface panels
 
+% Sync an already-open controller (no-op if none); no new controller is created.
+obj = update_controller(obj);
+
 end
 
 
@@ -332,5 +424,64 @@ function tf = is_uifigure(f)
 % Thin wrapper on the shared canlab_is_uifigure (keeps figure-creation behaviour
 % consistent with image_vector.montage / canlab_results_fmridisplay).
 tf = canlab_is_uifigure(f);
+end
+
+
+function tf = surface_has_volume(surf_data)
+% True when the grayordinate object has a subcortical (voxel) sub-block.
+tf = ~isempty(surf_data.brain_model) && ...
+     any(cellfun(@(m) strcmp(m.type, 'vox'), surf_data.brain_model.models));
+end
+
+
+function nv = cortex_vertex_counts(surf_data)
+% Per-hemisphere vertex counts of the object's cortical models (e.g. 32492 for
+% fs_LR-32k). Used to keep a subcortical-volume layer off the cortical meshes.
+nv = [];
+for i = 1:numel(surf_data.brain_model.models)
+    m = surf_data.brain_model.models{i};
+    if strcmp(m.type, 'surf') && ~isempty(m.numvert) && ~isnan(m.numvert)
+        nv(end + 1) = m.numvert; %#ok<AGROW>
+    end
+end
+nv = unique(nv);
+end
+
+
+function out = volume_color_args(color_args)
+% Translate the surface color options into the subset the volume blob path
+% (render_blobs) understands, so cortex and subcortex share a colour spec.
+% which_image is already applied; clim -> cmaprange; drop surface-only tokens.
+out = {};
+i = 1;
+while i <= numel(color_args)
+    key = color_args{i};
+    if ~ischar(key), i = i + 1; continue; end
+    switch lower(key)
+        case 'clim'
+            out = [out, {'cmaprange', color_args{i + 1}}]; %#ok<AGROW>
+        case {'cmaprange', 'maxcolor', 'mincolor', 'splitcolor', 'color', ...
+              'pos_colormap', 'neg_colormap'}
+            out = [out, color_args(i:i + 1)]; %#ok<AGROW>
+        case 'colormap'
+            if i + 1 <= numel(color_args) && isnumeric(color_args{i + 1})
+                out = [out, color_args(i:i + 1)]; %#ok<AGROW>
+            end
+        % which_image / colormapname / transvalue / wh_surface: not forwarded.
+    end
+    i = i + 2;
+end
+end
+
+
+function kw = surface_default_keyword(surf_data)
+% Multi-surface keyword whose meshes MATCH the object's surface space, so the
+% data paints directly (no cross-space resampling). Used when surface(o2,
+% surf_obj) is called with no explicit surface directive.
+switch surf_data.surface_space
+    case 'fsLR_32k',       kw = 'foursurfaces_hcp';          % 32492 verts/hemi
+    case 'fsaverage_164k', kw = 'foursurfaces_freesurfer';   % 163842 verts/hemi
+    otherwise,             kw = 'foursurfaces_hcp';          % best-effort default
+end
 end
 

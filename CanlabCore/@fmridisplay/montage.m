@@ -143,6 +143,27 @@ if isempty(obj.SPACE) || ~isstruct(obj.SPACE.V)
 
 end
 
+% An fmri_surface_data argument: build the montage, then render the object's
+% SUBCORTICAL grayordinates as a managed volume layer on the slices (cortical
+% surface data has no volume and is not shown on slices -- use surface(obj) for
+% that). This mirrors the surface() fmri_surface_data path so montage(o2, obj)
+% shows the subcortex instead of silently ignoring obj.
+is_surf = cellfun(@(a) isa(a, 'fmri_surface_data'), varargin);
+if any(is_surf)
+    surf_data = varargin{find(is_surf, 1)};
+    rest = varargin(~is_surf);
+    obj = montage(obj, rest{:});                         % build the montage view(s)
+    if ~isempty(surf_data.brain_model) && ...
+            any(cellfun(@(m) strcmp(m.type, 'vox'), surf_data.brain_model.models))
+        obj = addblobs(obj, get_wh_image(to_fmri_data(surf_data), 1));
+    else
+        warning('fmridisplay:montage:cortexonly', ...
+            ['This grayordinate object is cortex-only (no subcortical voxels); a slice ' ...
+             'montage shows nothing. Use surface(obj) to render the cortical surface.']);
+    end
+    return
+end
+
 % Multi-panel routing
 % -------------------------------------------------------------------------
 % The default montage(obj) (and montage(obj, <montagetype>) for any

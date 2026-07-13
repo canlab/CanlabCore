@@ -54,6 +54,14 @@ for k = wh_layers
 
     layer = obj.activation_maps{k};
 
+    % Surface-native layer (fmri_surface_data source): it has no volume mapdata,
+    % so skip the montage render_blobs path entirely (it would warn about an
+    % illegal mask size / volInfo). The surfaces are redrawn by composite_surfaces
+    % after this loop, which handles surface-native layers.
+    if isfield(layer, 'source_surface') && isa(layer.source_surface, 'fmri_surface_data')
+        continue
+    end
+
     if ~isfield(layer, 'render_args') || isempty(layer.render_args)
         % Layer predates source retention (or has no stored options); it
         % cannot be re-rendered from source. Leave it as-is.

@@ -84,6 +84,7 @@ cellfun(@(m) sprintf('  %-14s %-4s %6d rows', m.struct, m.type, m.count), ...
 
 sg = [];   % a full grayordinate object (cortex + subcortex), if available
 gfile = which('Gordon333.32k_fs_LR_Tian_Subcortex_S2.dlabel.nii');   % from NPM
+
 if ~isempty(gfile)
     sg = fmri_surface_data(gfile);
     types = cellfun(@(m) m.type, sg.brain_model.models, 'UniformOutput', false);
@@ -94,6 +95,8 @@ if ~isempty(gfile)
 else
     fprintf('\n(Install Neuroimaging_Pattern_Masks to see subcortical grayordinates.)\n');
 end
+
+o3 = surface(sg, 'clim', [1 1.8], 'surftype', 'midthickness');
 
 %% 4. Reconstruct to dense surfaces (and a subcortical volume)
 %

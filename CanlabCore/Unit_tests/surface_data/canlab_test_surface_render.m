@@ -157,6 +157,46 @@ end
 
 
 % -------------------------------------------------------------------------
+function test_default_view_matches_space(t)
+% surface(obj) with NO surface directive picks a four-surface view matching the
+% object's space family: fs_LR -> foursurfaces_hcp (native 32492); fsaverage
+% (incl. nested 6/5/4) -> foursurfaces_freesurfer (163842); onavg -> fs_LR view
+% (onavg is fs_LR-aligned). Data paints on the resulting cortical patches in
+% every case.
+if isempty(which('resample_surface')), t.assumeFail('resample_surface not on path.'); end
+s = t.TestData.s;                        % fs_LR-32k
+
+% Native fs_LR -> foursurfaces_hcp (32492-vertex patches painted directly).
+o = surface(s);
+verifyNotEmpty(t, cortex_patches(o, 32492), 'fs_LR default view should have 32492 patches.');
+verifyGreaterThan(t, painted_frac(o, 32492), 0.5, 'fs_LR default view should paint the cortex.');
+close all force;
+
+% fsaverage6 (nested) -> renders on the fsaverage-164k four-surface view.
+s6 = resample_surface(s, 'fsaverage6', 'interp', 'nearest');
+verifyEqual(t, s6.surface_space, 'fsaverage6');
+o6 = surface(s6);
+verifyNotEmpty(t, cortex_patches(o6, 163842), 'fsaverage6 should render on 163842-vertex patches.');
+verifyGreaterThan(t, painted_frac(o6, 163842), 0.5, 'fsaverage6 default view should paint the cortex.');
+close all force;
+
+% onavg (fs_LR-aligned) -> renders on the fs_LR four-surface view.
+son = resample_surface(s, 'onavg_41k', 'interp', 'nearest');
+verifyEqual(t, son.surface_space, 'onavg_41k');
+oon = surface(son);
+verifyNotEmpty(t, cortex_patches(oon, 32492), 'onavg should render on the fs_LR (32492) view.');
+verifyGreaterThan(t, painted_frac(oon, 32492), 0.5, 'onavg default view should paint the cortex.');
+close all force;
+
+% An explicit surface keyword overrides the space-matched default (and does not
+% error on a bare token -- the historical parser bug).
+oe = surface(s, 'foursurfaces_hcp');
+verifyNotEmpty(t, cortex_patches(oe, 32492), 'Explicit foursurfaces_hcp keyword should build the view.');
+close all force;
+end
+
+
+% -------------------------------------------------------------------------
 function test_atlas_surface_unique(t)
 % A volumetric atlas rendered on surfaces uses UNIQUE per-region solid colours
 % (via an indexed colormap), and surface(atl,'unique') is accepted (no warning).
@@ -215,6 +255,22 @@ for i = 1:numel(o2.surface)
         end
     end
 end
+end
+
+
+% =========================================================================
+function frac = painted_frac(o2, nv)
+% Fraction of vertices coloured non-gray across all nv-vertex cortical patches.
+p = cortex_patches(o2, nv);
+tot = 0; nz = 0;
+for k = 1:numel(p)
+    c = get(p(k), 'FaceVertexCData');
+    if size(c, 2) == 3 && size(c, 1) == nv
+        tot = tot + nv;
+        nz = nz + sum(~all(abs(c - 0.5) < 1e-6, 2));
+    end
+end
+frac = nz / max(tot, 1);
 end
 
 

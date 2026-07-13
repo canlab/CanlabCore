@@ -42,8 +42,11 @@ if has_cortex
     fs = obj;
     if ~strcmp(obj.surface_space, 'fsaverage_164k')
         % surf2vol needs fsaverage (the CBIG warp is fsaverage-based); get there
-        % natively. resample_surface auto-selects nearest for label/binary data.
-        fs = resample_surface(obj, 'fsaverage_164k');
+        % natively. This volume is for DISPLAY ONLY (sampled at mesh vertices to
+        % colour a patch), so resample by nearest neighbour: at 164k density the
+        % visual result is indistinguishable from barycentric, but ~250x faster
+        % (0.2 s vs ~48 s -- the barycentric weight build dominates otherwise).
+        fs = resample_surface(obj, 'fsaverage_164k', 'interp', 'nearest');
     end
     volc = surf2vol(fs);
 end

@@ -318,25 +318,44 @@ reg = surface_region(threshold(t, 3, 'positive', 'k', 20));
 Render on cortical surfaces. Three modes:
 
 - **Native (default):** builds a **managed, stateful `fmridisplay`** whose surface
-  views are the mesh set matching `surface_space` (fs_LR-32k → `'foursurfaces_hcp'`,
-  fsaverage-164k → `'foursurfaces_freesurfer'`), and paints the data as a managed
-  surface-native layer — colored directly, no resampling. Because the returned
-  object is under a controller, `set_colormap` / `set_opacity` / `rethreshold` /
-  `removeblobs` / `refresh` act on the surfaces (this is how you change the colormap
-  after rendering). Each hemisphere shows its own data.
+  views are a four-surface set (L/R lateral + medial) **chosen to match the object's
+  `surface_space`** (table below), and paints the data as a managed surface-native
+  layer. Because the returned object is under a controller, `set_colormap` /
+  `set_opacity` / `rethreshold` / `removeblobs` / `refresh` act on the surfaces (this
+  is how you change the colormap after rendering). Each hemisphere shows its own data.
 - **`'existingsurface', handles`:** color patch handles you already have (returns a
   struct with `.figure`/`.axes`/`.surfaces`).
 - **`'mni_surface', name`:** create an `addbrain` surface (e.g. `'left'`,
   `'hcp inflated'`) and render onto it, projecting through a volume when the
   surface is not the object's native mesh (returns a struct).
 
+**Default four-surface view per surface space.** With no explicit surface argument,
+`surface(obj)` picks the view that matches the object's space, so the data renders at
+native (or near-native) fidelity automatically:
+
+| `surface_space` | verts/hemi | default four-surface view | how it paints |
+|---|---|---|---|
+| `fsLR_32k` | 32,492 | `foursurfaces_hcp` | **native** (direct, no resampling) |
+| `fsaverage_164k` | 163,842 | `foursurfaces_freesurfer` | **native** (direct, no resampling) |
+| `fsaverage6` / `fsaverage5` / `fsaverage4` | 40,962 / 10,242 / 2,562 | `foursurfaces_freesurfer` | resampled **up** to fsaverage-164k (nearest, cached) |
+| `onavg_41k` / `onavg_10k` | 40,962 / 10,242 | `foursurfaces_hcp` | resampled to fs_LR-32k (nearest, cached) |
+
+Only `fsLR_32k` and `fsaverage_164k` ship inflated display meshes (in
+`canlab_canonical_brains/Canonical_brains_surfaces/`). The other spaces need no new
+mesh assets: the nested fsaverage spaces are subsets of fsaverage-164k, and onavg is
+fs_LR-aligned via the bundled onavg spheres, so each renders on its parent/aligned
+display space through a fast, cached nearest-neighbour resample (a one-line
+`render_layer_surfaces: resampling …` message prints the first time).
+
 You can also add a surface object to an **existing** managed display:
-`o2 = surface(o2, obj)` adds the object's matching native surfaces and paints it;
-`o2 = surface(o2, obj, 'foursurfaces_hcp')` targets a named surface set. Requesting a
-surface of a **different** space than the data (e.g. fsaverage meshes for fs_LR data)
-warns (`fmridisplay:render_layer_surfaces:spacemismatch`) rather than mapping wrong —
-a surface object has no volume to resample onto a foreign mesh, so use the matching
-surfaces (the bare `surface(obj)` picks them automatically).
+`o2 = surface(o2, obj)` adds the space-matched native surfaces and paints it;
+`o2 = surface(o2, obj, 'foursurfaces_hcp')` (or any `addbrain` surface keyword)
+overrides that with a named surface set. Requesting a **different standard** mesh than
+the data (e.g. fsaverage meshes for fs_LR data) auto-resamples the object onto that
+mesh (the same fast, cached nearest-neighbour resample, with the printed message); an
+**arbitrary** (non-standard) MNI mesh is handled by projecting the object to a volume.
+The `fmridisplay:render_layer_surfaces:spacemismatch` warning fires only when a mesh is
+neither a recognized standard cortical mesh nor projectable.
 
 | Option | Meaning |
 |---|---|
@@ -391,16 +410,26 @@ only on core MATLAB (+ the JVM for gzip) — no external toolbox.
 
 ## 6. Surface spaces
 
-| Space | Per-hemi vertices | Source | Used by |
+| Space | Per-hemi vertices | Source | Bundled display mesh |
 |---|---|---|---|
-| `fsLR_32k` | 32,492 | native CIFTI (HCP grayordinates) | `fmri_surface_data(cifti)` |
-| `fsaverage_164k` | 163,842 | CBIG RF mapping | `vol2surf` output |
+| `fsLR_32k` | 32,492 | native CIFTI (HCP grayordinates) | inflated (`foursurfaces_hcp`) |
+| `fsaverage_164k` | 163,842 | `vol2surf` (CBIG RF mapping) | inflated (`foursurfaces_freesurfer`) |
+| `fsaverage6` | 40,962 | `resample_surface` (nested subset of 164k) | — (resamples to 164k) |
+| `fsaverage5` | 10,242 | `resample_surface` (nested subset of 164k) | — (resamples to 164k) |
+| `fsaverage4` | 2,562 | `resample_surface` (nested subset of 164k) | — (resamples to 164k) |
+| `onavg_41k` | 40,962 | `resample_surface` (equal-area, fs_LR-aligned) | — (resamples to fs_LR) |
+| `onavg_10k` | 10,242 | `resample_surface` (equal-area, fs_LR-aligned) | — (resamples to fs_LR) |
 
-`vol2surf` produces `fsaverage_164k`; native CIFTI is `fsLR_32k`. These have
-different mesh topologies, so they cannot be combined without resampling
-(fsaverage↔fs_LR deformation is a planned enhancement). Native rendering uses the
-matching bundled mesh in `canlab_canonical_brains/Canonical_brains_surfaces/`
-(`addbrain('hcp inflated')` for fs_LR, `addbrain('inflated')` for fsaverage).
+Native CIFTI is `fsLR_32k`; `vol2surf` produces `fsaverage_164k`. fs_LR and fsaverage
+have different mesh topologies, but `resample_surface` maps natively between **all** of
+the spaces above (nested fsaverage downsampling is exact; every other direction uses a
+spherical barycentric/nearest interpolation on a shared fs_LR-aligned frame — see
+`resample_surface(obj, 'list')`). Only `fsLR_32k` and `fsaverage_164k` ship inflated
+display meshes in `canlab_canonical_brains/Canonical_brains_surfaces/`; the other
+spaces render by resampling onto their parent/aligned display space (see the default
+four-surface view table under [`surface`](#4-method-reference)). Native rendering uses
+the matching bundled mesh directly (`addbrain('hcp inflated')` for fs_LR,
+`addbrain('inflated')` for fsaverage).
 
 ---
 

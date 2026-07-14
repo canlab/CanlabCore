@@ -194,6 +194,25 @@ o2 = addblobs(o2, surf_stat, 'colormap', 'hot');   % paints the fs_LR meshes dir
 o2 = surface(o2, surf_stat);
 ```
 
+**Default four-surface view per surface space.** With no explicit surface argument,
+`surface(obj)` picks the four-surface view (L/R lateral + medial) that matches the
+object's `surface_space`, so the data renders at native (or near-native) fidelity
+automatically. Passing a surface keyword (e.g. `surface(obj, 'foursurfaces_hcp')`)
+overrides it.
+
+| `surface_space` | verts/hemi | default four-surface view | how it paints |
+|---|---|---|---|
+| `fsLR_32k` | 32,492 | `foursurfaces_hcp` | **native** (direct, no resampling) |
+| `fsaverage_164k` | 163,842 | `foursurfaces_freesurfer` | **native** (direct, no resampling) |
+| `fsaverage6` / `fsaverage5` / `fsaverage4` | 40,962 / 10,242 / 2,562 | `foursurfaces_freesurfer` | resampled **up** to fsaverage-164k (nearest, cached) |
+| `onavg_41k` / `onavg_10k` | 40,962 / 10,242 | `foursurfaces_hcp` | resampled to fs_LR-32k (nearest, cached) |
+
+Only `fsLR_32k` and `fsaverage_164k` ship inflated display meshes; the nested
+fsaverage spaces are subsets of fsaverage-164k and onavg is fs_LR-aligned (via the
+bundled onavg spheres), so they render on their parent/aligned space through a fast,
+cached nearest-neighbour resample (a one-line message prints the first time). No new
+mesh assets are required.
+
 `addblobs` (and `surface(o2, obj)`) detect the `fmri_surface_data` and paint matching
 cortical meshes **directly from the per-vertex data** (no volume resampling), using
 the same central `canlab_colormap` value→color map as montages, so colors match. Each

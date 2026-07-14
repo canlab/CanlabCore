@@ -158,6 +158,11 @@ drawnow, snapnow;
 st = threshold(ssurf, 3, 'positive', 'k', 20);   % t > 3, clusters >= 20 grayordinates
 [st, ncl] = reparse_contiguous(st, 'which_image', 1);
 fprintf('Found %d contiguous clusters above threshold\n', ncl);
+surface(st, 'foursurfaces_hcp', 'clim', [-6 6]);
+
+% An alternate surface thresholding 
+ssurft = threshold(ssurf, [-1 1], 'raw-outside');
+surface(ssurft, 'foursurfaces_hcp', 'clim', [-6 6]);
 
 % Summarize the clusters as region-like structs (centroid, size, mean value):
 reg = surface_region(st, 'which_image', 1);
@@ -181,6 +186,18 @@ if ~isempty(sg)
         size(parcel_means,2), parcel_labels{1}, parcel_means(1,1));
 end
 
+%% 9.2. Parcellate with CANlab2024 regions
+
+atl = load_atlas('canlab2024');
+figure; surface(atl, 'foursurfaces_hcp');  % show volumetric atlas on surface
+figure; montage(atl)                       % show volumetric atlas on slices
+atl_surf = vol2surf(atl);                  % transform to surface object (surface only)
+
+figure; surface(atl_surf);                 % show surface object 
+figure; surface(atl_surf, 'unique');       % ...in unique colors
+figure; surface(atl_surf, 'unique', 'foursurfaces_hcp');  % ...on a different surface
+
+
 %% 10. Other data operations: mean, apply_mask
 %
 % mean() averages across maps; apply_mask() keeps a subset of grayordinates
@@ -203,8 +220,10 @@ end
 group = cat(subj{:});                            % one object, 5 maps
 fprintf('group object: %d grayordinates x %d maps\n', size(group.dat,1), size(group.dat,2));
 
-tmap = ttest(group);                             % grayordinate-wise one-sample t-test
-% surface(tmap, 'clim', [-4 4]);                 % (render the group t-map)
+tmap = ttest(group);                             % grayordinate-wise one-sample t-test               
+tmap = threshold(tmap, [-2 2], 'raw-outside'); % 2-sided threshold at ~p<0.05
+figure; surface(tmap);                         % (render the group t-map)
+figure; surface(tmap, 'foursurfaces_hcp');     % ...on a different surface (interpolated)
 
 % OLS regression onto a design matrix (set X BEFORE calling regress):
 group.X = [ones(5,1), (1:5)'];                   % intercept + a linear predictor

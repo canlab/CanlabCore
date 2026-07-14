@@ -242,11 +242,20 @@ hemiR = containers.Map('KeyType', 'double', 'ValueType', 'any');
 hemiL(native_nv) = local_apply_thr(L0, thr);
 hemiR(native_nv) = local_apply_thr(R0, thr);
 
+% NOTE ON SPEED: a patch whose vertex count is the object's OWN space is painted
+% directly (the common, fast path -- no resample/projection). Only a DIFFERENT
+% standard cortical mesh triggers resample_surface, and only an arbitrary mesh in a
+% view with NO native cortical match triggers the (slower) volume projection -- so
+% e.g. the small subcortical anatomy meshes bundled into a foursurfaces_hcp layout
+% do NOT force a projection when the cortex is already painted natively.
 n_painted = 0; n_unknown = 0;
+resample_msg_shown = false; project_msg_shown = false;
 for i = wh_surface
     if i < 1 || i > numel(obj.surface), continue; end
     surfh = obj.surface{i}.object_handle;
     surfh = surfh(ishandle(surfh));
+    view_cortex_painted = false;      % a native/resampled cortical patch got the data
+    nonstd = gobjects(0);             % arbitrary meshes deferred to volume projection
     for hh = surfh(:)'
         if ~strcmp(get(hh, 'Type'), 'patch'), continue; end
         V   = get(hh, 'Vertices');
@@ -254,46 +263,27 @@ for i = wh_surface
         tag = lower(get(hh, 'Tag'));
         if iscell(tag), tag = strjoin(tag, ' '); end
 
-        % Ensure hemisphere data exists for this mesh's vertex count (resample if
-        % it is a recognized standard space different from the object's own).
+        % Ensure hemisphere data exists for this mesh's vertex count.
         if ~isKey(hemiL, nv)
             tgt = local_std_space_name(nv);
             if isempty(tgt)
-                % Non-standard MNI isosurface (e.g. addbrain 'hires left',
-                % 'cutaway'): no spherical registration exists, so paint it by
-                % projecting the data to a volume and sampling that volume at the
-                % patch's vertices (image_vector.render_on_surface). The volume is
-                % cached on the layer so re-renders stay fast.
-                if ~isfield(layer, 'display_volume') || isempty(layer.display_volume)
-                    try
-                        layer.display_volume = to_display_volume(surf);
-                        obj.activation_maps{k}.display_volume = layer.display_volume;
-                    catch
-                        n_unknown = n_unknown + 1; continue;
-                    end
-                end
-                vimg = layer.display_volume;
-                if size(vimg.dat, 2) > 1, vimg = get_wh_image(vimg, which_image); end
-                if ~isempty(thr) && isscalar(thr) && isfinite(thr) && ~strcmp(tc_map.type, 'indexed')
-                    vimg.dat(abs(vimg.dat) < thr) = 0;     % apply the layer threshold
-                end
-                cargs = {'truecolor', tc_map, 'truecolor_alpha', alpha, 'nolegend'};
-                if ~isempty(cmaprange), cargs = [cargs, {'cmaprange', cmaprange}]; end %#ok<AGROW>
-                if strcmp(tc_map.type, 'indexed'), cargs = [cargs, {'interp', 'nearest'}]; end %#ok<AGROW>
-                try
-                    render_on_surface(vimg, hh, cargs{:});
-                    n_painted = n_painted + 1;
-                catch
-                    n_unknown = n_unknown + 1;
-                end
+                nonstd(end + 1) = hh; %#ok<AGROW>   % arbitrary mesh: defer (project only if needed)
                 continue
             end
+            % A DIFFERENT standard cortical mesh (e.g. fs_LR <-> fsaverage): resample
+            % the source onto it once, cached on the layer.
             key = sprintf('nv%d', nv);
             if ~isfield(layer.resampled, key)
+                if ~resample_msg_shown
+                    fprintf('render_layer_surfaces: resampling %s data onto a %s mesh (once; cached)...\n', ...
+                        surf.surface_space, tgt);
+                    resample_msg_shown = true;
+                end
                 try
                     layer.resampled.(key) = resample_surface(surf, tgt, 'interp', 'nearest');
                 catch
-                    n_unknown = n_unknown + 1; continue;
+                    nonstd(end + 1) = hh; %#ok<AGROW>   % fall back to volume projection
+                    continue
                 end
                 obj.activation_maps{k}.resampled = layer.resampled;     % persist for re-renders
             end
@@ -337,6 +327,49 @@ for i = wh_surface
         out(col, :) = alpha * rgb(col, :) + (1 - alpha) * base(col, :);
         set(hh, 'FaceVertexCData', out, 'FaceColor', 'interp', 'EdgeColor', 'none');
         n_painted = n_painted + 1;
+        view_cortex_painted = true;
+    end
+
+    % Arbitrary (non-standard) meshes in this view are painted via a volume
+    % projection -- but ONLY if no native/resampled cortical patch already
+    % received the data in this view. This avoids the expensive resample +
+    % surf2vol round-trip for cortex-only data (e.g. fs_LR myelin) rendered on
+    % a mixed patch set like 'foursurfaces_hcp', where incidental subcortical
+    % anatomy meshes would otherwise trigger a needless projection.
+    if ~isempty(nonstd) && ~view_cortex_painted
+        if ~isfield(layer, 'display_volume') || isempty(layer.display_volume)
+            if ~project_msg_shown
+                fprintf(['render_layer_surfaces: projecting %s data to a volume to render ' ...
+                         'on an arbitrary surface (once; cached)...\n'], surf.surface_space);
+                project_msg_shown = true;
+            end
+            try
+                layer.display_volume = to_display_volume(surf);
+                obj.activation_maps{k}.display_volume = layer.display_volume;
+            catch
+                layer.display_volume = [];
+            end
+        end
+        if ~isempty(layer.display_volume)
+            vimg = layer.display_volume;
+            if size(vimg.dat, 2) > 1, vimg = get_wh_image(vimg, which_image); end
+            if ~isempty(thr) && isscalar(thr) && isfinite(thr) && ~strcmp(tc_map.type, 'indexed')
+                vimg.dat(abs(vimg.dat) < thr) = 0;
+            end
+            cargs = {'truecolor', tc_map, 'truecolor_alpha', alpha, 'nolegend'};
+            if ~isempty(cmaprange), cargs = [cargs, {'cmaprange', cmaprange}]; end
+            if strcmp(tc_map.type, 'indexed'), cargs = [cargs, {'interp', 'nearest'}]; end
+            for hh = nonstd(:)'
+                try
+                    render_on_surface(vimg, hh, cargs{:});
+                    n_painted = n_painted + 1;
+                catch
+                    n_unknown = n_unknown + 1;
+                end
+            end
+        else
+            n_unknown = n_unknown + numel(nonstd);
+        end
     end
 end
 

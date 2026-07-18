@@ -129,8 +129,8 @@ tsRuns = {}; confRuns = {}; segRuns = {}; subjUsed = {}; usedFiles = {}; usedEve
 total = 0;
 for di = 1:numel(od_list)
     cfg = cfgs{di};
-    fmri_files = cellstr(string(cfg.fmri_files));
-    events_files = local_cellstr_or_empty(cfg, 'events_files', numel(fmri_files));
+    fmri_files = strrep(cellstr(string(cfg.fmri_files)), '\', '/');   % normalize Windows-recorded paths for Linux/Discovery
+    events_files = strrep(local_cellstr_or_empty(cfg, 'events_files', numel(fmri_files)), '\', '/');
     subjects = cellstr(string(cfg.subject_ids));
     atlas_obj = [];
     if strcmp(unit, 'atlas'), atlas_obj = local_pick_atlas(cfg, opts.Atlas); end

@@ -48,10 +48,11 @@ function [X, delta, delta_hires, hrf] = onsets2fmridesign(ons, TR, varargin)
 %        (a) Scalar with constant duration value
 %
 %        (b) Vector of one duration for each event type
-%        (c) Cell array of one cell per condition, one duration per trial 
-% 
+%        (c) Cell array of one cell per condition, one duration per trial
+%
 %        * Note: You can also add duration to ons input manually
-%        instead; see ons above for more info *
+%        instead; see ons above for more info. Both routes are equivalent:
+%        'durs' values are in seconds, exactly like column 2 of ons. *
 %
 %   **'norm':**
 %        mean-center, orthogonalize, and L2-norm basis set
@@ -182,6 +183,25 @@ function [X, delta, delta_hires, hrf] = onsets2fmridesign(ons, TR, varargin)
 %    regressors overall in better range
 %    1/2020: Tor modified to increase tolerance/flexibility for fractional
 %    TRs, add better error reporting for length mismatch
+%
+%    2026: Fixed the 'durs' keyword, which was unusable in every form:
+%      - The cell-array branch ran cellfun over 'ons' instead of 'durs', so
+%        the caller's durations were discarded and replaced by onsets ./ TR.
+%        Every epoch got a duration proportional to when it happened.
+%      - Scalar and per-event-type durations were divided by the TR before
+%        being appended to ons, but the epoch builder reads that column as
+%        seconds. 'durs', 4 with TR = 2 built 2 s epochs.
+%      - parse_cell_onsets_durs discarded the normalized onsets returned by
+%        check_onsets, so a plain numeric onset vector threw "Brace indexing
+%        is not supported", and row-vector onsets were appended wrongly.
+%      - An unrecognized 'durs' format warned and then returned empty onsets.
+%    Durations entered as column 2 of ons were never affected, and all
+%    non-'durs' code paths are numerically unchanged.
+%
+%    2026: The keyword scan started at varargin{3} unconditionally, so
+%    onsets2fmridesign(ons, TR, 'durs', 2) assigned 'durs' to len and then
+%    failed downstream. Keywords are now recognized from varargin{1} when no
+%    positional [len], [HRF] arguments are given.
 % ..
 
 % ..
@@ -200,7 +220,18 @@ dosingletrial = 0;
 docheckorientation = 1;
 dononlinsaturation = 0;
 
-for i = 3:length(varargin)
+% Positional optional inputs are [len] and [HRF/basis set]. If the first
+% optional argument is a string, then the caller passed keywords only and
+% there are no positional arguments to skip over. (Previously the keyword
+% scan always started at index 3, so onsets2fmridesign(ons, TR, 'durs', 2)
+% silently assigned 'durs' to len and ignored the keyword.)
+if ~isempty(varargin) && ischar(varargin{1})
+    n_fixed_args = 0;
+else
+    n_fixed_args = 2;
+end
+
+for i = (n_fixed_args + 1):length(varargin)
     if ischar(varargin{i})
         switch varargin{i}
             
@@ -224,15 +255,13 @@ for i = 3:length(varargin)
             case 'nononlin',  dononlinsaturation = false;
                 
             case 'durs', durs = varargin{i+1};
-                
-                % Note: onsets entered in secs but TR sampling accounted
-                % for later. For durations, account for it here.
-                if iscell(durs), durs = cellfun(@(x) x ./ TR, ons, 'UniformOutput', false);
-                else
-                    durs = durs ./ TR;
-                    if length(durs) == 1, durs = repmat(durs, 1, length(ons)); end
-                end
-                
+
+                % Durations are in seconds, like onsets, and are appended as
+                % column 2 of ons. The epoch-building code below reads that
+                % column as seconds (dur_in_s), so no TR rescaling belongs
+                % here. (Previously this block divided by TR -- and, in the
+                % cell case, replaced the durations with ons ./ TR outright,
+                % discarding the caller's durations.)
                 ons = parse_cell_onsets_durs(ons, durs, docheckorientation);
                 
             otherwise, warning(['Unknown input string option:' varargin{i}]);
@@ -279,7 +308,7 @@ end  % end single trial
 % Optional: pre-specified length for run, or []
 % - - - - - - - - - - - - - - - - - - - -
 
-if ~isempty(varargin) && ~isempty(varargin{1}) % pre-specified length
+if n_fixed_args > 0 && ~isempty(varargin) && ~isempty(varargin{1}) % pre-specified length
     % Entering session len, and using len_original here, will downsample using pre-specified length
     
     len_original = varargin{1};     % this line is added by Wani to make this work for TR = 1.3
@@ -313,7 +342,7 @@ cf = zeros(len, 1);
 
 % Optional: basis set name, or []
 % - - - - - - - - - - - - - - - - - - - -
-if length(varargin) > 1 && ~isempty(varargin{2})
+if n_fixed_args > 0 && length(varargin) > 1 && ~isempty(varargin{2})
     if ischar(varargin{2})
         % basis set: Any of the named basis sets from SPM  spm_get_bf
         
@@ -622,8 +651,11 @@ function [xons, ons_includes_durations] = parse_cell_onsets_durs(ons, durs, doch
 
 xons = [];
 
-
-[~, ~, ~, ons_includes_durations] = check_onsets(ons, docheckorientation);
+% Take the normalized onsets back from check_onsets: it enforces a cell
+% array and fixes row/column orientation, and the ons{i} indexing below
+% depends on both. (Previously the normalized copy was discarded, so a plain
+% numeric onset vector errored here and row vectors were appended wrongly.)
+[ons, ~, ~, ons_includes_durations] = check_onsets(ons, docheckorientation);
 
 % sizes of onsets in each cell: First col is # events, 2nd is durations
 % if they exist.
@@ -640,14 +672,23 @@ if ons_includes_durations
     
 elseif ~isempty(durs) && iscell(durs)
     % We have durations for each event
-    
-    for i = 1:length(durs)
-        xons{i} = [ons{i} durs{i}];
+
+    if length(durs) ~= length(ons)
+        error('''durs'' cell array has %d cells but there are %d event types.', length(durs), length(ons));
     end
-    
+
+    for i = 1:length(ons)
+        if numel(durs{i}) ~= size(ons{i}, 1)
+            error('''durs''{%d} has %d durations but event type %d has %d events.', ...
+                i, numel(durs{i}), i, size(ons{i}, 1));
+        end
+
+        xons{i} = [ons{i} durs{i}(:)];   % (:) so row-vector durations also work
+    end
+
     % update
     ons_includes_durations = true;
-    
+
 elseif ~isempty(durs) && length(durs) == 1
     % We have the same duration for every event
     
@@ -670,7 +711,8 @@ elseif ~isempty(durs) && length(durs) == length(ons)
     
 elseif ~isempty(durs)
     warning('Durs input is entered, but format/length is unrecognized. Will not be used.');
-    
+    xons = ons;   % without this, unrecognized durations wiped out the onsets
+
 elseif isempty(durs)
     % No durations
     xons = ons; % xons is what we need to pass in to onsets2fmridesign handle dur option

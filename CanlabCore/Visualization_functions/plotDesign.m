@@ -119,8 +119,13 @@ function [X,d,out,handles] = plotDesign(ons,rt,TR,varargin)
 %
 % ..
 %    Programmers' notes
-%    DURS still needs some work to match onsets2fmridesign
 %    tor edited 8/2015 to fix some ease-of-usage issues and document
+%    2026: 'durs' now matches onsets2fmridesign. It was divided by the TR
+%    before being appended as column 2 of xons, but both onsets2fmridesign
+%    and the drawbox call below read that column as seconds, so epochs were
+%    modeled and plotted TR times too short. A cell array of durations
+%    errored on the './ TR' line, and an unrecognized format returned empty
+%    onsets. The same bug was fixed in onsets2fmridesign at the same time.
 % ..
 
 rtin = rt;      % original rt, to tell if rt is values or empty
@@ -150,9 +155,13 @@ for i = 1:length(varargin)
             % functional commands
             case 'yoffset', yoffset = varargin{i+1};
             case 'durs', durs = varargin{i+1};
-                durs = durs ./ TR;
-                if length(durs) == 1, durs = repmat(durs, 1, length(ons)); end
-                
+                % Durations are in seconds, like onsets. They are appended
+                % as column 2 of xons, which onsets2fmridesign reads as
+                % seconds and drawbox below uses as a box width in seconds.
+                % (Previously divided by TR here, which shrank both the
+                % modeled epochs and the plotted boxes by a factor of TR,
+                % and errored outright on a cell array of durations.)
+
             case {'color', 'colors'}, colors = varargin{i+1};
             case 'samefig', samefig = 1;
             case 'basisset', basisset =  varargin{i+1};
@@ -399,13 +408,22 @@ if ons_includes_durations
 elseif ~isempty(durs) && iscell(durs)
     % We have durations for each event
     
-    for i = 1:length(durs)
-        xons{i} = [ons{i} durs{i}];
+    if length(durs) ~= length(ons)
+        error('''durs'' cell array has %d cells but there are %d event types.', length(durs), length(ons));
     end
-    
+
+    for i = 1:length(ons)
+        if numel(durs{i}) ~= size(ons{i}, 1)
+            error('''durs''{%d} has %d durations but event type %d has %d events.', ...
+                i, numel(durs{i}), i, size(ons{i}, 1));
+        end
+
+        xons{i} = [ons{i} durs{i}(:)];   % (:) so row-vector durations also work
+    end
+
     % update
     ons_includes_durations = true;
-    
+
 elseif ~isempty(durs) && length(durs) == 1
     % We have the same duration for every event
     
@@ -428,7 +446,8 @@ elseif ~isempty(durs) && length(durs) == length(ons)
     
 elseif ~isempty(durs)
     warning('Durs input is entered, but format/length is unrecognized. Will not be used.');
-    
+    xons = ons;   % without this, unrecognized durations wiped out the onsets
+
 elseif isempty(durs)
     % No durations
     xons = ons; % xons is what we need to pass in to onsets2fmridesign handle dur option

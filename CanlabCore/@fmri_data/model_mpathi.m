@@ -107,9 +107,7 @@ function stats = model_mpathi(obj,source_mask,target_mask,varargin)
 %     supported by bootstrap inference.
 %
 % :References:
-%   Kragel, P. A., Cetin, B., Tor, W., et al. (2021). Multivariate
-%   pathway interactions reveal functional coupling between brain
-%   regions. Neuron.
+%   Kragel et al., (2021). Neuron.
 %
 % :See also:
 %   - model_brain_pathway (original four-pathway implementation)

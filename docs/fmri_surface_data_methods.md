@@ -62,7 +62,7 @@ cortical data between any of these spaces natively (see the [Surface resampling]
 section); `resample_surface(obj, 'list')` prints the keyword list. `vol2surf` /
 `surf2vol` convert between an MNI152 **volume** and `fsaverage_164k`.
 
-*References.* Fischl B, Sereno MI, Tootell RBH, Dale AM (1999), *Hum Brain Mapp*
+*References.* Fischl B, Sereno MI, Tootell RBH, Dale AM (1999), *Hum Brain Map*
 8(4):272–284. Van Essen DC, Glasser MF, Dierker DL, Harwell J, Coalson T (2012),
 *Cereb Cortex* 22(10):2241–2262. Glasser MF et al. (2013), *NeuroImage*
 80:105–124. Feilong M, Guo J, Gobbini MI, Haxby JV (2024), *Nat Methods*

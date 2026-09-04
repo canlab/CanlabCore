@@ -180,7 +180,7 @@ s6  = resample_surface(vol2surf(t), 'fsaverage6'); % nested downsample (exact)
 Project a volumetric image (MNI152) onto the **fsaverage-164k** cortical surface,
 returning an `fmri_surface_data`. **This is the CBIG registration-fusion mapper,
 natively:** it samples the vendored CBIG RF-ANTs MNI→fsaverage per-vertex
-coordinates (Wu et al. 2018, *Hum Brain Mapp*) with `interpn` — a line-for-line
+coordinates (Wu et al. 2018, *Hum Brain Map*) with `interpn` — a line-for-line
 reimplementation of CBIG's `CBIG_RF_projectMNI2fsaverage.m` using the identical
 warp, driven by SPM's `volInfo.mat` instead of FreeSurfer's `MRIread`, so no
 FreeSurfer/Workbench is required. Use `'interp','nearest'` for label maps.

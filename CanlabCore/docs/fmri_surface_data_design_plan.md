@@ -134,8 +134,8 @@ scatter rows into dense per-hemisphere vertex arrays (`reconstruct_image` overri
 subcortical volume; **(c)** contiguity source = mesh-graph connected components (cortex) /
 3-D connectivity (subcortex), replacing `volInfo.cluster`.
 
-### D4. Re-declare `fmri_data` per-image annotation properties **by name**
-Because we subclass `image_vector` (where these don't exist), we re-declare `X`, `Y`,
+### D4. Redeclare `fmri_data` per-image annotation properties **by name**
+Because we subclass `image_vector` (where these don't exist), we redeclare `X`, `Y`,
 `Y_names`, `covariates`, `covariate_names`, `images_per_session`, `metadata_table`,
 `image_metadata`, `additional_info` with the **identical `fmri_data` names** so analysis
 methods bind by name. These are per-*image* (column) annotations, independent of

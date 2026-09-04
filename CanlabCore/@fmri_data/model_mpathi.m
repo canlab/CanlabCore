@@ -14,7 +14,7 @@ function stats = model_mpathi(obj,source_mask,target_mask,varargin)
 % This function is a streamlined and up-to-date version of the original
 % model_brain_pathway.m. Unlike that implementation, which compared
 % traditional functional connectivity (based on ROI-averaged signals)
-% with the multivariate Pathway Interaction (MPathI) framework
+% with the multivariate Pathway Identification (MPathI) framework
 % described in Kragel et al. (2021, Neuron), the present script focuses
 % exclusively on the MPathI approach. In addition, this implementation
 % estimates a single directed pathway between one source region and one

@@ -1993,7 +1993,7 @@ imagenames = {'weights_NSF_grouppred_cvpcr.img' ...     % Wager et al. 2013 NPS 
     'moneyvalue_weights_fdr05.nii.gz' ...
     'shockintensity_weights_fdr05.nii.gz' ...
     'VIFS.nii' ...                                          % visually induced fear
-    'PiFoneM_unthresholded'                                 % picture induced fear of neck movement
+    'PiFoneM_unthresholded.nii'                                 % picture induced fear of neck movement
     }';
 
 table_list = table(keyword, pain, negemo, posemo, empathy, physio, cogcontrol, regulation, reward, other, imagenames);

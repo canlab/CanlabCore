@@ -629,8 +629,8 @@ if do_boot
         bs_V_pathway_one(i,:)= bootPLS_target_pattern_weights(bs_source_one_dat(rand_inds,:),bs_target_one_dat(rand_inds,:),ndim,flip_maps);
         bs_Z_pathway_one(i,:)= bootPLS_source_pattern_weights(bs_source_one_dat(rand_inds,:),bs_target_one_dat(rand_inds,:),ndim,flip_maps);
         
-        bs_V_pathway_four(i,:)= bootPLS_target_pattern_weights(bs_source_two_dat,bs_target_two_dat,ndim,flip_maps);
-        bs_Z_pathway_four(i,:)= bootPLS_source_pattern_weights(bs_source_two_dat,bs_target_two_dat,ndim,flip_maps);
+        bs_V_pathway_four(i,:) = bootPLS_target_pattern_weights(bs_source_two_dat(rand_inds,:), bs_target_two_dat(rand_inds,:), ndim, flip_maps);
+        bs_Z_pathway_four(i,:) = bootPLS_source_pattern_weights(bs_source_two_dat(rand_inds,:), bs_target_two_dat(rand_inds,:), ndim, flip_maps);
     end
     
     

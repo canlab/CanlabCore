@@ -37,15 +37,22 @@ function [power, t, d] = power_from_variance(con, N, sig2b, sig2wi, pthresh)
 %   **d:**
 %        effect size : Cohen's d
 %
-% see effect_size_map.m for a whole-brain, image-based power mapping
-% function
+% See canlab_effect_size_map for a whole-brain, image-based power mapping
+% function, and canlab_power_allocation_curves for normative power curves.
+%
+% Note: power is computed with the classical "shifted central t"
+% approximation, 1 - tcdf(u - t, N - 1). canlab_effect_size_map uses the
+% noncentral t distribution by default, which is exact under the model.
 %
 % ..
 %    Tor Wager, August 2009
+%    2026-09: Critical t value now uses N - 1 degrees of freedom (was N),
+%    matching the one-sample t-test df used for the power calculation.
 % ..
 
-% t-value threshold for significance at alpha level pthresh
-u_unc = tinv(1 - pthresh./2, N);
+% t-value threshold for significance at alpha level pthresh (two-tailed),
+% for a one-sample t-test with N - 1 degrees of freedom
+u_unc = tinv(1 - pthresh./2, N - 1);
 
 % expected t-value based on N, con, variance components
 t = ( abs(con) .* sqrt(N) ) ./ (sig2b + sig2wi) .^ .5;

@@ -1372,7 +1372,7 @@ create_figure('Optimal allocation', 2, 2);
 subplot(2, 2, 1);
 plot(alloc.N, alloc.sessions_per_subject, 'k', 'LineWidth', 3);
 plot(alloc.N, alloc.functional_hours_per_subject, 'k:', 'LineWidth', 3);
-legend({'Sessions per subject' 'Functional scan hours per subject'}, 'Location', 'best');
+legend({'Sessions per subject' 'Functional scan hours per subject'}, 'Location', 'best', 'AutoUpdate', 'off');
 axis tight
 plot_vertical_line(alloc.session_change_N);
 xlabel('Number of subjects');
@@ -1387,7 +1387,10 @@ if have_within
         set(hp(1), 'FaceColor', [.3 .3 .3]);
         set(hp(2), 'FaceColor', [.8 .8 .8]);
     end
-    title(sprintf('Variance at N = %d', best.N));
+    axis equal
+    axis off
+    ht = title(sprintf('Variance at N = %d', best.N));
+    ht.Position(2) = ht.Position(2) + 0.25;   % clear the slice labels
 else
     text(.1, .5, 'No within-subject variance information', 'FontSize', 12);
     axis off
@@ -1404,7 +1407,7 @@ for a = 1:numel(alloc.alpha_uncorrected)
 end
 xlabel('Number of subjects');
 ylabel('Mean power in search area');
-legend(legstr, 'Location', 'best');
+legend(legstr, 'Location', 'best', 'AutoUpdate', 'off');
 axis tight
 plot_vertical_line(alloc.session_change_N);
 plot_vertical_line(best.N, 'r');

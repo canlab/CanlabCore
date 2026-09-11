@@ -75,9 +75,10 @@ end
 
 function test_object_mode_with_resms_and_design(tc)
 [con_obj, resms_obj, X, c] = get_synthetic_inputs(30);
+opts = fast_options();
 
 [results, maps] = canlab_effect_size_map(con_obj, resms_obj, 'X', X, 'c', c, ...
-    'hours', 60, 'TR', 2, fast_options{:});
+    'hours', 60, 'TR', 2, opts{:});
 
 N = 30;
 nvox = results.n_voxels;
@@ -133,8 +134,9 @@ end
 function test_object_mode_without_within_information(tc)
 % Contrast images only: all variance is treated as between-subject
 [con_obj] = get_synthetic_inputs(20);
+opts = fast_options();
 
-results = canlab_effect_size_map(con_obj, fast_options{:});
+results = canlab_effect_size_map(con_obj, opts{:});
 
 tc.verifyEqual(results.N, 20);
 tc.verifyFalse(results.have_within_decomposition);
@@ -160,14 +162,16 @@ end
 
 function test_group_maps_must_be_paired(tc)
 [con_obj] = get_synthetic_inputs(10);
-tc.verifyError(@() canlab_effect_size_map(con_obj, 'group_con', con_obj, fast_options{:}), ...
+opts = fast_options();
+tc.verifyError(@() canlab_effect_size_map(con_obj, 'group_con', con_obj, opts{:}), ...
     'canlab_effect_size_map:GroupMaps');
 end
 
 
 function test_design_variance_requires_nscan(tc)
 [con_obj, resms_obj] = get_synthetic_inputs(10);
-tc.verifyError(@() canlab_effect_size_map(con_obj, resms_obj, 'design_variance', 0.01, fast_options{:}), ...
+opts = fast_options();
+tc.verifyError(@() canlab_effect_size_map(con_obj, resms_obj, 'design_variance', 0.01, opts{:}), ...
     'canlab_effect_size_map:NoNscan');
 end
 
@@ -180,6 +184,7 @@ function test_spm_folder_mode(tc)
 % Build a fake set of first-level SPM folders and read them back
 n_subjects = 6;
 [con_obj, resms_obj, X, c] = get_synthetic_inputs(n_subjects);
+opts = fast_options();
 
 parent = tempname;
 mkdir(parent);
@@ -212,7 +217,7 @@ for i = 1:n_subjects
 end
 
 % Select the contrast by name; 'task' is contrast #2 whose image is con_0001.nii
-results = canlab_effect_size_map(parent, 'contrast', 'task', fast_options{:});
+results = canlab_effect_size_map(parent, 'contrast', 'task', opts{:});
 
 tc.verifyEqual(results.N, n_subjects);
 tc.verifyEqual(results.contrast_name, 'task');
@@ -225,12 +230,12 @@ tc.verifyEqual(results.design.df_shrink_factor, 170 / 200, 'RelTol', 1e-10);
 tc.verifyTrue(all(results.sig2_between >= 0));
 
 % Same analysis from the objects directly should give the same effect sizes
-r_obj = canlab_effect_size_map(con_obj, resms_obj, 'X', X, 'c', c, fast_options{:});
+r_obj = canlab_effect_size_map(con_obj, resms_obj, 'X', X, 'c', c, opts{:});
 tc.verifyEqual(results.n_voxels, r_obj.n_voxels);
 tc.verifyEqual(results.summary.mean_d, r_obj.summary.mean_d, 'AbsTol', 1e-3);
 
 % A bad contrast name gives a helpful error
-tc.verifyError(@() canlab_effect_size_map(parent, 'contrast', 'nonexistent', fast_options{:}), ...
+tc.verifyError(@() canlab_effect_size_map(parent, 'contrast', 'nonexistent', opts{:}), ...
     'canlab_effect_size_map:BadContrast');
 end
 

@@ -169,7 +169,6 @@ function mcmh = montage_clusters_medial(ovl,clusters,varargin)
         V.M = V.mat;
     end
 
-    V.mat = scn_mat_conform(V.mat);
     
     textx = size(oimg,1) - 50;
     texty = 6; %size(oimg,2) - 6;
@@ -604,55 +603,3 @@ function ph = plot_points(mcmh,XYZmm,rc,V,whsl,myc,myplab)
         %plot(0,0,'kd')
     end
 end
-
-
-
-
-
-function in = scn_mat_conform(in)
-    %function in = scn_mat_conform(in)
-    %
-    % sets flipping to 0 (no flip) in SPM2 and adjusts mat file accordingly
-    % input in spm-style mat file or struct with .mat or .M fields
-    %
-
-    global defaults
-
-    if isstruct(in)
-        if isfield(in,'mat')
-            in.mat = scn_mat_conform(in.mat);
-        end
-
-        if isfield(in,'M')
-            in.M = scn_mat_conform(in.M);
-        end
-
-        return
-    end
-
-
-
-    if in(1) < 0
-        disp('Warning: Image has negative x voxel size, indicating ''flipped'' in SPM.')
-        disp('This will be changed to positive. This program does not do any image flipping.')
-
-        in(1) = abs(in(1));     % voxel size
-        in(1,4) = -(in(1,4));   % origin offset
-    end
-
-    if isempty(defaults) || ~isfield(defaults, 'analyze')
-        spm_defaults
-    end
-    
-    switch spm('Ver')
-        case {'SPM5', 'SPM2', 'SPM99'}
-            if defaults.analyze.flip
-                disp('Warning: Setting defaults.analyze.flip to 0.  No flipping.')
-                defaults.analyze.flip = 0;
-            end
-        otherwise
-            % SPM8+: no analyze field; flip is always 1
-    end
-
-end
-    

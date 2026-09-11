@@ -226,7 +226,7 @@ if(reading_data)
             disp('WARNING: spm defaults not set for spm2. Make sure your defaults are set correctly');
         otherwise
             % SPM5+, including any future versions
-            spm_defaults()
+            spm('Defaults', 'fmri')
     end
 
 

@@ -103,7 +103,7 @@ function OUT = mean_image(VP, Pout, w, varargin)
             disp('WARNING: spm defaults not set for spm2. Make sure your defaults are set correctly');
         otherwise
             % SPM5+, including any future versions
-            spm_defaults()
+            spm('Defaults', 'fmri')
     end
 
     % initialize output
@@ -309,8 +309,7 @@ end
 
 
 function weights = do_mean_like_mean_warped_image(P, outname)
-    spm_defaults;
-    defaults.analyze.flip = 0;
+    spm('Defaults', 'fmri');
     [volTemplate, normdat] = iimg_read_img(P);
 
     t1 = clock;

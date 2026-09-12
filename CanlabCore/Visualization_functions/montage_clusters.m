@@ -44,6 +44,18 @@ function mch = montage_clusters(ovl, clusters, varargin)
 
 
     % ..
+    %    One-time deprecation notice (shown once per MATLAB session)
+    % ..
+    persistent deprecation_warned
+    if isempty(deprecation_warned)
+        warning('montage_clusters:Deprecated', ...
+            ['montage_clusters is deprecated and will be removed in a future release.\n' ...
+            'Use canlab_results_fmridisplay (image objects), the region.montage method, or\n' ...
+            'canlab_montage_clusters (legacy clusters structures) instead. Shown once per session.']);
+        deprecation_warned = true;
+    end
+
+    % ..
     %    defaults
     % ..
     

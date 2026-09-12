@@ -249,7 +249,12 @@ end
 if any(strcmp(varargin, 'map')), methodtype = 'map'; end
 if any(strcmp(varargin, 'nosymmetric')), methodtype = 'map'; end
 if any(strcmp(varargin, 'symmetric')), methodtype = 'symmetric'; end
-if any(strcmp(varargin, 'old')), methodtype = 'old'; end
+if any(strcmp(varargin, 'old'))
+    % Legacy montage_clusters display has been retired; render with fmridisplay
+    warning('region:montage:OldDeprecated', ...
+        'The ''old'' (montage_clusters) option is deprecated; rendering with fmridisplay instead.');
+    varargin(strcmp(varargin, 'old')) = [];
+end
 if any(strcmp(varargin, 'nofigure')), dofigure = false; end
 if any(strcmp(varargin, 'indexmap'))
     colors = varargin{find(strcmp(varargin,'indexmap'))+1};
@@ -416,10 +421,6 @@ switch colortype
             % Just render blobs
             o2 = addblobs(o2, obj, 'targetsurface', targetsurface, varargin{:});
         end
-        
-    case 'old'
-        
-        montage_clusters([], obj, varargin{:})
         
 end
 

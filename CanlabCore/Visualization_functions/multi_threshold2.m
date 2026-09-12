@@ -317,7 +317,9 @@ function cl = multi_threshold2(P, type, df, varargin)
     end
 
     
-    mcmh = montage_clusters_medial(ovl, cl{:}, colors);
+    % Medial (sagittal) slices: fmridisplay replaces montage_clusters_medial
+    o2m = canlab_montage_clusters(cl, 'colors', colors, 'overlay', ovl, 'montagetype', 'sagittal', 'noverbose');
+    mcmh = ancestor(o2m.montage{1}.axis_handles(1), 'figure');
 
     if(~isempty(mcmh))
         medial_fig_title = sprintf('%s - medial', fig_title);

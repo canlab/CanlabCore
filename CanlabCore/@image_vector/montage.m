@@ -24,7 +24,8 @@ function fig_handle = montage(image_obj, varargin)
 %        for fmridisplay object style montage [default]
 %
 %   **scnmontage:**
-%        for circa 2008-style SCN lab montage for each image vector
+%        one separate compact2 fmridisplay montage figure per image
+%        (legacy option, formerly rendered with montage_clusters)
 %
 %   **'targetsurface', name:**
 %        Pass a surface name through to addblobs (e.g., 'fsLR_32k').
@@ -280,24 +281,19 @@ switch meth
         
     case 'scnmontage'
         
-        overlay = which('SPM8_colin27T1_seg.img');
+        % Legacy one-figure-per-image montage (montage_clusters is
+        % deprecated). Each image is rendered on its own fmridisplay
+        % compact2 montage; the output is still a vector of figure handles.
         
-        cl = cell(1, n);
-        fig_handle = zeros(1, n);
+        fig_handle = gobjects(1, n);
         
         for i = 1:n
             
-            % data from this image
-            dat = image_obj.dat(:, i);
+            o2 = canlab_results_fmridisplay(get_wh_image(image_obj, i), 'compact2', 'noverbose');
             
-            % top and bottom 10%
-            %dat(dat > prctile(dat, 10) & dat < prctile(dat, 90)) = 0;
+            fig_handle(i) = ancestor(o2.montage{1}.axis_handles(1), 'figure');
             
-            cl{i} = iimg_indx2clusters(dat, image_obj.volInfo);
-            
-            fig_handle(i) = montage_clusters(overlay, cl{i}, [2 2]);
-            
-            set(fig_handle, 'Name', sprintf('Montage %3.0f', i), 'Tag', sprintf('Montage %3.0f', i))
+            set(fig_handle(i), 'Name', sprintf('Montage %3.0f', i), 'Tag', sprintf('Montage %3.0f', i))
             
         end
         

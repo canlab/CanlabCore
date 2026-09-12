@@ -264,23 +264,8 @@ end
 cl{1}(1).thr = thr; 
 cl{1}(1).colors = colors; 
 
-% montage medial slices
-tmp = unique(tmp(1,:));
-if length(tmp) > 30, stopme = input('More than 30 slices in medial montage.  Make montage figure? (1/0) ');,if ~stopme, return,end, end
-
-if length(cl) == 6
-    montage_clusters_medial(ovl,cl{1},cl{2},cl{3},cl{4},cl{5},cl{6},colors);
-elseif length(cl) == 5
-     montage_clusters_medial(ovl,cl{1},cl{2},cl{3},cl{4},cl{5},colors);
-elseif length(cl) == 4
-     montage_clusters_medial(ovl,cl{1},cl{2},cl{3},cl{4},colors);       
-elseif length(cl) == 3
-    montage_clusters_medial(ovl,cl{1},cl{2},cl{3},colors);
-elseif length(cl) == 2
-    montage_clusters_medial(ovl,cl{1},cl{2},colors);
-elseif length(cl) == 1
-    montage_clusters_medial(ovl,cl{1},colors);
-end
+% montage medial (sagittal) slices: fmridisplay replaces montage_clusters_medial
+canlab_montage_clusters(cl, 'colors', colors, 'overlay', ovl, 'montagetype', 'sagittal', 'noverbose');
 
 cl{1}(1).thr = thr; 
 cl{1}(1).colors = colors; 

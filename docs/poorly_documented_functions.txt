@@ -426,7 +426,6 @@
 0/3 +0 CanlabCore/Visualization_functions/mea_visualise.m
 0/3 +0 CanlabCore/Visualization_functions/mni_TSU.m
 0/3 +0 CanlabCore/Visualization_functions/montage_clusters_maxslice.m
-0/3 +0 CanlabCore/Visualization_functions/montage_clusters_medial.m
 0/3 +0 CanlabCore/Visualization_functions/montage_clusters_text2.m
 0/3 +0 CanlabCore/Visualization_functions/movie_stillframes.m
 0/3 +0 CanlabCore/Visualization_functions/multi_threshold.m

@@ -587,8 +587,9 @@ end
 
 function fig_handle = create_montage(vecs_to_reconstruct, fmridat)
 
+% One fmridisplay montage figure per column (replaces montage_clusters)
 n = size(vecs_to_reconstruct, 2);
-overlay = which('SPM8_colin27T1_seg.img');
+fig_handle = gobjects(1, n);
 
 for i = 1:n
 
@@ -596,11 +597,13 @@ for i = 1:n
     % top and bottom 10%
     dat(dat > prctile(dat, 10) & dat < prctile(dat, 90)) = 0;
 
-    cl{i} = iimg_indx2clusters(dat, fmridat.volInfo);
+    m = get_wh_image(fmridat, 1);   % template with matching volInfo
+    m.dat = dat;
 
-    fig_handle(i) = montage_clusters(overlay, cl{i}, [2 2]);
+    o2 = canlab_results_fmridisplay(m, 'compact2', 'noverbose');
+    fig_handle(i) = ancestor(o2.montage{1}.axis_handles(1), 'figure');
 
-    set(fig_handle, 'Name', sprintf('Montage %3.0f', i), 'Tag', sprintf('Montage %3.0f', i));
+    set(fig_handle(i), 'Name', sprintf('Montage %3.0f', i), 'Tag', sprintf('Montage %3.0f', i));
 
 end
 

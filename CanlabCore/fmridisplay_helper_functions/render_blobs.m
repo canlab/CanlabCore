@@ -319,7 +319,7 @@ for i = 1:length(varargin)
             case 'coronal', myview = 'coronal'; %disp('Warning! NOT implemented correctly yet!!!'), pause(5)
             case 'axial', myview = 'axial';
                 
-            case {'wh_montages', 'regioncenters', 'blobcenters', 'nosymmetric', 'nooutline','no_surface', 'nolegend', ...
+            case {'wh_montages', 'regioncenters', 'blobcenters', 'nosymmetric', 'nooutline','no_surface', 'nolegend', 'legend', ...
                     'solid', 'thresh', 'k', 'nofigure' 'wh_surfaces' 'montagetype' 'sourcespace' 'targetsurface' , ...
                     'disableVis3d'}
                 % not functional, avoid warning
@@ -327,6 +327,11 @@ for i = 1:length(varargin)
                 % other related functions, including calling functions, and can be ignored here.
                 
             case 'noverbose', doverbose = false;
+
+            case 'labels'
+                % Region labels for a discrete (indexmap) legend. Stored on the
+                % layer (render_args) and consumed by fmridisplay.legend and
+                % render_on_surface; nothing to do for the slice renderer.
                 
             case 'interp'
                 interpStyle = varargin{i+1};
@@ -335,7 +340,10 @@ for i = 1:length(varargin)
                 k = varargin{i+1};
                 enhance_contrast = @(x1)((1./(1+exp(-k.*x1)))-0.5);
             
-            case {'full','full hcp','full2','nearest', 'MNI152NLin2009cAsym'}
+            case {'full','full hcp','full2','nearest', 'MNI152NLin2009cAsym', 'MNI152NLin6Asym', 'colin27', 'fsaverage_164k', 'fsLR_32k'}
+                % (the last five are VALUES of sourcespace / targetsurface; this
+                % loop visits every string, so list them to avoid a bogus
+                % "Unknown input string option" warning)
                 continue
 
             case { 'compact', ...
@@ -395,7 +403,11 @@ n = length(handles);
 
 
 if ~isempty(indexmap)
-    n_color_needed = length(unique(currentmap.mapdata(:)));
+    % Indices index the colormap rows directly, so the largest index (0 = background,
+    % not a colour) is what must fit; counting unique values including 0 falsely
+    % warned "Looping colormap" for every atlas with exactly one colour per region.
+    vals = currentmap.mapdata(:); vals = vals(isfinite(vals) & vals > 0);
+    n_color_needed = 0; if ~isempty(vals), n_color_needed = max(round(vals)); end
     if n_color_needed > size(indexmap,1)
         warning('More indices were specified than colormap values. Looping colormap');
         indexmap = repmat(indexmap,ceil(n_color_needed/size(indexmap,1)),1);

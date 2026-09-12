@@ -229,6 +229,9 @@ function toggle_legend(obj)
 % removes them again. ON targets the montage figure explicitly (legend() would
 % otherwise draw into the controller uifigure via gcf — the old "toggle won't
 % turn back on" bug) and re-renders surfaces with colorbars; OFF removes both.
+% legend() reads each layer's stored 'indexmap' / 'labels', so an atlas layer
+% gets a discrete labelled legend (one block per region) and tracks its handle,
+% so OFF can remove it too.
 fig = obj.controller_handle;
 on  = false;
 if ~isempty(fig) && isgraphics(fig)

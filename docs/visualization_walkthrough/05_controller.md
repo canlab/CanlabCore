@@ -53,7 +53,7 @@ Global footer:
 | Button | Action | Command line |
 |--------|--------|--------------|
 | **Re-render** | Redraw all layers on all views. | `refresh(o)` |
-| **Toggle legend** | Put/remove colorbar legends on the montage & surface figures. | `remove_legend(o)` |
+| **Toggle legend** | Put/remove colorbar legends on the montage & surface figures. Atlas / `'indexmap'` layers get a discrete legend, one block per region, labelled when the layer was added with `'labels'`. | `legend(o)` / `remove_legend(o)` |
 
 ---
 

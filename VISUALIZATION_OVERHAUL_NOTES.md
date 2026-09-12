@@ -381,6 +381,46 @@ handles (unlike `montage(t)`, which returns a managed `fmridisplay`). Plan:
    walkthroughs/scripts), so make it a deliberate decision in this phase rather than a
    standalone tweak.
 
+**Bugfix (2026-09-12): indexed (atlas) layers — Toggle legend + speckled surface borders.**
+Reported by Michael Sun. Two defects, both in the indexed / `'indexmap'` path.
+- *Toggle legend did nothing useful for a montage drawn with `'labels'`.* `@fmridisplay/legend`
+  only drew a discrete legend when handed `'indexmap'`/`'labels'` explicitly, never stored its
+  handle, and otherwise drew a continuous ramp from the layer's min/max colours; the controller
+  calls `legend(obj, 'noverbose')`, so an atlas layer got the wrong legend and OFF couldn't find
+  the discrete one. Second half: Toggle ON drew the montage legend, then re-rendered surfaces, and
+  `render_layer_surfaces` deleted "the layer's prior legendhandle" — the montage legend it had just
+  drawn (this also wiped continuous montage legends whenever surfaces existed). Now `legend()`
+  reads `'indexmap'`/`'labels'` from each layer's `render_args`, draws one colour block per region
+  with the labels (or indices) at the standard legend positions (full width for a lone many-region
+  layer), and registers the axes; montage and surface legends are tracked separately
+  (`montage_legendhandle` / `surface_legendhandle`, both unioned into `legendhandle`), so each
+  redraw replaces only its own. `remove_legend` clears all of it. `render_blobs` accepts `'labels'`
+  silently (it used to warn "Unknown input string option").
+- *Speckled, multi-coloured parcel borders on surfaces.* `render_layer_surfaces` stripped
+  `'indexmap'` before calling `render_on_surface` and passed only `'interp','nearest'`. With
+  `doindexmap` false, the source->target surface registration used the barycentric LINEAR
+  `resample_from_*.mat` (not the `*_nearestneighbor` one), blending integer region indices across
+  borders; `canlab_colormap.indexed` then rounded them to arbitrary neighbouring indices. Fixed by
+  passing `'colormap', cmap, 'indexmap'` through (new `indexed_render_args` helper), so
+  `render_on_surface` takes its nearest-neighbour path end to end and drops non-integer leftovers;
+  the true-colour path now paints indexed layers with `'flat'` faces (crisp borders, as the legacy
+  indexmap path did) instead of `'interp'`. Verified on a clean 4-slab synthetic parcellation:
+  out-of-set vertex colours 2,734 (1.7%) -> 0. Residual dots on the canlab2024 coarse atlas are
+  single-voxel islands in the atlas itself (0.46% of voxels), faithfully projected.
+- *Infinite loop in `render_on_surface`'s `ordered_mode`* (mode across the three `srcdepth`
+  samples on the nearest-neighbour path): its tie-breaking `while` never advanced `j`, so a tie
+  whose first sample was NaN (a vertex sampling outside the image at one depth) spun forever and
+  hung MATLAB. Surfaced by the new surface test; rewritten as a plain `for` over the row.
+- Also: `render_blobs` no longer warns "Looping colormap" for an atlas with exactly one colour per
+  region (it counted the background 0 as a colour), "Unknown input string option" for the
+  `sourcespace`/`targetsurface` VALUES, or for `'legend'`; the surface colorbar for an indexmap
+  without labels is ticked with region indices; fixed `colormap(bar1axis, …)` typo on the
+  negative indexmap bar; `legend()`'s `keyboard` debug stop in the fill loop is now a warning.
+- Tests (+5 in `canlab_test_fmridisplay_handle`): discrete labelled legend inferred from the layer
+  and removed by `remove_legend`; index ticks without labels; controller Toggle legend
+  on->off->on for an indexed layer; indexed surface layer is `'flat'` with every coloured vertex
+  in the palette (continuous layer stays `'interp'`); `'labels'` accepted warning-free.
+
 ---
 
 ## 1. Motivation

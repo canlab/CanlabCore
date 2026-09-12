@@ -156,13 +156,11 @@ for i = wh_surface
     % ALL colour modes — including indexed/atlas — colour the vertices via the
     % central canlab_colormap (tc_map) through render_on_surface's true-colour
     % path, so the surface uses the exact same value->colour mapping as the
-    % montage. Indexed maps must sample nearest-neighbour so integer region
-    % indices survive projection (linear interp would blend indices at borders).
+    % montage. Indexed maps must be sampled nearest-neighbour END TO END so
+    % integer region indices survive projection; see indexed_render_args.
     call_args = [clean_args, color_args, {'truecolor', tc_map, 'truecolor_alpha', layer_alpha}, leg_args];
     if ~isempty(cmaprange), call_args = [call_args, {'cmaprange', cmaprange}]; end
-    if strcmp(tc_map.type, 'indexed') && ~any(strcmp(call_args, 'interp'))
-        call_args = [call_args, {'interp', 'nearest'}];
-    end
+    call_args = [call_args, indexed_render_args(tc_map, args)];
     % Single-ramp / solid / continuous / indexed maps get ONE colorbar (not a
     % pos+neg pair, which would wrongly imply a split colour scale).
     if ismember(tc_map.type, {'single', 'solid', 'continuous', 'indexed'})
@@ -170,13 +168,25 @@ for i = wh_surface
     end
     [~, bar1axis, bar2axis] = render_on_surface(img, surfh, call_args{:});
 
-    % Track the colorbar axes as the layer's legend; drop a prior one so
-    % legends from multiple surfaces don't stack up.
-    if isfield(obj.activation_maps{k}, 'legendhandle') && ~isempty(obj.activation_maps{k}.legendhandle)
-        old = obj.activation_maps{k}.legendhandle;
-        delete(old(ishandle(old)));
+    % Track the colorbar axes as part of the layer's legend. Drop the layer's
+    % prior SURFACE colorbars (tracked in surface_legendhandle) so legends from
+    % repeated re-renders don't stack up -- but leave any montage legend drawn by
+    % legend() alone: legendhandle holds both, and deleting it wholesale here
+    % used to wipe the montage legend the controller's Toggle legend had just
+    % drawn (toggle draws it, then re-renders surfaces with colorbars).
+    lay = obj.activation_maps{k};
+    keep = gobjects(0);
+    if isfield(lay, 'legendhandle') && ~isempty(lay.legendhandle)
+        keep = lay.legendhandle(ishandle(lay.legendhandle));
     end
-    obj.activation_maps{k}.legendhandle = [bar1axis, bar2axis];
+    if isfield(lay, 'surface_legendhandle') && ~isempty(lay.surface_legendhandle)
+        old = lay.surface_legendhandle(ishandle(lay.surface_legendhandle));
+        keep = keep(~arrayfun(@(x) any(x == old), keep));   % (ismember is not defined for graphics handles)
+        delete(old);
+    end
+    newh = [bar1axis, bar2axis];
+    obj.activation_maps{k}.surface_legendhandle = newh;
+    obj.activation_maps{k}.legendhandle = [reshape(keep, 1, []), newh];
 
 end
 
@@ -358,7 +368,7 @@ for i = wh_surface
             end
             cargs = {'truecolor', tc_map, 'truecolor_alpha', alpha, 'nolegend'};
             if ~isempty(cmaprange), cargs = [cargs, {'cmaprange', cmaprange}]; end
-            if strcmp(tc_map.type, 'indexed'), cargs = [cargs, {'interp', 'nearest'}]; end
+            cargs = [cargs, indexed_render_args(tc_map, args)];
             for hh = nonstd(:)'
                 try
                     render_on_surface(vimg, hh, cargs{:});
@@ -450,6 +460,32 @@ elseif hask('color')
 end
 % 'colormap' (a raw n x 3 matrix) and the no-spec default are left to
 % render_on_surface via clean_args.
+end
+
+
+function extra = indexed_render_args(tc_map, args)
+% Extra render_on_surface options for an INDEXED (atlas / per-region) layer; {}
+% for any other map type.
+%
+% The layer's indexed colormap is stripped from args (strip_color_tokens) because
+% the vertices are coloured through tc_map, but render_on_surface still has to
+% KNOW the map is indexed. Its 'indexmap' flag (which needs the 'colormap') turns
+% on nearest-neighbour sampling at every stage -- the interp3 volume lookup AND
+% the precomputed source->target surface registration (the *_nearestneighbor.mat
+% file instead of the barycentric-linear one) -- and discards any non-integer
+% vertex value left over from interpolation. Passing only 'interp','nearest' (as
+% before) left the linear registration in place: region indices were blended
+% across parcel borders and then rounded to arbitrary neighbouring indices,
+% producing the speckled multi-coloured borders seen on atlas surfaces.
+% 'labels' (if the layer has them) ride along so the surface colorbar, when shown,
+% is a discrete labelled one.
+extra = {};
+if ~strcmp(tc_map.type, 'indexed'), return, end
+extra = {'colormap', tc_map.colors, 'indexmap', 'interp', 'nearest'};
+wh = find(strcmp(args, 'labels'), 1);
+if ~isempty(wh) && wh < numel(args) && ~isempty(args{wh + 1})
+    extra = [extra, {'labels', args{wh + 1}}];
+end
 end
 
 

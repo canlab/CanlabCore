@@ -726,7 +726,12 @@ for i = 1:length(surface_handles)
             rgb(col, :) = a .* rgb(col, :) + (1 - a) .* base(col, :);
         end
         rgb(unc, :) = base(unc, :);
-        set(sh_obj, 'FaceVertexCData', rgb, 'FaceColor', 'interp', ...
+        % Indexed (atlas / per-region) maps: 'flat' faces, so each face shows one
+        % region's colour and parcel borders stay crisp -- 'interp' would blend
+        % the two neighbouring regions' colours across every border face into a
+        % third colour. Continuous maps keep smooth per-vertex shading.
+        if doindexmap, facemode = 'flat'; else, facemode = 'interp'; end
+        set(sh_obj, 'FaceVertexCData', rgb, 'FaceColor', facemode, ...
             'CDataMapping', 'direct', 'EdgeColor', 'none');
         if doscaledtrans
             z = c ./ max(abs(datvec)); z = enhance_contrast(z);
@@ -865,15 +870,26 @@ if any(datvec > 0) || single_colorbar
     colorbar1_han = colorbar(bar1axis, 'EastOutside');
     set(bar1axis, 'Visible', 'off');
     
-    if doindexmap & exist('mylabels', 'var')
-        num_labels=numel(mylabels);
-
-        % Calculate the YTick positions to be centered within each color segment
-        y_positions = linspace(0, 1, num_labels + 1); % +1 for the edges
-        y_positions = (y_positions(1:end-1) + y_positions(2:end)) / 2; % Midpoints
-        
-        % Set the YTick positions and labels
-        set(colorbar1_han, 'YLim', [0 1], 'YTick', y_positions, 'YTickLabel', mylabels, 'FontSize', 18);
+    if doindexmap
+        % Discrete legend: one colour segment per colormap row (region index),
+        % ticks centred in each segment. Use the caller's 'labels' when given,
+        % else the region indices (thinned when there are many, to stay legible).
+        ncol = size(cm, 1) - 1;                          % cm(1, :) is the gray pad
+        if exist('mylabels', 'var') && ~isempty(mylabels)
+            seglabels = cellstr(mylabels); seglabels = seglabels(:)';
+        else
+            seglabels = arrayfun(@num2str, 1:ncol, 'UniformOutput', false);
+        end
+        nseg = numel(seglabels);
+        y_positions = linspace(0, 1, nseg + 1);                              % segment edges
+        y_positions = (y_positions(1:end-1) + y_positions(2:end)) / 2;       % midpoints
+        keep = 1:nseg;
+        if ~(exist('mylabels', 'var') && ~isempty(mylabels)) && nseg > 20
+            keep = unique(round(linspace(1, nseg, 10)));                    % thin index ticks
+        end
+        fsz = max(7, min(18, round(240 / max(nseg, 1))));
+        set(colorbar1_han, 'Limits', [0 1], 'Ticks', y_positions(keep), ...
+            'TickLabels', seglabels(keep), 'FontSize', fsz);
 
     else
         % Single-ramp/solid map: ONE bar over the full range [clim(1) clim(2)]
@@ -903,7 +919,7 @@ if any(datvec < 0) && ~single_colorbar
     
     bar2axis = axes('Parent', surf_fig, 'Position', [.55 .1 .38 .4]);
     if doindexmap
-        colormap(bar1axis, cm(2:end,:));
+        colormap(bar2axis, cm(2:end,:));
     else
         colormap(bar2axis, cm(1+(kneg-1)*nvals:kneg*nvals, :));
     end
@@ -1215,18 +1231,21 @@ function M = ordered_mode(dat)
     % 
     % by default the mode is computed within row of dat
 
-    [M,F,C] = mode(dat,2);
+    [M, ~, C] = mode(dat, 2);
 
-    for i = 1:length(C)
-        if length(C{i})>1
-            firstval = [];
-            j = 1;
-            while isempty(firstval) && j <= size(dat,2)
-                if sum(dat(i,:) == dat(i,j)) == F(i)
-                    firstval = dat(i,j);
+    for i = 1:numel(C)
+        if numel(C{i}) > 1
+            % tie: take whichever tied value appears first in the row. (The
+            % previous while-loop never advanced its counter, so a tie whose
+            % first sample was NaN -- e.g. a vertex sampling outside the image
+            % at one depth -- spun forever and hung MATLAB.)
+            row = dat(i, :);
+            for j = 1:numel(row)
+                if any(C{i} == row(j))
+                    M(i) = row(j);
+                    break
                 end
             end
-            M(i) = firstval;
         end
     end
 end

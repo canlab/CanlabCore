@@ -807,3 +807,146 @@ tc.verifyGreaterThan(numel(o2.montage), 0, 'multiview composed montages onto the
 tc.verifyGreaterThan(numel(o2.activation_maps{1}.blobhandles), nb0, ...
     'existing blobs were pulled onto the new montages');
 end
+
+
+% ------------------------------------------------------------------------
+% Indexed (atlas / per-region) layers: discrete legend + crisp surface borders
+% ------------------------------------------------------------------------
+
+function [img, cm, labs] = build_indexed_layer_source()
+% A small per-region (indexed) image in the shape atlas.montage produces:
+% integer region indices in .dat, one colour per index ('indexmap'), one label
+% per index ('labels'). Built from the sample thresholded t-map's regions.
+t    = canlab_get_sample_thresholded_t(0.01);
+r    = region(t, 'noverbose');
+n    = numel(r);
+for i = 1:n                                    % value = region index (as atlas2region does)
+    r(i).val = repmat(i, size(r(i).val)); r(i).Z = repmat(i, size(r(i).Z)); r(i).all_data = [];
+end
+img  = region2imagevec(r);                     % dat = region index per voxel
+cm   = cell2mat(scn_standard_colors(n)');
+labs = arrayfun(@(i) sprintf('Region%d', i), 1:n, 'UniformOutput', false);
+end
+
+
+function test_legend_indexed_layer_is_discrete_and_labelled(tc)
+% Regression (M. Sun): legend(obj) on a layer added with 'indexmap' + 'labels'
+% must draw a DISCRETE legend (one colour block per region, ticks = labels),
+% infer both from the layer's stored render options (no explicit 'indexmap' /
+% 'labels' inputs needed), put it on the montage figure, and track its handle
+% so remove_legend can delete it. Previously it drew a continuous ramp from the
+% layer's min/max colours and left the discrete axes untracked.
+tc.assumeTrue(usejava('jvm'), 'montage rendering requires Java');
+[img, cm, labs] = build_indexed_layer_source();
+o2 = fmridisplay('nocontroller'); o2 = montage(o2);
+o2 = addblobs(o2, img, 'indexmap', cm, 'labels', labs, 'noverbose');
+fm = ancestor(o2.montage{1}.axis_handles(1), 'figure');
+set(groot, 'CurrentFigure', fm);
+o2 = legend(o2, 'noverbose');
+lh = o2.activation_maps{1}.legendhandle;
+tc.assertTrue(~isempty(lh) && all(isgraphics(lh)), 'legend stored a live legend handle');
+tc.verifyEqual(ancestor(lh(1), 'figure'), fm, 'legend drawn on the montage figure');
+tc.verifyEqual(numel(findobj(lh(1), 'Type', 'patch')), size(cm, 1), 'one colour block per region index');
+tc.verifyEqual(reshape(cellstr(get(lh(1), 'XTickLabel')), 1, []), labs, 'ticks carry the region labels');
+o2 = remove_legend(o2);
+tc.verifyFalse(any(isgraphics(lh)), 'remove_legend deleted the discrete legend');
+end
+
+
+function test_legend_indexed_layer_without_labels_uses_indices(tc)
+% An indexmap layer with no labels still gets a discrete legend, ticked with
+% region indices.
+tc.assumeTrue(usejava('jvm'), 'montage rendering requires Java');
+[img, cm] = build_indexed_layer_source();
+o2 = fmridisplay('nocontroller'); o2 = montage(o2);
+o2 = addblobs(o2, img, 'indexmap', cm, 'noverbose');
+set(groot, 'CurrentFigure', ancestor(o2.montage{1}.axis_handles(1), 'figure'));
+o2 = legend(o2, 'noverbose');
+lh = o2.activation_maps{1}.legendhandle;
+tc.assertTrue(~isempty(lh) && all(isgraphics(lh)));
+tc.verifyEqual(numel(findobj(lh(1), 'Type', 'patch')), size(cm, 1));
+tl = cellstr(get(lh(1), 'XTickLabel'));
+tc.verifyEqual(tl{1}, '1', 'index ticks start at region 1');
+end
+
+
+function test_controller_toggle_legend_indexed_layer(tc)
+% Regression (M. Sun): the controller's 'Toggle legend' button did nothing
+% useful for a montage drawn with 'labels' (expects a discrete colorbar). It
+% must now draw the discrete legend on the montage figure, and remove it again.
+tc.assumeTrue(usejava('desktop') || (usejava('jvm') && feature('ShowFigureWindows')), ...
+    'controller widget requires an interactive figure window');
+[img, cm, labs] = build_indexed_layer_source();
+o2  = fmridisplay('nocontroller'); o2 = montage(o2);
+o2  = addblobs(o2, img, 'indexmap', cm, 'labels', labs, 'noverbose');
+fig = controller(o2);
+tc.addTeardown(@() delete(fig(isvalid(fig))));
+btn = findobj(fig, 'Type', 'uibutton', 'Text', 'Toggle legend');
+tc.assertNotEmpty(btn, 'controller has a Toggle legend button');
+fm  = ancestor(o2.montage{1}.axis_handles(1), 'figure');
+
+btn.ButtonPushedFcn(btn, []);                                   % ON
+leg = findobj(fm, 'Tag', 'fmridisp_fig_legend');
+tc.assertNotEmpty(leg, 'Toggle legend drew a legend on the montage figure');
+tc.verifyEqual(numel(findobj(leg(1), 'Type', 'patch')), size(cm, 1), 'discrete: one block per region');
+tc.verifyEqual(reshape(cellstr(get(leg(1), 'XTickLabel')), 1, []), labs, 'labelled with the region labels');
+
+btn.ButtonPushedFcn(btn, []);                                   % OFF
+tc.verifyEmpty(findobj(fm, 'Tag', 'fmridisp_fig_legend'), 'Toggle legend removed it again');
+
+btn.ButtonPushedFcn(btn, []);                                   % ON again
+tc.verifyNotEmpty(findobj(fm, 'Tag', 'fmridisp_fig_legend'), 'legend can be toggled back on');
+end
+
+
+function test_indexed_surface_layer_is_flat_and_in_palette(tc)
+% Regression (M. Sun): per-region (indexmap) colouring showed speckled,
+% distorted colours along parcel borders on surfaces. render_layer_surfaces
+% stripped the 'indexmap' flag before calling render_on_surface, so the
+% volume->surface projection used the barycentric LINEAR registration (blending
+% integer region indices, then rounding them to arbitrary neighbours) and the
+% faces were 'interp'-shaded across borders. Now the indexed colormap is passed
+% through: render_on_surface takes its nearest-neighbour indexmap path end to
+% end and paints 'flat' faces, so every coloured vertex carries exactly one
+% region's palette colour and borders are crisp. A continuous layer keeps
+% 'interp' shading.
+tc.assumeTrue(usejava('jvm'), 'surface rendering requires Java');
+[img, cm] = build_indexed_layer_source();
+o2 = fmridisplay('nocontroller');
+try
+    o2 = surface(o2, 'inflated left');         % registered fsaverage_164k mesh
+catch ME
+    tc.assumeFail(['surface needs a graphics environment: ' ME.message]);
+end
+% sourcespace/targetsurface exercise the precomputed surface registration path
+% (as montage layouts with surfaces do).
+o2 = addblobs(o2, img, 'indexmap', cm, 'noverbose', ...
+    'sourcespace', 'MNI152NLin2009cAsym', 'targetsurface', 'fsaverage_164k');
+h = o2.surface{1}.object_handle; h = h(ishandle(h)); h = h(1);
+tc.verifyEqual(get(h, 'FaceColor'), 'flat', 'indexed layer painted with flat (per-face) colours');
+c = get(h, 'FaceVertexCData'); base = get(h, 'UserData');
+tc.assertEqual(size(c), size(base), 'true-colour vertex data with saved anatomy gray');
+colored = any(abs(c - base) > 1e-6, 2);
+tc.assumeTrue(any(colored), 'no coloured vertices (projection produced nothing)');
+inpal = ismember(round(c(colored, :), 6), round(cm, 6), 'rows');
+tc.verifyTrue(all(inpal), 'every coloured vertex has exactly one region''s palette colour');
+
+% A continuous (statistic_image) layer on top keeps smooth interp shading.
+t = canlab_get_sample_thresholded_t(0.01);
+o2 = removeblobs(o2);
+o2 = addblobs(o2, t, 'noverbose');
+tc.verifyEqual(get(h, 'FaceColor'), 'interp', 'continuous layer keeps interp shading');
+end
+
+
+function test_render_blobs_accepts_labels_silently(tc)
+% 'labels' rides along in the layer's render options (for the discrete legend);
+% the slice renderer must not warn "Unknown input string option:labels".
+tc.assumeTrue(usejava('jvm'), 'montage rendering requires Java');
+[img, cm, labs] = build_indexed_layer_source();
+o2 = fmridisplay('nocontroller'); o2 = montage(o2);
+% ('interp','nearest' given explicitly: render_blobs otherwise warns that it is
+% adding them for an indexmap, which is unrelated to 'labels'.)
+tc.verifyWarningFree(@() addblobs(o2, img, 'indexmap', cm, 'labels', labs, 'interp', 'nearest', 'noverbose'));
+tc.verifyTrue(any(strcmp(o2.activation_maps{1}.render_args, 'labels')), 'labels stored on the layer');
+end

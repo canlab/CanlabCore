@@ -266,7 +266,7 @@ end
 
 
 function test_unrecognized_durs_does_not_destroy_onsets(tc)
-% An unparseable 'durs' should warn and fall back to impulse events, not
+% An unparsable 'durs' should warn and fall back to impulse events, not
 % return an empty design.
 
 TR = 1; runlen = 60;

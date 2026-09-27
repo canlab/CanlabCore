@@ -130,7 +130,9 @@ function varargout = canlab_orthviews(varargin)
 %    Copyright (C) 2026  Tor Wager / CANlab
 %
 %    Programmers' notes:
-%    Image I/O uses MATLAB's built-in niftiread / niftiinfo (R2017b+).
+%    Image I/O uses MATLAB's built-in niftiread / niftiinfo (Image Processing
+%    Toolbox, R2017b+), falling back to SPM's spm_vol / spm_read_vols when the
+%    toolbox is not installed.
 %    Internal state is stored as appdata on the figure under the key
 %    'canlab_orthviews_state'.
 % ..
@@ -1389,45 +1391,96 @@ end
 
 
 function [vol, M, dim] = read_nifti_volume(file)
-    % Read a NIfTI / NIfTI.gz volume using MATLAB built-ins; convert affine
-    % from MATLAB's row-vector convention (Transform.T) to the SPM-style
-    % 1-based column-vector M used throughout CANlab.
-    try
-        info = niftiinfo(file);
-        vol  = niftiread(info);
-    catch ME
-        % Fall back: maybe an Analyze .img with a .hdr companion
-        [p, n, e] = fileparts(file);
+    % Read a NIfTI / NIfTI.gz / Analyze volume. Prefers MATLAB's built-in
+    % niftiinfo / niftiread (Image Processing Toolbox); falls back to SPM's
+    % spm_vol / spm_read_vols when the toolbox is not installed (or the
+    % built-in reader fails on the file). Returns the SPM-style 1-based
+    % column-vector affine M used throughout CANlab, whichever reader ran.
+    candidates = {file};
+    [p, n, e] = fileparts(file);
+    if strcmpi(e, '.img')                       % Analyze .img with a .nii sibling?
+        alt = fullfile(p, [n '.nii']);
+    elseif strcmpi(e, '.nii')
+        alt = fullfile(p, [n '.img']);
+    else
         alt = '';
-        if strcmpi(e, '.img')
-            alt = fullfile(p, [n '.nii']);
-        elseif strcmpi(e, '.nii')
-            alt = fullfile(p, [n '.img']);
-        end
-        if ~isempty(alt) && exist(alt, 'file')
-            info = niftiinfo(alt);
-            vol  = niftiread(info);
-        else
-            rethrow(ME);
-        end
+    end
+    if ~isempty(alt) && exist(alt, 'file'), candidates{end + 1} = alt; end
+
+    have_builtin = exist('niftiinfo', 'file') == 2 && exist('niftiread', 'file') == 2;
+    have_spm     = exist('spm_vol', 'file') == 2 && exist('spm_read_vols', 'file') == 2;
+    if ~have_builtin && ~have_spm
+        error('canlab_orthviews:noNiftiReader', ...
+            ['Cannot read %s: neither niftiinfo/niftiread (Image Processing Toolbox) ' ...
+             'nor SPM (spm_vol) is on the MATLAB path.'], file);
     end
 
+    lastME = [];
+    for c = 1:numel(candidates)
+        f = candidates{c};
+        if have_builtin
+            try
+                [vol, M] = read_with_builtin(f);
+                [vol, dim] = finish_volume(vol);
+                return
+            catch ME
+                lastME = ME;
+            end
+        end
+        if have_spm
+            try
+                [vol, M] = read_with_spm(f);
+                [vol, dim] = finish_volume(vol);
+                return
+            catch ME
+                lastME = ME;
+            end
+        end
+    end
+    rethrow(lastME);
+end
+
+
+function [vol, M] = read_with_builtin(f)
+    % MATLAB built-in reader. info.Transform.T is row-vector convention:
+    % [x y z 1] = [i j k 1]*T, with 0-based voxel indices in the NIfTI
+    % standard. Convert to [x y z 1]' = M_1based * [i j k 1]' for 1-based
+    % indices, i.e. SPM's V.mat convention.
+    info = niftiinfo(f);
+    vol  = niftiread(info);
+    T0 = info.Transform.T';                          % column-vector convention, 0-based
+    shift0to1 = [eye(3), -ones(3, 1); 0 0 0 1];      % compose with the 0->1 index shift
+    M = T0 * shift0to1;
+end
+
+
+function [vol, M] = read_with_spm(f)
+    % SPM reader (used when Image Processing Toolbox is absent). V.mat is
+    % already the 1-based column-vector affine. spm_vol does not read .gz,
+    % so a gzipped file is inflated into a temp folder first.
+    [~, ~, e] = fileparts(f);
+    if strcmpi(e, '.gz')
+        tmpdir = tempname;
+        mkdir(tmpdir);
+        cleanup = onCleanup(@() rmdir(tmpdir, 's')); %#ok<NASGU>
+        out = gunzip(f, tmpdir);
+        f = out{1};
+    end
+    V   = spm_vol(f);
+    V   = V(1);                                      % first volume if 4-D
+    vol = spm_read_vols(V);
+    M   = V.mat;
+end
+
+
+function [vol, dim] = finish_volume(vol)
     vol = double(vol);
     if ndims(vol) > 3
         vol = vol(:, :, :, 1);  % use first volume if 4-D
     end
     dim = size(vol);
     if numel(dim) < 3, dim(end+1:3) = 1; end
-
-    % info.Transform.T is row-vector convention: [x y z 1] = [i j k 1]*T,
-    % with 0-based voxel indices in the NIfTI standard. Convert to:
-    %   [x y z 1]' = M_1based * [i j k 1]' for 1-based indices.
-    T0 = info.Transform.T';      % column-vector convention, 0-based
-    % Compose with the 0->1 shift so callers can use 1-based indices.
-    shift0to1 = [eye(3), -ones(3, 1); 0 0 0 1];
-    M = T0 * shift0to1;
 end
-
 
 % =========================================================================
 % Slice math

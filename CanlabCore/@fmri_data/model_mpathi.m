@@ -188,12 +188,18 @@ target_obj=apply_mask(obj,target_mask);
 % For 10-fold, images will be divided into 10 cells
 
 
-for xval_i=1:max(indices)
-    un_inds=unique(indices);
+% build every fold BEFORE the cross-validation loop.
+un_inds = unique(indices);
+un_inds = un_inds(:)';
 
-    to_align_dat_source{xval_i}=source_obj.dat(:,indices==xval_i);
-    to_align_dat_target{xval_i}=target_obj.dat(:,indices==xval_i);
-    
+to_align_dat_source = cell(1, numel(un_inds));
+to_align_dat_target = cell(1, numel(un_inds));
+for xval_i = un_inds
+    to_align_dat_source{xval_i} = source_obj.dat(:, indices == xval_i);
+    to_align_dat_target{xval_i} = target_obj.dat(:, indices == xval_i);
+end
+
+for xval_i=1:max(indices)    
     if do_alignment
         % Call Manning hyperalign.m
         % (Currently hyperaligns rows)

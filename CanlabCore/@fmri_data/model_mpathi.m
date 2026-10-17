@@ -192,6 +192,14 @@ target_obj=apply_mask(obj,target_mask);
 un_inds = unique(indices);
 un_inds = un_inds(:)';
 
+% {un_inds ~= xval_i} indexes these cell arrays positionally, so the fold
+% labels have to be 1..N with no gaps for that to line up.
+if ~isequal(un_inds, 1:numel(un_inds))
+    error('crv_model_mpathi:foldLabels', ...
+        ['Fold labels must be 1..N with no gaps; got %s. ' ...
+         'Renumber the ''Indices'' vector before calling.'], mat2str(un_inds));
+end
+
 to_align_dat_source = cell(1, numel(un_inds));
 to_align_dat_target = cell(1, numel(un_inds));
 for xval_i = un_inds

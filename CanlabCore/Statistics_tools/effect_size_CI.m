@@ -87,6 +87,22 @@ function [d_CI, P, P_CI] = effect_size_CI(d, n, varargin)
 % d2p = @(d, dfmodel, dfe, tails) tails .* (1 - tcdf(d .* sqrt(dfmodel+dfe), dfe));
 % d2p = @(d, n, dfe, tails) tails .* (1 - tcdf(d .* sqrt(n), dfe));
 %
+% Converting Cohen's d to Number Needed to Treat (NNT)
+% 
+% % Kraemer & Kupfer (2006)
+% 
+% auc = @(d) normcdf(d ./ sqrt(2));
+% d2nnt_kraemer = (@(d) 1 ./ (2 .* auc(d) - 1));
+% 
+% % Furakawa
+% 
+% eer = @(d, cer) normcdf(d + norminv(cer));
+% nnt_furukawa = @(d, cer) 1 ./ (eer(d, cer) - cer);
+% 
+% Kraemer HC, Kupfer DJ. Size of treatment effects and their importance to clinical research and practice. Biol Psychiatry 2006;59:990–996.  
+% Furukawa TA. From effect size into number needed to treat. Lancet 1999;353:1680.   Furukawa TA, Leucht S. How to obtain NNT from Cohen's d and comparison with other methods. PLoS One 2011;6:e19070.
+% Hasselblad V, Hedges LV. Meta-analysis of screening and diagnostic tests. Psychol Bull 1995;117:167–178.   
+% Chinn S. A simple method for converting an odds ratio to effect size. Stat Med 2000;19:3127–3131.
 %
 % :Examples:
 % ::
@@ -141,19 +157,10 @@ function [d_CI, P, P_CI] = effect_size_CI(d, n, varargin)
 % title('Two-sample test');
 % han2 = plot_horizontal_line(0); set(han2, 'Linestyle', '--');
 
-%%
-
-
-
-% By Tor Wager, 10/2018, alpha version. Comparisons with other methods and
-% published examples should be performed, independent checks should be
-% performed.
 
 % t  = d * sqrt(N)
 % we want critical value x where noncentral tcdf is 0.025 and 0.975 for 2-tailed CI
 % or .05 .95 for 90% CI
-
-
 
 % -------------------------------------------------------------------------
 % DEFAULT ARGUMENT VALUES

@@ -56,6 +56,7 @@ function p = addbrain(varargin)
 % 'pauli_subcortical'    High-res combined surface from the Pauli CIT168 "reinforcement learning" atlas
 % 'CIT168'               Lower-res combined surface from the Pauli CIT168 "reinforcement learning" atlas
 % 'cerebellum','cblm'    surf_spm2_cblm,  an old but nice surface for rendering
+% 'cerebellum hires'     SUIT cerebellum only (brainstem removed), high-res with folia; suit_surface_cerebellum.mat
 % 'brainstem'            surf_spm2_brainstem, an old but nice surface for rendering
 % 'suit brainstem'       Diedrichsen SUIT brainstem and cerebellum; 'suit_surface_brainstem_cerebellum.mat
 %
@@ -210,6 +211,7 @@ function p = addbrain(varargin)
 %   - 'nucleus accumbens'
 %   - 'hypothalamus'
 %   - 'cerebellum'
+%   - 'cerebellum hires'
 %   - {'md','mediodorsal'}
 %   - {'cm','centromedian'}
 %   - 'pbn'
@@ -940,6 +942,13 @@ switch meth
 
     case {'cerebellum','cblm'}
         pname = 'surf_spm2_cblm.mat';
+        p = add_surface(pname);
+        set(p,'FaceColor',[.8 .65 .8]);
+
+    case {'cerebellum hires', 'cblm hires'}
+        % SUIT cerebellum with the brainstem removed (CANLab2024 cerebellar
+        % labels); high-res surface with folia
+        pname = 'suit_surface_cerebellum.mat';
         p = add_surface(pname);
         set(p,'FaceColor',[.8 .65 .8]);
 

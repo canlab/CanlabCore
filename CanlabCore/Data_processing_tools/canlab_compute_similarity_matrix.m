@@ -37,7 +37,8 @@ function [R, N] = canlab_compute_similarity_matrix(dat, varargin)
 %
 %   **'similarity_metric'** (string):
 %       Metric to compute. Options:
-%           - 'correlation' (default)
+%           - 'correlation' (default)  -- Pearson correlation
+%           - 'spearman'               -- Spearman rank correlation
 %           - 'cosine_similarity'
 %           - 'dot_product'
 %           - 'dice'
@@ -99,7 +100,7 @@ function [R, N] = canlab_compute_similarity_matrix(dat, varargin)
 p = inputParser;
 p.addRequired('dat', @(x) validateattributes(x, {'numeric'}, {'2d'}));
 p.addParameter('treat_zero_as_data', false, @(x) islogical(x) || isnumeric(x));
-p.addParameter('similarity_metric', 'correlation', @(x) ismember(x, {'correlation', 'cosine_similarity', 'dot_product', 'dice'}));
+p.addParameter('similarity_metric', 'correlation', @(x) ismember(x, {'correlation', 'spearman', 'cosine_similarity', 'dot_product', 'dice'}));
 p.addParameter('verbose', true, @(x) islogical(x) || isnumeric(x));
 p.addParameter('doplot', false, @(x) islogical(x) || isnumeric(x));
 p.addParameter('complete_cases', false, @(x) islogical(x) || isnumeric(x));  % otherwise pairwise
@@ -217,6 +218,13 @@ for i = 1:k
                 case 'correlation'
                     Rval = corr(a, b);
 
+                case 'spearman'
+                    % Rank-transform within the shared valid rows, then Pearson.
+                    % Equivalent to corr(a, b, 'Type', 'Spearman') but written
+                    % out so the rank step is explicit and the same code path
+                    % can be reused elsewhere.
+                    Rval = corr(a, b, 'Type', 'Spearman');
+
                 case 'cosine_similarity'
                     Rval = dot(a, b) / (norm(a) * norm(b));
 
@@ -251,6 +259,9 @@ N = n * ones(k);  % All pairs have same number of observations
 switch sim_metric
     case 'correlation'
         R = corr(dat);  % built-in vectorized
+
+    case 'spearman'
+        R = corr(dat, 'Type', 'Spearman');  % built-in vectorized rank correlation
 
     case 'cosine_similarity'
         norms = sqrt(sum(dat.^2, 1));

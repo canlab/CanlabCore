@@ -14,7 +14,8 @@ function fig = controller(obj, varargin)
 %   - is type-aware for thresholding (statistic_image -> p-value on a LOG slider,
 %     fmri_data/mask -> raw |x| slider);
 %   - echoes the equivalent line of code for each action to the command window;
-%   - names the bound variable in its title and closes with `close all`.
+%   - names the bound variable in its title and closes with its display figure
+%     (so `close all` closes it too).
 %
 % To change the controller window colour, edit FIG_COLOR just below.
 %
@@ -54,6 +55,7 @@ if ~isempty(obj.controller_handle) && isgraphics(obj.controller_handle) && isval
     fig   = obj.controller_handle;
     vname = getappdata(fig, 'objname');
     is_new_fig = false;
+    bind_to_display_figures(fig, obj);
     existing = findobj(fig, 'Type', 'uipanel');
     if nlayers > 0 && numel(existing) == nlayers
         update_controls_in_place(fig, obj, cmap_options);
@@ -61,9 +63,16 @@ if ~isempty(obj.controller_handle) && isgraphics(obj.controller_handle) && isval
     end
     delete(allchild(fig));
 else
-    fig = uifigure('Name', 'CANlab display controller', 'HandleVisibility', 'on', ...
+    % HandleVisibility 'callback' (not 'on'): the uifigure opens asynchronously
+    % and, if visible, can become gcf mid-build, so bare axes()/subplot calls in
+    % montage/addbrain landed in the controller -- and addblobs' rebuild below
+    % (delete(allchild(fig))) then deleted those montage axes. The fmridisplay
+    % constructor ties the controller's lifetime to the display figure instead,
+    % so `close all` still closes it.
+    fig = uifigure('Name', 'CANlab display controller', 'HandleVisibility', 'callback', ...
         'Color', FIG_COLOR);
     obj.controller_handle = fig;
+    bind_to_display_figures(fig, obj);
     is_new_fig = true;
     if isempty(vname), vname = 'obj'; end
 end
@@ -720,6 +729,27 @@ if ~isempty(bh)
 end
 if ~isempty(obj.surface)
     composite_surfaces(obj);
+end
+end
+
+
+function bind_to_display_figures(fig, obj)
+% The controller's handle is hidden (HandleVisibility 'callback'), so close all
+% no longer reaches it. Close it when any figure holding this display's montages
+% or surfaces is deleted instead. Each figure is bound once (appdata flag).
+ah = [];
+for i = 1:numel(obj.montage), ah = [ah obj.montage{i}.axis_handles(:)']; end %#ok<AGROW>
+sh = obj.surface;
+for i = 1:numel(sh)
+    if isstruct(sh{i}) && isfield(sh{i}, 'object_handle'), ah = [ah sh{i}.object_handle(:)']; end %#ok<AGROW>
+end
+ah = ah(isgraphics(ah));
+if isempty(ah), return, end
+figs = unique(arrayfun(@(h) ancestor(h, 'figure'), ah));
+for f = figs(:)'
+    if isequal(f, fig) || isappdata(f, 'canlab_controller_bound'), continue, end
+    setappdata(f, 'canlab_controller_bound', true);
+    addlistener(f, 'ObjectBeingDestroyed', @(~, ~) delete(fig(isvalid(fig))));
 end
 end
 

@@ -603,11 +603,11 @@ if do_setup_display
          
             % axial bottom
             axh4 = axes('Position', [.10 0.4 .17 .17]);
-            o2 = montage(o2, 'volume_data', dat, 'axial', 'slice_range', [-40 50], 'onerow', 'spacing', 12, 'noverbose', 'existing_axes', axh4);
+            o2 = montage(o2, 'volume_data', dat, 'axial', 'slice_range', [-24 60], 'onerow', 'spacing', 12, 'noverbose', 'existing_axes', axh4);
             
             % axial top
             axh5 = axes('Position', [.12 0.54 .17 .17]);
-            o2 = montage(o2, 'volume_data', dat, 'axial', 'slice_range', [-46 50], 'onerow', 'spacing', 12, 'noverbose', 'existing_axes', axh5);
+            o2 = montage(o2, 'volume_data', dat, 'axial', 'slice_range', [-30 54], 'onerow', 'spacing', 12, 'noverbose', 'existing_axes', axh5);
             
 
             % --- Apply coordinate titles if coordinates flag is on ---
@@ -2247,6 +2247,13 @@ try
         if ~isempty(oh), composed_figs(end+1) = ancestor(oh(1), 'figure'); end %#ok<AGROW>
     end
     canlab_hide_axes_toolbar(composed_figs);
+catch
+end
+
+% Sync the controller now that all montage/surface axes exist; this also binds
+% it to close with the figures built above (needed when no blobs were added).
+try
+    o2 = update_controller(o2);
 catch
 end
 

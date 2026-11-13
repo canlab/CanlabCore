@@ -28,7 +28,10 @@ function SPACE = map_to_world_space(V)
 %    Tor Wager, Feb 2011
 % ..
 
-bottomleft_mm = V.mat(1:3, 4);
+% Voxel indices are 1-based (SPM convention): V.mat(1:3, 4) is the position of
+% voxel [0 0 0], one voxel outside the volume. Using it stretched the coordinate
+% vectors by one voxel, misplacing slices/blobs by up to a voxel.
+bottomleft_mm = voxel2mm([1 1 1]', V.mat);
 topright_mm = voxel2mm([V.dim(1:3)]', V.mat);
 
 xcoords = linspace(bottomleft_mm(1), topright_mm(1), V.dim(1));

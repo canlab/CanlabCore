@@ -35,7 +35,7 @@ function obj = surface(obj, varargin)
 %          'caudate left' / 'caudate right'          (basal ganglia group)
 %          'thalamus', 'amygdala', 'cerebellum', 'limbic', 'bg', ...
 %        Multi-surface keywords add a SET of views to this same object:
-%          'foursurfaces', 'foursurfaces_hcp', 'foursurfaces_freesurfer'
+%          'foursurfaces', 'foursurfaces_hcp', 'foursurfaces_hcp_inflated', 'foursurfaces_freesurfer'
 %
 %   **'orientation', ORN:**
 %        'lateral' (default) or 'medial'. For an L/R cortical surface, 'medial'
@@ -181,7 +181,7 @@ end
 % becomes its own registered view, so blobs/refresh act on all of them
 % together. (fmridisplay is a handle class, so han is not replaced.)
 multi = '';
-for kw = {'foursurfaces_hcp', 'foursurfaces_freesurfer', 'foursurfaces'}
+for kw = {'foursurfaces_hcp_inflated', 'foursurfaces_hcp', 'foursurfaces_freesurfer', 'foursurfaces'}
     if any(strcmp(varargin, kw{1})), multi = kw{1}; break; end
 end
 if ~isempty(multi)
@@ -354,7 +354,7 @@ for kw = {'direction', 'orientation', 'axes'}         % drop any single-view con
     for j = sort(wh, 'descend'), rest(j:j+1) = []; end
 end
 
-if any(strcmp(multi, {'foursurfaces', 'foursurfaces_hcp'}))
+if any(strcmp(multi, {'foursurfaces', 'foursurfaces_hcp', 'foursurfaces_hcp_inflated'}))
 
     % Build the canonical layout through addbrain (drawn into layout_fig via
     % subplots), so the surfaces match fmri_data.surface exactly.

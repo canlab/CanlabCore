@@ -28,7 +28,7 @@ function p = addbrain(varargin)
 % % -----------------------------------------------------------------------
 % 'left' 'hires left' 'surface left' 'hires surface left' ...
 % 'right' 'hires right' 'surface right' 'hires surface right' ...
-% 'transparent_surface' 'foursurfaces' 'foursurfaces_hcp' 'flat left'  'flat right' ...
+% 'transparent_surface' 'foursurfaces' 'foursurfaces_hcp' 'foursurfaces_hcp_inflated' 'flat left'  'flat right' ...
 % 'bigbrain' {'hires surface left', 'bigbrain left'}
 % ['fsavg_left' or 'inflated left'], 'fsavg_right' or 'inflated right', uses freesurfer inflated brain with Thomas Yeo group's RF_ANTs mapping from MNI to Freesurfer. (https://doi.org/10.1002/hbm.24213)
 % 'hcp inflated', 'hcp inflated left', 'hcp inflated right', uses the HCP fs_LR-32k inflated mesh.
@@ -160,6 +160,12 @@ function p = addbrain(varargin)
 %
 %   **'foursurfaces_hcp':**
 %        Lateral and medial views with HCP pial surfaces, with brainstem
+%
+%   **'foursurfaces_hcp_inflated':**
+%        Lateral and medial views of the HCP inflated (fsLR 32k) surfaces,
+%        no subcortical structures. Surfaces keep their 'hcp inflated
+%        left'/'hcp inflated right' tags so render_on_surface can apply the
+%        MNI -> fsLR_32k registration (region.surface does this automatically).
 %
 %   **'BG':**
 %        Basal ganglia
@@ -1177,6 +1183,9 @@ switch meth
     case 'foursurfaces_hcp'
         p = run_foursurfaces_hcp;
 
+    case 'foursurfaces_hcp_inflated'
+        p = run_foursurfaces_hcp_inflated;
+
     case 'flat left'
 
         pname = which('L.flat.32k.mat'); % from Glasser_et_al_2016_HCP
@@ -1210,8 +1219,10 @@ end  % method
 
 switch meth
 
-    case {'limbic', 'BG', 'globus pallidus', 'gp', 'bg', 'basal ganglia', 'cutaway', 'brainstem_group', 'limbic hires', 'left_cutaway', 'right_cutaway'}
-        % do nothing; multi-region
+    case {'limbic', 'BG', 'globus pallidus', 'gp', 'bg', 'basal ganglia', 'cutaway', 'brainstem_group', 'limbic hires', 'left_cutaway', 'right_cutaway', ...
+            'foursurfaces_hcp_inflated'}
+        % do nothing; multi-region (foursurfaces_hcp_inflated keeps per-hemisphere
+        % tags, which render_on_surface needs for registered projection)
 
     otherwise
         if all(ishandle(p))
@@ -1448,3 +1459,30 @@ lightRestoreSingle; axis image; axis off; lighting gouraud; material dull
 
 end
 
+
+
+function all_surf_handles = run_foursurfaces_hcp_inflated
+% Same 2 x 2 layout as run_foursurfaces_hcp, using HCP inflated hemispheres.
+
+all_surf_handles = [];
+f1 = gcf;
+
+% {subplot, hemisphere, view azimuth}; medial views reuse the lateral mesh
+panels = {1, 'right', 90; 4, 'right', 270; 2, 'left', 270; 3, 'left', 90};
+
+for i = 1:size(panels, 1)
+    figure(f1);
+    axh = subplot(2, 2, panels{i, 1});
+    if mod(i, 2)
+        surfh = addbrain(['hcp inflated ' panels{i, 2}]);
+        set(surfh, 'FaceColor', [.5 .5 .5], 'FaceAlpha', 1);
+    else
+        surfh = copyobj(surfh, axh);
+    end
+    if iscolumn(surfh), surfh = surfh'; end
+    all_surf_handles = [all_surf_handles surfh]; %#ok<AGROW>
+    view(panels{i, 3}, 0);
+    lightRestoreSingle; axis image; axis off; lighting gouraud; material dull
+end
+
+end

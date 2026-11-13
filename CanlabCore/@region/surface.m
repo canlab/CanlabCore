@@ -1,4 +1,4 @@
-function [surface_handles, pcl, ncl] = surface(r, varargin)
+function [surface_handles, pcl, ncl, o2] = surface(r, varargin)
 % Render image data on brain surfaces; options for cutaways and canonical surfaces
 % Surface method for region object - renders blobs on multiple types of 3-D
 % surfaces
@@ -6,7 +6,7 @@ function [surface_handles, pcl, ncl] = surface(r, varargin)
 % :Usage:
 % ::
 %
-%    [surface_handles, pcl, ncl] = surface(r, [optional inputs])
+%    [surface_handles, pcl, ncl, o2] = surface(r, [optional inputs])
 %
 %    - accepts combinations of existing surface handles and one or more
 %    keywords accepted by addbrain.m to build surfaces
@@ -38,6 +38,10 @@ function [surface_handles, pcl, ncl] = surface(r, varargin)
 %   **'surface_handles':**
 %        Followed by existing surface handles to render on
 %
+%   **'nocontroller':**
+%        Render directly (legacy path) without registering the surfaces in an
+%        fmridisplay object, so no interactive controller opens.
+%
 %   **addbrain.m keywords:**
 %        Keywords for surfaces accepted by addbrain.m
 %        A list is below:
@@ -56,7 +60,7 @@ function [surface_handles, pcl, ncl] = surface(r, varargin)
 %         % -----------------------------------------------------------------------
 %         'left' 'hires left' 'surface left' 'hires surface left' ...
 %         'right' 'hires right' 'surface right' 'hires surface right' ...
-%         'transparent_surface' 'foursurfaces' 'foursurfaces_hcp' 'flat left'  'flat right' ...
+%         'transparent_surface' 'foursurfaces' 'foursurfaces_hcp' 'foursurfaces_hcp_inflated' 'flat left'  'flat right' ...
 %
 %         % Macro subcortical surfaces
 %         % -----------------------------------------------------------------------
@@ -91,6 +95,12 @@ function [surface_handles, pcl, ncl] = surface(r, varargin)
 %
 %   **ncl:**
 %        region object with negative-only clusters
+%
+%   **o2:**
+%        fmridisplay object holding the surfaces as registered views and the
+%        region as a blob layer (empty with 'nocontroller'). The interactive
+%        controller is bound to it, and you can keep working with it, e.g.
+%        set_colormap(o2, 'color', [0 0 1]), removeblobs(o2), addblobs(o2, r2).
 %
 %
 % :Examples:
@@ -130,6 +140,8 @@ function [surface_handles, pcl, ncl] = surface(r, varargin)
 
 existingfig = false;
 surface_handles = [];
+o2 = [];
+use_display = true;   % register in an fmridisplay (enables the controller); 'nocontroller' -> legacy direct render
 
 addbrain_allowable_args = {'vmpfc' 'nacc' 'BST' 'cau' 'caudate' 'put' 'GP' 'GPe' 'GPi' 'VeP' ...
     'cm' 'md' 'stn' 'habenula' 'mammillary' 'hypothalamus','hy','hythal' ...
@@ -139,7 +151,7 @@ addbrain_allowable_args = {'vmpfc' 'nacc' 'BST' 'cau' 'caudate' 'put' 'GP' 'GPe'
     'medullary_raphe' 'spinal_trigeminal' 'nuc_ambiguus' 'dmnx_nts' 'ncs_B6_B8' 'nrp_B5' 'pbn' 'ncf' 'vep' 'PBP' ...
     'left' 'hires left' 'surface left' 'hires surface left' ...
     'right' 'hires right' 'surface right' 'hires surface right' ...
-    'transparent_surface' 'foursurfaces'  'foursurfaces_hcp' 'flat left'  'flat right' 'foursurfaces_hcp' ...
+    'transparent_surface' 'foursurfaces'  'foursurfaces_hcp' 'foursurfaces_hcp_inflated' 'flat left'  'flat right' 'foursurfaces_hcp' ...
     'brainbottom' 'cutaway', 'left_cutaway' 'right_cutaway' ...
     'left_insula_slab' 'right_insula_slab' 'accumbens_slab' 'coronal_slabs' 'coronal_slabs_4' 'coronal_slabs_5' ...
     'brainstem' 'suit brainstem' 'amygdala' 'amygdala hires' 'hippocampus', 'hipp' 'hippocampus hires' 'cerebellum','cblm' 'CIT168' ...
@@ -165,7 +177,9 @@ for i = 1:length(varargin)
             case {'existingfig', 'nofigure'}, existingfig = true; varargin{i} = []; 
                 
             case 'noverbose'
-                
+
+            case 'nocontroller', use_display = false; varargin{i} = [];
+
             case addbrain_allowable_args
                 % do nothing, handle later
 
@@ -182,6 +196,28 @@ end
 
 % BUILD BRAIN SURFACE BASED ON ALLOWABLE INPUTS TO ADDBRAIN
 % -------------------------------------------------------------------------
+
+% Inflated / sphere / FreeSurfer surfaces are not in MNI space, so sampling
+% the volume at their vertex coordinates paints the wrong place (usually
+% almost nothing). If the caller didn't specify a registration, infer the
+% target surface from the surface keyword, as region.montage does, and
+% assume the CANlab default MNI152NLin6Asym (SPM) source space.
+if ~any(strcmp(varargin, 'sourcespace')) && ~any(strcmp(varargin, 'targetsurface'))
+    targetsurface = [];
+    for i = 1:length(varargin)
+        if ischar(varargin{i})
+            if any(strcmp(varargin{i}, {'inflated left' 'inflated right' 'fsavg_left' 'fsavg_right'})) || ...
+                    startsWith(varargin{i}, 'freesurfer ')
+                targetsurface = 'fsaverage_164k';
+            elseif any(strcmp(varargin{i}, {'hcp inflated left' 'hcp inflated right' 'hcp sphere left' 'hcp sphere right' 'foursurfaces_hcp_inflated'}))
+                targetsurface = 'fsLR_32k';
+            end
+        end
+    end
+    if ~isempty(targetsurface)
+        varargin = [varargin, {'sourcespace', 'MNI152NLin6Asym', 'targetsurface', targetsurface}];
+    end
+end
 
 for i = 1:length(varargin)
     
@@ -246,7 +282,22 @@ switch color_mode
         varargin = [varargin, {'color', [1 0.4 0]}];
 end
 
-render_on_surface(obj, surface_handles, varargin{:});
+% Render through an fmridisplay object when possible: the surfaces become
+% registered views and the region a managed blob layer, so the interactive
+% controller opens and set_colormap / rethreshold / removeblobs work on it, as for
+% montage(). The geometry above is unchanged. Falls back to a direct render.
+if use_display
+    try
+        o2 = local_display_layer(r, surface_handles, varargin, addbrain_allowable_args);
+    catch ME
+        warning('region:surface:display', ...
+            'Could not register surfaces in an fmridisplay (%s). Rendering directly.', ME.message);
+        o2 = [];
+    end
+end
+if isempty(o2)
+    render_on_surface(obj, surface_handles, varargin{:});
+end
 
 % Hide the "..." interaction toolbar on the surface axes (recent MATLAB shows one
 % in the corner of every axes). Sweep the figure(s) holding the surface patches.
@@ -259,3 +310,61 @@ catch
 end
 
 end % function
+
+
+function o2 = local_display_layer(r, surface_handles, args, addbrain_allowable_args)
+% Wrap already-built surface patches in an fmridisplay (one view per axes) and
+% add region r as a layer. args are the remaining surface() options; addbrain
+% keywords are geometry only, the rest are colour / registration options.
+
+sh = surface_handles(ishandle(surface_handles));
+if isempty(sh), error('no valid surface handles'); end
+
+keep = true(size(args));
+for i = 1:numel(args)
+    if isempty(args{i}) || (ischar(args{i}) && any(strcmp(args{i}, [addbrain_allowable_args, {'noverbose'}])))
+        keep(i) = false;
+    end
+end
+args = args(keep);
+
+% Translate render_on_surface colour conventions to addblobs' so the display
+% path looks the same as the direct render:
+%  - indexed ('unique') maps: render_on_surface takes 'colormap', M + an
+%    'indexmap' flag; addblobs takes 'indexmap', M (nearest-neighbour throughout).
+%  - no colour given: keep render_on_surface's hot/cool split rather than the
+%    addblobs default palette.
+wi = find(strcmp(args, 'indexmap'), 1);
+wc = find(strcmp(args, 'colormap'), 1);
+if ~isempty(wi) && ~isempty(wc) && isnumeric(args{wc + 1})
+    M = args{wc + 1};
+    args([wi, wc, wc + 1]) = [];
+    args = [args, {'indexmap', M}];
+end
+color_keys = {'color', 'colormap', 'colormapname', 'pos_colormap', 'neg_colormap', 'splitcolor', 'maxcolor', 'mincolor', 'indexmap'};
+if ~any(cellfun(@(a) ischar(a) && any(strcmp(a, color_keys)), args))
+    args = [args, {'splitcolor', {[0 0 1], [0 .8 .8], [1 .4 .5], [1 1 0]}}];
+end
+
+o2 = fmridisplay;
+
+% Group patches by parent axes, preserving creation order (as fmridisplay.surface
+% does for addbrain's multi-panel layouts).
+ax_list = gobjects(0);
+grp = zeros(numel(sh), 1);
+for i = 1:numel(sh)
+    a = ancestor(sh(i), 'axes');
+    idx = find(ax_list == a, 1);
+    if isempty(idx), ax_list(end + 1) = a; idx = numel(ax_list); end %#ok<AGROW>
+    grp(i) = idx;
+end
+for a = 1:numel(ax_list)
+    these = sh(grp == a);
+    o2.surface{end + 1} = struct('axis_handles', ax_list(a), 'direction', get(these(1), 'Tag'), ...
+        'orientation', '', 'object_handle', these(:)');
+end
+
+o2 = addblobs(o2, r, args{:}, 'noverbose');
+
+end
+

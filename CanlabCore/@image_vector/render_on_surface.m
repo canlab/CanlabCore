@@ -216,6 +216,7 @@ srcdepth = {'midthickness','pial','white'}; % default depth to sample a surface 
 targetsurface = [];
 interp = 'linear';
 gray_buffer = true;
+graybuffer_n = 0;   % size of gray fade at near-zero end of colour blocks; set by hotcool_split_colormap
 truecolor_cmap = [];   % optional canlab_colormap -> true-colour (N x 3 RGB) vertices
 truecolor_alpha = 1;   % opacity for the true-colour layer (blend with what's underneath)
 
@@ -399,7 +400,7 @@ if ~isempty(pos_colormap) ||  ~isempty(neg_colormap)
     % Skip colormap generator, already
     % found the range of colors for pos/neg values to split around 0 here.
     % this sets the colormap for axis_handle
-    [cm, kpos, kneg] = hotcool_split_colormap(nvals, clim, axis_handle, pos_colormap(1, :), pos_colormap(end, :), neg_colormap(1, :), neg_colormap(end, :), 'gray_buffer', gray_buffer);
+    [cm, kpos, kneg, graybuffer_n] = hotcool_split_colormap(nvals, clim, axis_handle, pos_colormap(1, :), pos_colormap(end, :), neg_colormap(1, :), neg_colormap(end, :), 'gray_buffer', gray_buffer);
     
     % colormapname = [neg_colormap; pos_colormap];   % colormapname is either name or [nvals x 3] matrix
     % nvals = size(colormapname, 1);                 % needs to match for color and gray maps to work right
@@ -428,7 +429,7 @@ else
     elseif diff(sign(clim))
         
         % Default colormap for objects with - and + values
-        [cm, kpos, kneg] = hotcool_split_colormap(nvals, clim, axis_handle, splitcolors{:}, 'gray_buffer', gray_buffer);
+        [cm, kpos, kneg, graybuffer_n] = hotcool_split_colormap(nvals, clim, axis_handle, splitcolors{:}, 'gray_buffer', gray_buffer);
         
     else
         [cm, kpos, kneg] = split_colormap(nvals, colormapname, axis_handle);
@@ -680,15 +681,31 @@ for i = 1:length(surface_handles)
             end
             c_colored(whneg) = cneg;
         else
+            % The data range maps to the coloured part of each block, beyond
+            % the gray fade (graybuffer_n entries nearest zero). Only vertices
+            % interpolated below the lowest data value (blob borders) fade
+            % into gray. Mapping the lowest data value onto the gray end made
+            % constant-valued maps (binary masks, region objects) render
+            % entirely gray.
             whpos = c > 0;
             %     kpos = 61;   % which block of 256 colors; depends on colormap
-            cpos = map_function(c(whpos), prctile(datvec(datvec>0),1), clim(2), (kpos-1)*nvals+1, kpos*nvals); % map into indices in hot cm range of colormap
+            poslow = prctile(datvec(datvec>0),1);
+            cpos = map_function(c(whpos), poslow, clim(2), (kpos-1)*nvals+1+graybuffer_n, kpos*nvals); % map into indices in hot cm range of colormap
+            if graybuffer_n && ~isempty(poslow)
+                cp = c(whpos); wfringe = cp < poslow;
+                cpos(wfringe) = map_function(cp(wfringe), 0, poslow, (kpos-1)*nvals+1, (kpos-1)*nvals+graybuffer_n);
+            end
             c_colored(whpos) = cpos;
-            
+
             whneg = c < 0;
             %     kneg = 55;   % which block of 256 colors
-            % NOTE: *** THIS IS NOT WORKING WELL IN SOME CASES -- TAKES c and converts to cneg = all Inf in a problematic example case 
-            cneg = map_function(c(whneg), clim(1), prctile(datvec(datvec<0),99), (kneg-1)*nvals+1, kneg*nvals); % map into indices in cool cm range of colormap
+            % NOTE: *** THIS IS NOT WORKING WELL IN SOME CASES -- TAKES c and converts to cneg = all Inf in a problematic example case
+            neghigh = prctile(datvec(datvec<0),99);
+            cneg = map_function(c(whneg), clim(1), neghigh, (kneg-1)*nvals+1, kneg*nvals-graybuffer_n); % map into indices in cool cm range of colormap
+            if graybuffer_n && ~isempty(neghigh)
+                cn = c(whneg); wfringe = cn > neghigh;
+                cneg(wfringe) = map_function(cn(wfringe), neghigh, 0, kneg*nvals-graybuffer_n, kneg*nvals);
+            end
             c_colored(whneg) = cneg;
         end
     end
@@ -851,6 +868,12 @@ else
     if isempty(surf_fig), surf_fig = gcf; end
 end
 
+% Creating the colorbar axes below makes them the figure's CurrentAxes, so a
+% following addbrain/surface call would draw into the small colorbar axes.
+% Restore the surface's own axes as current when done.
+if isempty(sh_for_fig), surf_ax = get(surf_fig, 'CurrentAxes'); else, surf_ax = ancestor(sh_for_fig(1), 'axes'); end
+restore_axes = onCleanup(@() local_restore_current_axes(surf_fig, surf_ax)); %#ok<NASGU>
+
 if any(datvec > 0) || single_colorbar
 
     % check for existing colorbars (in the SURFACE figure)
@@ -949,6 +972,13 @@ end
 end % main function
 
 
+function local_restore_current_axes(fig, ax)
+if ~isempty(ax) && isgraphics(ax) && isgraphics(fig) && isequal(ancestor(ax, 'figure'), fig)
+    set(fig, 'CurrentAxes', ax);
+end
+end
+
+
 % -----------------------------------------------------------------------
 % -----------------------------------------------------------------------
 % Subfunctions
@@ -1034,9 +1064,12 @@ end % function
 % - If object is positive-valued or negative-valued only, assume we want a unipolar colormap
 
 
-function [cm, kpos, kneg] = hotcool_split_colormap(nvals, clim, axis_handle, varargin)
+function [cm, kpos, kneg, graybuffer] = hotcool_split_colormap(nvals, clim, axis_handle, varargin)
 %
 % cm = hotcool_split_colormap(nvals, clim, [lowhot hihot lowcool hicool]), each is [r g b] triplet
+%
+% graybuffer (4th output) is the number of gray-to-colour fade entries at the
+% near-zero end of each block (0 if gray_buffer, false).
 %
 % Get hotcool split colormap (around 0)
 % note: colormaps with these colors match spm_orthviews_hotcool_colormap used in orthviews()

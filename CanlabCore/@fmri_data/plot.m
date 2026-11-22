@@ -29,6 +29,27 @@ function [wh_outlier_uncorr, wh_outlier_corr, X] = plot(fmridat, varargin)
 % **'means_for_unique_Y'**
 %      Show montages of means for unique values of .Y 
 %
+%   **'rastermap'** (or 'sort', 'rastermap'):
+%      Sort the voxels (columns) of the carpet plot with the Rastermap
+%      algorithm (canlab_sort_rastermap.m; Stringer et al. 2024 Nat Neurosci), so
+%      voxels with similar profiles across images are adjacent. This reveals
+%      groups of co-varying voxels and graded transitions between them that
+%      are invisible in the default (spatial) voxel order. For speed on large
+%      datasets, k-means runs on at most 50,000 voxels and all voxels are then
+%      assigned. 'sort', 'none' keeps the default order. The voxel order is
+%      returned in X.voxel_sort_order.
+%
+% :Examples:
+% ::
+%
+%    obj = load_image_set('emotionreg');
+%    plot(obj)                      % standard QC plots
+%    plot(obj, 'rastermap')         % carpet plot with Rastermap-sorted voxels
+%
+%    % Sort voxels with Rastermap directly, group them into 6 clusters, and
+%    % plot the sorted data with each cluster in its own colour
+%    [voxel_order, cluster_labels] = canlab_sort_rastermap(obj.dat, 'k', 6, 'plot');
+%
 % :Outputs:
 %
 % The 'data' [default] plot method returns a composite of several plots,
@@ -150,6 +171,7 @@ function [wh_outlier_uncorr, wh_outlier_corr, X] = plot(fmridat, varargin)
 %        p-values less than .05.
 %       X can be passed into such methods such as plot_correlation_matrix()
 %       and other methods that use such structs.
+%        - X.voxel_sort_order: carpet-plot voxel order, if 'rastermap' is used
 
 
 % Programmers' notes: tor - 4/6/2018, changed mahalanobis distance method
@@ -176,10 +198,11 @@ plotmethod = 'data';  % or 'means_for_unique_Y'
 doorthviews = true;
 dooutliers = true;
 dorunmeanmontages = true;
+sort_method = 'none';     % voxel order in carpet plot: 'none' or 'rastermap'
 
 allowable_inputs = {'plotmethod' 'doorthviews' 'dooutliers' 'dorunmeanmontages'};
 
-keyword_inputs = {'noorthviews' 'nooutliers' 'norunmontages' 'nomontages' 'montage' 'montages' 'means_for_unique_Y'};
+keyword_inputs = {'noorthviews' 'nooutliers' 'norunmontages' 'nomontages' 'montage' 'montages' 'means_for_unique_Y' 'rastermap'};
 
 % optional inputs with default values - each keyword entered will create a variable of the same name
 
@@ -190,6 +213,9 @@ for i = 1:length(varargin)
             case allowable_inputs
 
                 eval([varargin{i} ' = varargin{i+1}; varargin{i+1} = [];']);
+
+            case 'sort'
+                sort_method = varargin{i+1}; varargin{i+1} = [];
 
             case keyword_inputs
                 % Skip deal with this below
@@ -219,6 +245,11 @@ for i = 1:length(varargin)
             case 'orthviews', plotmethod = 'orthviews'; % orthviews only
 
             case 'means_for_unique_Y', plotmethod = 'means_for_unique_Y'; 
+
+            case 'rastermap', sort_method = 'rastermap';
+
+            case 'sort'
+                % handled above
 
             case allowable_inputs
                 % skip - handled above
@@ -250,12 +281,32 @@ switch plotmethod
         [~, nimg] = size(fmridat.dat);
         mm = mean(fmridat.dat, 2, 'omitnan'); %  nanmean(fmridat.dat, 2);
         dat_vox_centered = fmridat.dat - repmat(mm, 1, nimg);
+
+        % Optional: sort voxels so those with similar profiles across images
+        % are adjacent (Rastermap; see canlab_sort_rastermap.m)
+        carpet_title = 'fmri data .dat Data matrix';
+        carpet_xlabel = 'Voxels';
+        if strcmpi(sort_method, 'rastermap')
+            if nimg < 3
+                warning('fmri_data:plot:rastermap', 'Rastermap sorting needs at least 3 images; showing default voxel order.');
+            else
+                fprintf('Sorting voxels with Rastermap... ');
+                t0 = tic;
+                voxel_order = canlab_sort_rastermap(fmridat.dat, 'noverbose', 'kmeans_max_samples', 50000);
+                fprintf('done in %.1f sec\n', toc(t0));
+                dat_vox_centered = dat_vox_centered(voxel_order, :);
+                X.voxel_sort_order = voxel_order;
+                carpet_title = 'fmri data .dat Data matrix (Rastermap-sorted voxels)';
+                carpet_xlabel = 'Voxels (Rastermap order)';
+            end
+        end
+
         imagesc(dat_vox_centered');
         colorbar;
 
         axis tight; set(gca, 'YDir', 'Reverse')
-        title('fmri data .dat Data matrix');
-        xlabel('Voxels'); ylabel('Images');
+        title(carpet_title);
+        xlabel(carpet_xlabel); ylabel('Images');
         drawnow;
 
         tmp = mean(dat_vox_centered(:), 'omitnan');  % nanmean(dat_vox_centered(:));

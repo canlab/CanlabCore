@@ -69,6 +69,13 @@ function OUT = plot_correlation_matrix(X, varargin)
 %
 %   **'reorder_by_clustering'**                 Reorder using clustering dendrogram (separate function)
 %
+%   **'reorder_by_rastermap'**                  Reorder with the Rastermap algorithm (canlab_sort_rastermap):
+%                                               variables with similar correlation profiles (rows of r)
+%                                               are placed next to each other. Uses r, so it works with
+%                                               raw data or 'input_is_r'. Most useful for larger matrices
+%                                               (roughly > 50 variables); for small matrices it sorts the
+%                                               variables directly without the clustering step.
+%
 %   Partitions: Note: partition labels MUST be sorted (ascending sequential) for this to work right.
 %   'partitions'                                followed by k-length integer vector of partitions to plot with color bars
 %   'partitioncolors'                           followed by cell array of strings for colors
@@ -143,11 +150,14 @@ function OUT = plot_correlation_matrix(X, varargin)
 % % Use auto-reordering within plot_correlation_matrix
 % plot_correlation_matrix(R, 'input_is_r', true, 'names', obj.metadata_table.target, 'reorder_by_clustering');
 %
+% % Or reorder with Rastermap (canlab_sort_rastermap)
+% plot_correlation_matrix(R, 'input_is_r', true, 'names', obj.metadata_table.target, 'reorder_by_rastermap');
+%
 % :References:
 %   None - basic stats functions.
 %
 % :See also:
-%   - canlab_sort_distance_matrix, clusterdata_permtest
+%   - canlab_sort_distance_matrix, canlab_sort_rastermap, clusterdata_permtest
 %
 
 % ..
@@ -186,6 +196,7 @@ partitioncolors = {};
 partitionlabels = {};
 doreorder = false;      % Reorder columns to sort by partition labels; updated below
 reorder_by_clustering = false;
+reorder_by_rastermap = false;
 
 % names
 var_names = {};
@@ -229,7 +240,7 @@ end
 
 allowable_inputs = {'var_names' 'p_thr' 'dospearman' 'dopartial' 'dofdr' 'dofigure' 'doimage' 'docircles' 'dotext' 'colorlimit' 'text_x_offset' 'text_y_offset' 'text_fsize' 'text_nonsig_color' 'text_sig_color' 'partitions' 'partitioncolors' 'partitionlabels'};
 
-special_commands = {'spearman', 'Spearman', 'rank', 'dorank' 'partial', 'Partial', 'partialcorr' 'image' 'circles' 'notext' 'fdr' 'FDR' 'nocalc' 'input_rmatrix' 'nofigure' 'names', 'labels', 'regions', 'input_is_r', 'input_rmatrix', 'reorder_by_clustering'};
+special_commands = {'spearman', 'Spearman', 'rank', 'dorank' 'partial', 'Partial', 'partialcorr' 'image' 'circles' 'notext' 'fdr' 'FDR' 'nocalc' 'input_rmatrix' 'nofigure' 'names', 'labels', 'regions', 'input_is_r', 'input_rmatrix', 'reorder_by_clustering', 'reorder_by_rastermap'};
 
 for i = 1:length(varargin)
     if ischar(varargin{i})
@@ -266,6 +277,7 @@ for i = 1:length(varargin)
             case {'fdr' 'FDR'},                              dofdr = true;  
             case {'nofigure'},                               dofigure = false; hold on;
             case 'reorder_by_clustering',                    reorder_by_clustering = true;
+            case 'reorder_by_rastermap',                     reorder_by_rastermap = true;
                 
             case {'names', 'labels'}, var_names = varargin{i+1}; varargin{i+1} = [];
                 
@@ -467,6 +479,31 @@ if reorder_by_clustering
     var_names = var_names(perm_order);
 
     OUT.reorder_note = 'Note: Variables were re-ordered based on clustering dendrogram using canlab_sort_distance_matrix. Reordered names saved in .var_names field.';
+    disp(OUT.reorder_note);
+
+end
+
+% Reorder automatically with Rastermap: sort variables by their correlation
+% profiles (rows of r), so variables with similar profiles are adjacent
+if reorder_by_rastermap && size(r, 1) >= 3
+
+    ws = warning('off', 'canlab_sort_rastermap:fewRows');   % small matrices are sorted directly
+    restore_warn = onCleanup(@() warning(ws));
+    rr = r; rr(~isfinite(rr)) = 0;
+    perm_order = canlab_sort_rastermap(rr, 'noverbose');
+    clear restore_warn
+
+    r = r(perm_order, perm_order);
+    OUT.r = OUT.r(perm_order, perm_order);
+    OUT.p = OUT.p(perm_order, perm_order);
+    OUT.sig = OUT.sig(perm_order, perm_order);
+
+    p = p(perm_order, perm_order);
+    sig = sig(perm_order, perm_order);
+    var_names = var_names(perm_order);
+    OUT.perm_order = perm_order;
+
+    OUT.reorder_note = 'Note: Variables were re-ordered with Rastermap using canlab_sort_rastermap. Reordered names saved in .var_names field.';
     disp(OUT.reorder_note);
 
 end

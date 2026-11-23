@@ -126,10 +126,10 @@ fprintf('HRF estimation\n')
 
 if iscell(obj)
 
-    for i = numel(obj)
+    for i = 1:numel(obj)
         
         
-        [params_obj{i}, hrf_obj{i}, params_obj_dat{i}, hrf_obj_dat{i}] = hrf_fit(obj{i},TR,Runc,T,method,mode, varargin);
+        [params_obj{i}, hrf_obj{i}, params_obj_dat{i}, hrf_obj_dat{i}] = hrf_fit(obj{i},TR,Runc,T,method,mode, varargin{:});
 
 
     end
@@ -203,8 +203,7 @@ if isstruct(obj)
     end
 
 
-    hrf_fit(obj)
-
+    error('Struct SPM input handling is not supported in this entrypoint. Use EstHRF_inAtlas/hrf_fit for SPM workflows.');
 
 end
 

@@ -450,7 +450,7 @@ for i = 1:k
     else
         % MAFDR
         if doverbose, fprintf('%s\nApplying MAFDR correction\n', names{i}); end
-        [FDRq(:, i), ~, pIO] = mafdr(pvalues(:, i));
+        [~, FDRq(:, i), pIO] = mafdr(pvalues(:, i));
         sig_q05 = FDRq < 0.05;
         % P-threshold for FDR q < 0.05 for each map
         pthr_i = max(pvalues(FDRq(:, i) < 0.05, i));

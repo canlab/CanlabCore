@@ -25,7 +25,7 @@ function out = searchlight_disti_Lukas(dat, dist_i, additional_inputs)
 
 %% -------------------- Defaults --------------------
 r          = 3;
-P          = 100;
+P          = 200;
 alg        = 'cv_svm';
 fixedC     = [];
 cv_assign  = [];
@@ -211,20 +211,21 @@ if aprioriprob > 0.99
 else
 % Enforce constraint q >= p (as in SAS proc multtest)
     for j = 1:length(TFCE_q_voxel_fdr)
-        if TFCE_q_voxel_fdr(j) < p_unc(j)
-           TFCE_q_voxel_fdr(j) = p_unc(j);
+        if TFCE_q_voxel_fdr(j) < TFCE_p_voxel(j)
+           TFCE_q_voxel_fdr(j) = TFCE_p_voxel(j);
         end
     end
 
 end
 
 tfce_stat_img_fdr = tfce_stat_img;
-if exist('TFCE_p_voxel','var')
+
+if aprioriprob > 0.99 % Benjamini-Hochberg result
     tfce_stat_img_fdr.dat = TFCE_p_voxel_fdr;
     tfce_stat_img_fdr.dat_descrip = ['fdr corrected TFCE p-values based on ' num2str(P) ' permutations'];
     tfce_stat_img_fdr.p = TFCE_p_voxel_fdr;
     tfce_stat_img_fdr.p_type = ['fdr corrected TFCE p-values based on ' num2str(P) ' permutations'];
-else
+else                  % Storey result
     tfce_stat_img_fdr.dat = TFCE_q_voxel_fdr;
     tfce_stat_img_fdr.dat_descrip = ['fdr corrected TFCE q-values based on ' num2str(P) ' permutations'];
     tfce_stat_img_fdr.p = TFCE_q_voxel_fdr;

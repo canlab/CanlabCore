@@ -100,10 +100,13 @@ function [poscl, negcl, results_table] = table(cl, varargin)
 %    November 2022: Autolabel now accepts 'atlas_obj' argument. Michael Sun
 %    September 2024: add "noverbose" option. Zizhuang Miao
 %    September 2024: add "publication" option based on mine and Zizhuang's code. Michael Sun
+%    August 2026: made improvements to retain Z_descrip from input region object. Lukas VO
 
 
 n_cols = 140;                       % 140 good for HTML reports
 sep_str = repmat('_', 1, n_cols);   % see textwrap
+Z_descrip = cl.Z_descrip;
+val_descrip = cl.val_descrip;
 
 k = 0;
 dosep = true;
@@ -157,6 +160,16 @@ end
 if dosep
     % separate pos and neg
     [poscl, negcl] = posneg_separate(cl);
+    
+    for preg = 1:size(poscl, 2)
+        poscl(preg).Z_descrip = Z_descrip;
+        poscl(preg).val_descrip = val_descrip;
+    end
+    
+    for nreg = 1:size(negcl, 2)
+        negcl(nreg).Z_descrip = Z_descrip;
+        negcl(nreg).val_descrip = val_descrip;
+    end
     
     cl = [poscl negcl];
     ispos = [true(1, length(poscl)) false(1, length(negcl))]; % logical for splitting combined cl later
@@ -294,9 +307,17 @@ else
     
     % Z = get_max_Z(cl);
     if show_min % show minimum value
-        Z = get_min(cl, 'Z', 'minVal');  % use function because may be empty, handle if so
+        if ~isempty(Z_descrip)
+            Z = get_min(cl, 'Z', ['min' Z_descrip]);  % use function because may be empty, handle if so
+        else
+            Z = get_min(cl, 'Z', 'minZ');
+        end
     else % default behavior: max Z / signed max
-        Z = get_signed_max(cl, 'Z', 'minP');  % use function because may be empty, handle if so
+        if ~isempty(Z_descrip)
+            Z = get_signed_max(cl, 'Z', ['max' Z_descrip]);  % use function because may be empty, handle if so
+        else
+            Z = get_signed_max(cl, 'Z', 'maxZ');
+        end
     end
 
     results_table = [Region Volume XYZ Z Atlas_coverage];

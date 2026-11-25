@@ -137,7 +137,7 @@ function obj = bootstrap(obj, X, Y, varargin)
 
     if verbose, fprintf('bootstrap: %d samples', nboot); end
     every = max(1, ceil(nboot / 20));
-    for b = 1:nboot
+    parfor b = 1:nboot
         if verbose && mod(b, every) == 0, fprintf('.'); end
 
         if isempty(groups)

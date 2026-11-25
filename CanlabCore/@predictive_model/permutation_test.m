@@ -191,7 +191,7 @@ function obj = permutation_test(obj, X, Y, varargin)
     end
     every = max(1, ceil(nperm / 20));
 
-    for i = 1:nperm
+    parfor i = 1:nperm
         if verbose && mod(i, every) == 0, fprintf('.'); end
 
         switch perm_scheme
